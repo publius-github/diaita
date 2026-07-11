@@ -12,7 +12,12 @@ class CalorieCounterApplication : Application() {
         super.onCreate()
         container = AppContainer(this)
         container.appScope.launch {
-            runCatching { RetentionMaintenance(container.database).run() }
+            runCatching {
+                RetentionMaintenance(
+                    container.database.diaryEntryDao(),
+                    container.database.monthlyAggregateDao(),
+                ).run()
+            }
         }
     }
 }

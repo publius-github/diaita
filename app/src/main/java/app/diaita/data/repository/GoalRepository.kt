@@ -4,7 +4,9 @@ import app.diaita.data.db.dao.DailyGoalDao
 import app.diaita.data.db.entities.DailyGoal
 import kotlinx.coroutines.flow.Flow
 
-class GoalRepository(private val dailyGoalDao: DailyGoalDao) {
+class GoalRepository(
+    private val dailyGoalDao: DailyGoalDao,
+) {
     fun getGoal(): Flow<DailyGoal?> = dailyGoalDao.getGoal()
 
     suspend fun setGoal(

@@ -1,0 +1,54 @@
+package app.diaita.data.db
+
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * Replays every migration on real schema snapshots from app/schemas. Add a case here for
+ * each new schema version — this is what keeps "no destructive migration" honest.
+ */
+@RunWith(AndroidJUnit4::class)
+class MigrationTest {
+    private val testDbName = "migration-test.db"
+
+    @get:Rule
+    val helper =
+        MigrationTestHelper(
+            InstrumentationRegistry.getInstrumentation(),
+            AppDatabase::class.java,
+            emptyList(),
+            FrameworkSQLiteOpenHelperFactory(),
+        )
+
+    @Test
+    fun migrate4To5_backfillsSeedKeysByName() {
+        helper.createDatabase(testDbName, 4).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO food_items
+                    (name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g, source, createdAt)
+                VALUES
+                    ('White rice, cooked', 130.0, 2.7, 0.3, 28.0, 'SEED', 0),
+                    ('My custom food', 100.0, 1.0, 1.0, 1.0, 'MANUAL', 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 5, true, Migrations.MIGRATION_4_5).use { db ->
+            db.query("SELECT seedKey FROM food_items WHERE name = 'White rice, cooked'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("white_rice_cooked", cursor.getString(0))
+            }
+            db.query("SELECT seedKey FROM food_items WHERE name = 'My custom food'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(null, cursor.getString(0))
+            }
+        }
+    }
+}

@@ -7,6 +7,7 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.PresetRepository
+import app.diaita.data.repository.PresetSummary
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class DraftPresetItem(val food: FoodItem, val quantityGrams: Double)
+data class DraftPresetItem(
+    val food: FoodItem,
+    val quantityGrams: Double,
+)
 
 data class PresetEditUiState(
     /** Non-null when editing an existing preset rather than creating a new one. */
@@ -38,18 +42,16 @@ class PresetViewModel(
     private val presetRepository: PresetRepository,
     private val foodRepository: FoodRepository,
 ) : ViewModel() {
-
-    val presets: StateFlow<List<PresetWithItems>> = presetRepository.getAllWithItems()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val presets: StateFlow<List<PresetSummary>> =
+        presetRepository
+            .getAllSummaries()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _justLogged = MutableStateFlow(false)
     val justLogged: StateFlow<Boolean> = _justLogged.asStateFlow()
 
     private val _editState = MutableStateFlow(PresetEditUiState())
     val editState: StateFlow<PresetEditUiState> = _editState.asStateFlow()
-
-    private val _confirmDeletePreset = MutableStateFlow<MealPreset?>(null)
-    val confirmDeletePreset: StateFlow<MealPreset?> = _confirmDeletePreset.asStateFlow()
 
     private val _undoEvent = MutableSharedFlow<PresetWithItems>(extraBufferCapacity = 1)
     val undoEvent: SharedFlow<PresetWithItems> = _undoEvent.asSharedFlow()
@@ -75,17 +77,8 @@ class PresetViewModel(
         _justLogged.value = false
     }
 
-    fun requestDeletePreset(preset: MealPreset) {
-        _confirmDeletePreset.value = preset
-    }
-
-    fun cancelDeletePreset() {
-        _confirmDeletePreset.value = null
-    }
-
-    fun confirmDeletePreset() {
-        val preset = _confirmDeletePreset.value ?: return
-        _confirmDeletePreset.value = null
+    /** Deletes immediately; the emitted event lets the snackbar offer Undo. */
+    fun deletePreset(preset: MealPreset) {
         viewModelScope.launch {
             val presetWithItems = presetRepository.getWithItems(preset.id)
             presetRepository.deletePreset(preset)
@@ -104,11 +97,12 @@ class PresetViewModel(
         if (_editState.value.editingPresetId == presetId) return
         viewModelScope.launch {
             val presetWithItems = presetRepository.getWithItems(presetId) ?: return@launch
-            val draftItems = presetWithItems.items.mapNotNull { item ->
-                foodRepository.getById(item.foodItemId)?.let { food ->
-                    DraftPresetItem(food, item.quantityGrams)
+            val draftItems =
+                presetWithItems.items.mapNotNull { item ->
+                    foodRepository.getById(item.foodItemId)?.let { food ->
+                        DraftPresetItem(food, item.quantityGrams)
+                    }
                 }
-            }
             _editState.update {
                 it.copy(
                     editingPresetId = presetId,
@@ -130,7 +124,10 @@ class PresetViewModel(
 
     fun dismissQuantityDialog() = _editState.update { it.copy(foodPendingQuantity = null) }
 
-    fun addDraftItem(food: FoodItem, quantityGrams: Double) {
+    fun addDraftItem(
+        food: FoodItem,
+        quantityGrams: Double,
+    ) {
         _editState.update {
             it.copy(
                 draftItems = it.draftItems + DraftPresetItem(food, quantityGrams),

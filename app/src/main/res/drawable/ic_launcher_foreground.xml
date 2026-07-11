@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Diaita placeholder mark: the archived Greek key / meander concept — two
+     mirrored open/unfinished stepped brackets, thin stroke, square module.
+     Straight scale-up of the original sketch, not a redesign. Temporary icon
+     while a final mark is developed. Generated via scratchpad gen_meander.py. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Progress-ring motif matching the in-app calorie ring: a 270° white arc
-         with an amber dot filling the gap. Kept inside the adaptive-icon safe zone. -->
     <path
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round"
+        android:strokeWidth="3.51"
+        android:strokeLineCap="square"
+        android:strokeLineJoin="miter"
         android:fillColor="#00000000"
-        android:pathData="M54,26 A28,28 0 1,1 26,54" />
+        android:pathData="M27.00,64.80 V43.20 H48.60 V56.70 H37.80 V49.95" />
     <path
-        android:fillColor="#FFC107"
-        android:pathData="M34,29.5 a5.5,5.5 0 1,1 0,11 a5.5,5.5 0 1,1 0,-11" />
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.51"
+        android:strokeLineCap="square"
+        android:strokeLineJoin="miter"
+        android:fillColor="#00000000"
+        android:pathData="M59.40,49.95 V56.70 H70.20 V43.20 H81.00 V64.80" />
 </vector>

@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,10 +63,11 @@ fun HistoryScreen(
     var showWeightDialog by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
     ) {
         Text(
             stringResource(R.string.history_title_days, uiState.rangeDays),
@@ -129,8 +132,12 @@ fun HistoryScreen(
         if (uiState.weights.isEmpty()) {
             Text(stringResource(R.string.weight_empty), style = MaterialTheme.typography.bodySmall)
         } else {
-            val windowStart = uiState.days.firstOrNull()?.date?.let { LocalDate.parse(it) }
-                ?: LocalDate.now().minusDays(uiState.rangeDays - 1L)
+            val windowStart =
+                uiState.days
+                    .firstOrNull()
+                    ?.date
+                    ?.let { LocalDate.parse(it) }
+                    ?: LocalDate.now().minusDays(uiState.rangeDays - 1L)
             WeightLineChart(
                 weights = uiState.weights,
                 targetKg = uiState.weightTargetKg,
@@ -216,19 +223,27 @@ private fun CalorieBarChart(
     val chartMax = (maxOf(maxCalories, goalCalories?.toDouble() ?: 0.0) * 1.15).coerceAtLeast(100.0)
     val gridStep = calorieGridStep(chartMax)
     val labelStep = labelEvery(days.size)
+    val chartDescription =
+        stringResource(
+            R.string.chart_calories_a11y,
+            days.size,
+            days.map { it.calories }.average().toInt(),
+        )
 
     Canvas(
-        modifier = modifier
-            .height(220.dp)
-            .pointerInput(days) {
-                detectTapGestures { offset ->
-                    val leftPad = AXIS_LEFT_PAD.toPx()
-                    if (offset.x < leftPad) return@detectTapGestures
-                    val slot = (size.width - leftPad) / days.size
-                    val index = ((offset.x - leftPad) / slot).toInt().coerceIn(0, days.size - 1)
-                    onBarTap(index)
-                }
-            },
+        modifier =
+            modifier
+                .height(220.dp)
+                .semantics { contentDescription = chartDescription }
+                .pointerInput(days) {
+                    detectTapGestures { offset ->
+                        val leftPad = AXIS_LEFT_PAD.toPx()
+                        if (offset.x < leftPad) return@detectTapGestures
+                        val slot = (size.width - leftPad) / days.size
+                        val index = ((offset.x - leftPad) / slot).toInt().coerceIn(0, days.size - 1)
+                        onBarTap(index)
+                    }
+                },
     ) {
         val leftPad = AXIS_LEFT_PAD.toPx()
         val bottomPad = AXIS_BOTTOM_PAD.toPx()
@@ -236,12 +251,13 @@ private fun CalorieBarChart(
         val chartHeight = size.height - bottomPad
         val slot = chartWidth / days.size
 
-        val axisPaint = Paint().apply {
-            color = labelColor.toArgb()
-            textSize = labelTextSizePx
-            isAntiAlias = true
-            textAlign = Paint.Align.RIGHT
-        }
+        val axisPaint =
+            Paint().apply {
+                color = labelColor.toArgb()
+                textSize = labelTextSizePx
+                isAntiAlias = true
+                textAlign = Paint.Align.RIGHT
+            }
         val centerPaint = Paint(axisPaint).apply { textAlign = Paint.Align.CENTER }
 
         fun yFor(value: Double): Float = (chartHeight - value / chartMax * chartHeight).toFloat()
@@ -350,8 +366,18 @@ private fun WeightLineChart(
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
     val labelStep = labelEvery(totalDays)
+    val chartDescription =
+        stringResource(
+            R.string.chart_weight_a11y,
+            String.format(Locale.US, "%.1f", weights.last().weightKg),
+        )
 
-    Canvas(modifier = modifier.height(150.dp)) {
+    Canvas(
+        modifier =
+            modifier
+                .height(150.dp)
+                .semantics { contentDescription = chartDescription },
+    ) {
         val leftPad = AXIS_LEFT_PAD.toPx()
         val bottomPad = AXIS_BOTTOM_PAD.toPx()
         val chartWidth = size.width - leftPad
@@ -367,20 +393,23 @@ private fun WeightLineChart(
         val span = (scaleHigh - scaleLow).coerceAtLeast(2.0)
         val gridStep = weightGridStep(span)
 
-        val axisPaint = Paint().apply {
-            color = labelColor.toArgb()
-            textSize = labelTextSizePx
-            isAntiAlias = true
-            textAlign = Paint.Align.RIGHT
-        }
+        val axisPaint =
+            Paint().apply {
+                color = labelColor.toArgb()
+                textSize = labelTextSizePx
+                isAntiAlias = true
+                textAlign = Paint.Align.RIGHT
+            }
         val centerPaint = Paint(axisPaint).apply { textAlign = Paint.Align.CENTER }
 
         fun yFor(kg: Double): Float = (chartHeight - (kg - scaleLow) / span * chartHeight).toFloat()
+
         fun xFor(entry: WeightEntry): Float {
-            val dayIndex = ChronoUnit.DAYS
-                .between(windowStart, LocalDate.parse(entry.date))
-                .toInt()
-                .coerceIn(0, totalDays - 1)
+            val dayIndex =
+                ChronoUnit.DAYS
+                    .between(windowStart, LocalDate.parse(entry.date))
+                    .toInt()
+                    .coerceIn(0, totalDays - 1)
             return leftPad + dayIndex * slot + slot / 2f
         }
 
@@ -465,8 +494,7 @@ private fun WeightLineChart(
 
 private val DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
 
-private fun formatDate(isoDate: String): String =
-    LocalDate.parse(isoDate).format(DateTimeFormatter.ofPattern("d MMM"))
+private fun formatDate(isoDate: String): String = LocalDate.parse(isoDate).format(DateTimeFormatter.ofPattern("d MMM"))
 
 private fun formatYearMonth(yearMonth: String): String =
     YearMonth.parse(yearMonth).format(DateTimeFormatter.ofPattern("MMMM yyyy"))

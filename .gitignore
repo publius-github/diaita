@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+
+# Kotlin toolchain
+.kotlin/
+
+# Local machine configuration (SDK paths etc.)
+local.properties
+
+# Build outputs
+*.apk
+*.aab
+
+# Release signing (keep the keystore backed up OUTSIDE the repo too — losing it
+# means existing users must uninstall/reinstall to get updates)
+*.jks
+*.keystore
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+cicd-quality-report.md

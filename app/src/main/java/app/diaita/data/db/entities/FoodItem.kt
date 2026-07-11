@@ -8,10 +8,16 @@ enum class FoodSource { SEED, MANUAL, OPENFOODFACTS }
 
 @Entity(
     tableName = "food_items",
-    indices = [Index(value = ["barcode"]), Index(value = ["offId"])],
+    indices = [
+        Index(value = ["barcode"]),
+        Index(value = ["offId"]),
+        Index(value = ["seedKey"], unique = true),
+    ],
 )
 data class FoodItem(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    /** Stable identity of a seed-catalog entry (null for MANUAL/OPENFOODFACTS rows). */
+    val seedKey: String? = null,
     val name: String,
     val brand: String? = null,
     val barcode: String? = null,

@@ -17,6 +17,11 @@ data class PresetWithItems(
     val items: List<MealPresetItem>,
 )
 
+data class PresetCalories(
+    val presetId: Long,
+    val calories: Double,
+)
+
 @Dao
 interface MealPresetDao {
     @Insert
@@ -32,7 +37,10 @@ interface MealPresetDao {
     suspend fun deleteItem(item: MealPresetItem)
 
     @Query("UPDATE meal_presets SET name = :name WHERE id = :presetId")
-    suspend fun renamePreset(presetId: Long, name: String)
+    suspend fun renamePreset(
+        presetId: Long,
+        name: String,
+    )
 
     @Query("DELETE FROM meal_preset_items WHERE presetId = :presetId")
     suspend fun deleteItemsForPreset(presetId: Long)
@@ -44,4 +52,12 @@ interface MealPresetDao {
     @Transaction
     @Query("SELECT * FROM meal_presets WHERE id = :id")
     suspend fun getWithItems(id: Long): PresetWithItems?
+
+    @Query(
+        "SELECT i.presetId AS presetId, " +
+            "SUM(f.caloriesPer100g * i.quantityGrams / 100.0) AS calories " +
+            "FROM meal_preset_items i JOIN food_items f ON f.id = i.foodItemId " +
+            "GROUP BY i.presetId",
+    )
+    fun presetCalories(): Flow<List<PresetCalories>>
 }

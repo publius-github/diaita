@@ -61,6 +61,9 @@ interface DiaryEntryDao {
     @Query("SELECT * FROM diary_entries WHERE logDate = :date ORDER BY loggedAt ASC")
     fun entriesForDate(date: String): Flow<List<DiaryEntryWithFood>>
 
+    @Query("SELECT * FROM diary_entries WHERE logDate = :date ORDER BY loggedAt ASC")
+    suspend fun entriesForDateOnce(date: String): List<DiaryEntry>
+
     @Query(
         """
         SELECT
@@ -86,7 +89,10 @@ interface DiaryEntryDao {
         ORDER BY d.logDate ASC
         """,
     )
-    fun historyTotals(fromDate: String, toDate: String): Flow<List<DayTotal>>
+    fun historyTotals(
+        fromDate: String,
+        toDate: String,
+    ): Flow<List<DayTotal>>
 
     /** Most recently logged distinct foods, for the quick-access row on the Add Food screen. */
     @Query(
