@@ -123,7 +123,11 @@ fun PresetListScreen(
                             Column {
                                 Text(presetWithItems.preset.name, style = MaterialTheme.typography.bodyLarge)
                                 Text(
-                                    stringResource(R.string.items_count, presetWithItems.items.size),
+                                    stringResource(
+                                        R.string.items_count_kcal,
+                                        presetWithItems.items.size,
+                                        presetWithItems.totalCalories.toInt(),
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }

@@ -2,7 +2,6 @@ package app.diaita.ui.goals
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.diaita.data.repository.ExportRepository
 import app.diaita.data.repository.GoalRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +24,6 @@ data class GoalsUiState(
 
 class GoalsViewModel(
     private val goalRepository: GoalRepository,
-    private val exportRepository: ExportRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GoalsUiState())
     val uiState: StateFlow<GoalsUiState> = _uiState.asStateFlow()
@@ -64,12 +62,16 @@ class GoalsViewModel(
     fun onCarbsTargetChanged(value: String) = _uiState.update { it.copy(carbsTarget = value, hasError = false) }
     fun onWeightTargetChanged(value: String) = _uiState.update { it.copy(weightTarget = value, hasError = false) }
 
-    /** Quick-split helper: 30% protein / 30% fat / 40% carbs of the calorie target, converted to grams. */
+    /**
+     * Quick-split helper: 30% protein / 25% fat / 45% carbs of the calorie target, converted to
+     * grams. This sits inside the commonly recommended healthy macro ranges (protein 10-35%,
+     * fat 20-35%, carbs 45-65% of energy) while keeping protein high enough for satiety.
+     */
     fun applyQuickSplit() {
         val calories = _uiState.value.calorieTarget.toIntOrNull() ?: return
         val proteinG = (calories * 0.30 / 4).toInt()
-        val fatG = (calories * 0.30 / 9).toInt()
-        val carbsG = (calories * 0.40 / 4).toInt()
+        val fatG = (calories * 0.25 / 9).toInt()
+        val carbsG = (calories * 0.45 / 4).toInt()
         _uiState.update {
             it.copy(
                 proteinTarget = proteinG.toString(),
@@ -99,5 +101,4 @@ class GoalsViewModel(
         }
     }
 
-    suspend fun exportDiaryCsv(): String = exportRepository.exportDiaryCsv()
 }

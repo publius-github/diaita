@@ -90,10 +90,6 @@ class AddFoodViewModel(
 
     fun onShowManualEntryChanged(show: Boolean) = _uiState.update { it.copy(showManualEntry = show) }
 
-    fun onOpenFoodFactsToggled(enabled: Boolean) {
-        viewModelScope.launch { settingsRepository.setOpenFoodFactsEnabled(enabled) }
-    }
-
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
         searchQueryFlow.value = query

@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import app.diaita.data.db.entities.FoodItem
+import app.diaita.data.db.entities.FoodSource
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -36,4 +37,7 @@ interface FoodItemDao {
 
     @Query("SELECT COUNT(*) FROM food_items")
     suspend fun count(): Int
+
+    @Query("SELECT name FROM food_items WHERE source = :source")
+    suspend fun getNamesBySource(source: FoodSource): List<String>
 }

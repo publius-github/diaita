@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+
+# Kotlin toolchain
+.kotlin/
+
+# Local machine configuration (SDK paths etc.)
+local.properties
+
+# Build outputs
+*.apk
+*.aab
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

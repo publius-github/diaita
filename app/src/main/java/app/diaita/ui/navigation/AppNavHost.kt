@@ -2,9 +2,9 @@ package app.diaita.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -32,6 +32,8 @@ import app.diaita.ui.goals.GoalsScreen
 import app.diaita.ui.history.HistoryScreen
 import app.diaita.ui.presets.PresetEditScreen
 import app.diaita.ui.presets.PresetListScreen
+import app.diaita.ui.settings.BackupScreen
+import app.diaita.ui.settings.SettingsScreen
 
 private data class BottomNavItem(val screen: Screen, val labelRes: Int, val icon: ImageVector)
 
@@ -39,7 +41,7 @@ private val bottomNavItems = listOf(
     BottomNavItem(Screen.Diary, R.string.nav_today, Icons.Filled.Today),
     BottomNavItem(Screen.PresetList, R.string.nav_presets, Icons.Filled.List),
     BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
-    BottomNavItem(Screen.Goals, R.string.nav_goals, Icons.Filled.Flag),
+    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
 )
 
 @Composable
@@ -120,8 +122,17 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             ) {
                 DayDetailScreen(onBack = { navController.popBackStack() })
             }
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    onGoalsClick = { navController.navigate(Screen.Goals.route) },
+                    onBackupClick = { navController.navigate(Screen.Backup.route) },
+                )
+            }
             composable(Screen.Goals.route) {
-                GoalsScreen()
+                GoalsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.Backup.route) {
+                BackupScreen(onBack = { navController.popBackStack() })
             }
         }
     }

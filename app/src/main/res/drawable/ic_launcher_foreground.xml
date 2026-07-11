@@ -4,15 +4,32 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Progress-ring motif matching the in-app calorie ring: a 270° white arc
-         with an amber dot filling the gap. Kept inside the adaptive-icon safe zone. -->
+    <!-- Pacman chasing a healthy snack: a yellow pacman about to swallow a bite-sized
+         avocado (kept clearly smaller than the mouth opening). White outline keeps the
+         avocado readable on the green launcher/splash background. -->
+
+    <!-- Pacman body: full disc minus a 60-degree mouth wedge opening to the right -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round"
+        android:fillColor="#FFD54F"
+        android:pathData="M42,54 L61,43 A22,22 0 1,0 61,65 Z" />
+    <!-- Pacman eye -->
+    <path
+        android:fillColor="#263238"
+        android:pathData="M39.2,42.5 a2.8,2.8 0 1,0 5.6,0 a2.8,2.8 0 1,0 -5.6,0" />
+
+    <!-- Bite-sized avocado: white outline ring, dark skin, light flesh, brown pit -->
+    <path
         android:fillColor="#00000000"
-        android:pathData="M54,26 A28,28 0 1,1 26,54" />
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M68,54 a6,8 0 1,0 12,0 a6,8 0 1,0 -12,0" />
     <path
-        android:fillColor="#FFC107"
-        android:pathData="M34,29.5 a5.5,5.5 0 1,1 0,11 a5.5,5.5 0 1,1 0,-11" />
+        android:fillColor="#33691E"
+        android:pathData="M68,54 a6,8 0 1,0 12,0 a6,8 0 1,0 -12,0" />
+    <path
+        android:fillColor="#C5E1A5"
+        android:pathData="M69.6,54 a4.4,6.3 0 1,0 8.8,0 a4.4,6.3 0 1,0 -8.8,0" />
+    <path
+        android:fillColor="#6D4C41"
+        android:pathData="M71.7,56 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0" />
 </vector>

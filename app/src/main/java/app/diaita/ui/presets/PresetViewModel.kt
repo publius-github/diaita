@@ -7,6 +7,7 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.PresetRepository
+import app.diaita.data.repository.PresetSummary
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,7 @@ class PresetViewModel(
     private val foodRepository: FoodRepository,
 ) : ViewModel() {
 
-    val presets: StateFlow<List<PresetWithItems>> = presetRepository.getAllWithItems()
+    val presets: StateFlow<List<PresetSummary>> = presetRepository.getAllSummaries()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _justLogged = MutableStateFlow(false)

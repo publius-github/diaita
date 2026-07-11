@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -39,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.presets.PresetViewModel
+import app.diaita.util.DateUtils
 
 @Composable
 fun AddFoodScreen(
@@ -79,6 +79,7 @@ fun AddFoodScreen(
     uiState.foodPendingQuantity?.let { food ->
         QuantityDialog(
             food = food,
+            initialMealSlot = DateUtils.defaultMealSlotNow(),
             showMealSlotPicker = true,
             onDismiss = viewModel::dismissQuantityDialog,
             onConfirm = { grams, slot ->
@@ -124,14 +125,6 @@ private fun SearchForm(uiState: AddFoodUiState, viewModel: AddFoodViewModel) {
                     )
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = uiState.openFoodFactsEnabled,
-                onCheckedChange = viewModel::onOpenFoodFactsToggled,
-            )
-            Text(stringResource(R.string.search_off_checkbox), style = MaterialTheme.typography.bodySmall)
         }
         if (uiState.openFoodFactsEnabled && !uiState.isOnline) {
             Text(
@@ -269,7 +262,13 @@ private fun PresetsTab(
                 ListItem(
                     headlineContent = { Text(presetWithItems.preset.name) },
                     supportingContent = {
-                        Text(stringResource(R.string.preset_items_tap_to_log, presetWithItems.items.size))
+                        Text(
+                            stringResource(
+                                R.string.preset_items_kcal_tap_to_log,
+                                presetWithItems.items.size,
+                                presetWithItems.totalCalories.toInt(),
+                            ),
+                        )
                     },
                     modifier = Modifier.clickable {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)

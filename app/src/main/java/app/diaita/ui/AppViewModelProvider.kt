@@ -13,6 +13,7 @@ import app.diaita.ui.diary.DiaryViewModel
 import app.diaita.ui.goals.GoalsViewModel
 import app.diaita.ui.history.HistoryViewModel
 import app.diaita.ui.presets.PresetViewModel
+import app.diaita.ui.settings.SettingsViewModel
 
 private fun CreationExtras.appContainer(): AppContainer =
     (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as CalorieCounterApplication).container
@@ -35,7 +36,10 @@ object AppViewModelProvider {
             )
         }
         initializer { PresetViewModel(appContainer().presetRepository, appContainer().foodRepository) }
-        initializer { GoalsViewModel(appContainer().goalRepository, appContainer().exportRepository) }
+        initializer { GoalsViewModel(appContainer().goalRepository) }
+        initializer {
+            SettingsViewModel(appContainer().settingsRepository, appContainer().exportRepository)
+        }
         initializer {
             HistoryViewModel(
                 appContainer().diaryRepository,

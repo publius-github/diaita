@@ -15,7 +15,7 @@
     <string name="nav_today">Today</string>
     <string name="nav_presets">Presets</string>
     <string name="nav_history">History</string>
-    <string name="nav_goals">Goals</string>
+    <string name="nav_settings">Settings</string>
 
     <!-- Diary -->
     <string name="today_title">Today</string>
@@ -32,6 +32,24 @@
     <string name="diary_food_subtitle">%1$s · %2$d g — %3$d kcal</string>
     <string name="diary_preset_subtitle">%1$s · %2$d items — %3$d kcal</string>
     <string name="deleted_named">Deleted \"%1$s\"</string>
+
+    <!-- Day-part balance bar -->
+    <string name="day_part_morning">Morning</string>
+    <string name="day_part_day">Day</string>
+    <string name="day_part_evening">Evening</string>
+    <string name="day_part_kcal">%1$d / %2$d</string>
+
+    <!-- Pace message (rotates daily within each mood) -->
+    <string name="pace_empty">Clean slate. Log your first meal and let\'s make it a good day.</string>
+    <string name="pace_ok_1">Right on track — keep it rolling.</string>
+    <string name="pace_ok_2">Nice pacing. Your future self approves.</string>
+    <string name="pace_ok_3">Steady as she goes. Looking good.</string>
+    <string name="pace_warn_1">Easy, champ — that was more than the plan allows for this time of day.</string>
+    <string name="pace_warn_2">You\'re ahead of schedule. Maybe let the next snack walk on by.</string>
+    <string name="pace_warn_3">Slow down — at this pace dinner will be a glass of water.</string>
+    <string name="pace_over_1">Goal obliterated. Put the fork down and step away from the fridge.</string>
+    <string name="pace_over_2">You didn\'t cross the limit, you drove a truck through it. Kitchen\'s closed.</string>
+    <string name="pace_over_3">That\'s enough. The couch and a glass of water are your only friends tonight.</string>
 
     <!-- Meal slots -->
     <string name="meal_breakfast">Breakfast</string>
@@ -64,7 +82,7 @@
     <string name="save_and_log">Save &amp; log</string>
     <string name="manual_error">Fill in a name and valid numbers for calories/protein/fat/carbs</string>
     <string name="no_presets_addfood">No presets yet — create one from the Presets tab.</string>
-    <string name="preset_items_tap_to_log">%1$d items — tap to log</string>
+    <string name="preset_items_kcal_tap_to_log">%1$d items · %2$d kcal — tap to log</string>
 
     <!-- Quantity dialog -->
     <string name="quantity_grams">Quantity (grams)</string>
@@ -73,12 +91,12 @@
     <!-- Presets -->
     <string name="new_preset">New preset</string>
     <string name="no_presets_yet">No presets yet — tap + to create one (e.g. \"My usual breakfast\").</string>
-    <string name="items_count">%1$d items</string>
+    <string name="items_count_kcal">%1$d items · %2$d kcal</string>
     <string name="log_preset">Log preset</string>
     <string name="delete_preset">Delete preset</string>
     <string name="preset_name_label">Preset name (e.g. \"My usual breakfast\")</string>
     <string name="items_in_preset">Items in this preset</string>
-    <string name="no_items_yet">None yet — search below and tap a food to add it.</string>
+    <string name="no_items_yet">None yet — tap \"Add food\" below to add one.</string>
     <string name="item_with_grams">%1$s — %2$d g</string>
     <string name="remove">Remove</string>
     <string name="search_to_add">Search foods to add</string>
@@ -88,7 +106,7 @@
     <!-- Goals -->
     <string name="daily_goal">Daily goal</string>
     <string name="calories_label">Calories</string>
-    <string name="quick_split">Split 30% protein / 30% fat / 40% carbs</string>
+    <string name="quick_split">Tip: healthy split — 30% protein / 25% fat / 45% carbs</string>
     <string name="protein_g">Protein (g)</string>
     <string name="fat_g">Fat (g)</string>
     <string name="carbs_g">Carbs (g)</string>
@@ -97,6 +115,13 @@
     <string name="save_goal">Save goal</string>
     <string name="goal_saved">Goal saved</string>
     <string name="backup_title">Backup</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_goals">Daily goals</string>
+    <string name="settings_goals_desc">Calories, macros and weight target</string>
+    <string name="settings_backup_desc">Export your diary to a CSV file</string>
+    <string name="settings_off_desc">Look up foods online while searching</string>
     <string name="export_csv">Export diary (CSV)</string>
     <string name="diary_exported">Diary exported</string>
 

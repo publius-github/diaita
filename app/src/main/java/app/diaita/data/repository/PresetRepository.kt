@@ -7,13 +7,34 @@ import app.diaita.data.db.dao.PresetWithItems
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
+import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+
+/** A preset with its items plus the total calories of one serving, for list display. */
+data class PresetSummary(
+    val preset: MealPreset,
+    val items: List<MealPresetItem>,
+    val totalCalories: Double,
+)
 
 class PresetRepository(
     private val database: AppDatabase,
     private val mealPresetDao: MealPresetDao,
 ) {
     fun getAllWithItems(): Flow<List<PresetWithItems>> = mealPresetDao.getAllWithItems()
+
+    fun getAllSummaries(): Flow<List<PresetSummary>> =
+        combine(mealPresetDao.getAllWithItems(), mealPresetDao.presetCalories()) { presets, calories ->
+            val caloriesByPresetId = calories.associate { it.presetId to it.calories }
+            presets.map { withItems ->
+                PresetSummary(
+                    preset = withItems.preset,
+                    items = withItems.items,
+                    totalCalories = caloriesByPresetId[withItems.preset.id] ?: 0.0,
+                )
+            }
+        }
 
     suspend fun getWithItems(presetId: Long): PresetWithItems? = mealPresetDao.getWithItems(presetId)
 
@@ -61,6 +82,9 @@ class PresetRepository(
             val presetWithItems = mealPresetDao.getWithItems(presetId) ?: return@withTransaction
             val diaryEntryDao = database.diaryEntryDao()
             val loggedAt = System.currentTimeMillis()
+            // Presets are one-tap logs with no slot picker, so infer the meal from the clock —
+            // this is what places the log under the right Diary section and day-part segment.
+            val mealSlot = DateUtils.defaultMealSlotNow()
             presetWithItems.items.forEach { item ->
                 diaryEntryDao.insert(
                     DiaryEntry(
@@ -68,6 +92,7 @@ class PresetRepository(
                         quantityGrams = item.quantityGrams,
                         logDate = logDate,
                         loggedAt = loggedAt,
+                        mealSlot = mealSlot,
                         sourcePresetId = presetWithItems.preset.id,
                         sourcePresetName = presetWithItems.preset.name,
                     ),

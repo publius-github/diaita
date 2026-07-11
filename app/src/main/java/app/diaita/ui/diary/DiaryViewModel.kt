@@ -43,6 +43,7 @@ sealed class DiaryRow {
 
 data class DiaryUiState(
     val sections: List<DiarySection> = emptyList(),
+    val dayPartCalories: Map<DayPart, Double> = emptyMap(),
     val totalCalories: Double = 0.0,
     val totalProtein: Double = 0.0,
     val totalFat: Double = 0.0,
@@ -74,6 +75,7 @@ class DiaryViewModel(
     ) { entries, totals, goal, todayWeights ->
         DiaryUiState(
             sections = buildDiarySections(entries),
+            dayPartCalories = buildDayPartCalories(entries),
             totalCalories = totals.totalCalories,
             totalProtein = totals.totalProtein,
             totalFat = totals.totalFat,
