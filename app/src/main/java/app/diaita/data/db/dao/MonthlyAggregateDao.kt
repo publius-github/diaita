@@ -17,7 +17,4 @@ interface MonthlyAggregateDao {
 
     @Query("SELECT * FROM monthly_aggregates ORDER BY yearMonth DESC")
     fun getAll(): Flow<List<MonthlyAggregate>>
-
-    @Query("DELETE FROM monthly_aggregates WHERE yearMonth < :cutoffYearMonth")
-    suspend fun deleteBefore(cutoffYearMonth: String)
 }

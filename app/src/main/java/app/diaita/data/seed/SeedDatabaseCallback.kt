@@ -4,14 +4,18 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.diaita.data.db.AppDatabase
 import app.diaita.data.db.entities.FoodSource
+import app.diaita.data.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Keeps the seed food catalog in sync on every database open (which also covers first
- * creation): any [SeedFoods] entry whose name is not yet present among SEED rows gets
- * inserted. This lets catalog additions in app updates reach existing installs without
- * a schema migration, and is idempotent because names are compared first.
+ * Keeps the seed food catalog in sync on database open (which also covers first
+ * creation). Sync is versioned: when the stored catalog version is behind
+ * [SeedFoods.CATALOG_VERSION], every entry is upserted by [SeedFoods]' stable seedKey —
+ * existing rows get their name/macros/serving refreshed (so corrections reach existing
+ * installs), missing rows are inserted. Rows keep their primary key, so diary entries
+ * referencing them are unaffected.
  *
  * [databaseProvider] is invoked lazily (Room only opens the underlying SQLite file, and
  * fires callbacks, on first real query) so it's safe for it to reference a database
@@ -19,15 +23,39 @@ import kotlinx.coroutines.launch
  */
 class SeedDatabaseCallback(
     private val appScope: CoroutineScope,
+    private val settingsRepository: SettingsRepository,
     private val databaseProvider: () -> AppDatabase,
 ) : RoomDatabase.Callback() {
     override fun onOpen(db: SupportSQLiteDatabase) {
         super.onOpen(db)
         appScope.launch {
+            if (settingsRepository.seedCatalogVersion.first() >= SeedFoods.CATALOG_VERSION) {
+                return@launch
+            }
             val foodItemDao = databaseProvider().foodItemDao()
-            val existingNames = foodItemDao.getNamesBySource(FoodSource.SEED).toHashSet()
-            val missing = SeedFoods.all.filter { it.name !in existingNames }
-            if (missing.isNotEmpty()) foodItemDao.insertAll(missing)
+            val existingByKey =
+                foodItemDao
+                    .getBySource(FoodSource.SEED)
+                    .filter { it.seedKey != null }
+                    .associateBy { it.seedKey }
+            SeedFoods.all.forEach { seed ->
+                val existing = existingByKey[seed.seedKey]
+                if (existing == null) {
+                    foodItemDao.insert(seed)
+                } else {
+                    foodItemDao.update(
+                        existing.copy(
+                            name = seed.name,
+                            caloriesPer100g = seed.caloriesPer100g,
+                            proteinPer100g = seed.proteinPer100g,
+                            fatPer100g = seed.fatPer100g,
+                            carbsPer100g = seed.carbsPer100g,
+                            defaultServingGrams = seed.defaultServingGrams,
+                        ),
+                    )
+                }
+            }
+            settingsRepository.setSeedCatalogVersion(SeedFoods.CATALOG_VERSION)
         }
     }
 }

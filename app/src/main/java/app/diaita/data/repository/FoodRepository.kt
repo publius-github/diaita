@@ -5,14 +5,28 @@ import app.diaita.data.db.dao.FoodItemDao
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 import app.diaita.data.remote.OpenFoodFactsApi
-import app.diaita.data.remote.dto.OffSearchHit
+import app.diaita.data.remote.dto.OffProduct
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import retrofit2.HttpException
+import java.net.HttpURLConnection
 
 /** Outcome of an [FoodRepository.refreshFromOpenFoodFacts] call, so the UI can tell "no matches" apart from a failed request. */
 sealed class OffSearchOutcome {
     data object Success : OffSearchOutcome()
+
     data object NetworkError : OffSearchOutcome()
+}
+
+/** Outcome of a barcode scan lookup, so the UI can offer the right follow-up for each case. */
+sealed class BarcodeLookupOutcome {
+    data class Found(
+        val food: FoodItem,
+    ) : BarcodeLookupOutcome()
+
+    data object NotFound : BarcodeLookupOutcome()
+
+    data object NetworkError : BarcodeLookupOutcome()
 }
 
 class FoodRepository(
@@ -28,7 +42,7 @@ class FoodRepository(
     suspend fun isOnline(): Boolean = connectivityObserver.isOnline.first()
 
     /**
-     * Queries OpenFoodFacts and write-through caches any new results into Room, keyed by [OffSearchHit.code].
+     * Queries OpenFoodFacts and write-through caches any new results into Room, keyed by [OffProduct.code].
      * Callers don't need the cached rows directly — [search]'s Flow re-emits automatically once new rows land,
      * since Room invalidates the query on table writes. The return value only distinguishes success from a
      * failed request, so the UI can show "couldn't reach OpenFoodFacts" instead of silently looking like
@@ -37,32 +51,81 @@ class FoodRepository(
     suspend fun refreshFromOpenFoodFacts(query: String): OffSearchOutcome {
         if (query.isBlank()) return OffSearchOutcome.Success
         return runCatching { openFoodFactsApi.searchByName(query = query) }
-            .onSuccess { response -> response.hits.forEach { hit -> cacheHitIfNew(hit) } }
+            .onSuccess { response -> response.products.forEach { product -> cacheProductIfNew(product) } }
             .fold(
                 onSuccess = { OffSearchOutcome.Success },
                 onFailure = { OffSearchOutcome.NetworkError },
             )
     }
 
-    private suspend fun cacheHitIfNew(hit: OffSearchHit) {
-        val offId = hit.code ?: return
-        val name = hit.productName?.takeIf { it.isNotBlank() } ?: return
-        val calories = hit.nutriments?.energyKcal100g ?: return
+    private suspend fun cacheProductIfNew(product: OffProduct) {
+        val offId = product.code ?: return
+        val name = product.productName?.takeIf { it.isNotBlank() } ?: return
+        val calories = product.nutriments?.energyKcal100g ?: return
         if (foodItemDao.getByOffId(offId) != null) return
 
         foodItemDao.insert(
             FoodItem(
                 name = name,
-                brand = hit.brands?.firstOrNull(),
+                brand = firstBrand(product.brands),
                 barcode = offId,
                 caloriesPer100g = calories,
-                proteinPer100g = hit.nutriments.proteins100g ?: 0.0,
-                fatPer100g = hit.nutriments.fat100g ?: 0.0,
-                carbsPer100g = hit.nutriments.carbohydrates100g ?: 0.0,
+                proteinPer100g = product.nutriments.proteins100g ?: 0.0,
+                fatPer100g = product.nutriments.fat100g ?: 0.0,
+                carbsPer100g = product.nutriments.carbohydrates100g ?: 0.0,
                 source = FoodSource.OPENFOODFACTS,
                 offId = offId,
             ),
         )
+    }
+
+    private fun firstBrand(brands: String?): String? =
+        brands
+            ?.substringBefore(',')
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+
+    /**
+     * Resolves a scanned barcode to a food: local cache first (any source), then the
+     * OpenFoodFacts product API with write-through caching. Unknown barcodes surface as
+     * [BarcodeLookupOutcome.NotFound] whether OFF reports them via `status = 0` or HTTP 404.
+     */
+    suspend fun lookupByBarcode(barcode: String): BarcodeLookupOutcome {
+        foodItemDao.getByBarcode(barcode)?.let { return BarcodeLookupOutcome.Found(it) }
+        return runCatching { openFoodFactsApi.productByBarcode(barcode) }
+            .fold(
+                onSuccess = { response ->
+                    val product = response.product
+                    val name = product?.productName?.takeIf { it.isNotBlank() }
+                    val calories = product?.nutriments?.energyKcal100g
+                    if (response.status != 1 || product == null || name == null || calories == null) {
+                        BarcodeLookupOutcome.NotFound
+                    } else {
+                        val id =
+                            foodItemDao.insert(
+                                FoodItem(
+                                    name = name,
+                                    brand = firstBrand(product.brands),
+                                    barcode = barcode,
+                                    caloriesPer100g = calories,
+                                    proteinPer100g = product.nutriments.proteins100g ?: 0.0,
+                                    fatPer100g = product.nutriments.fat100g ?: 0.0,
+                                    carbsPer100g = product.nutriments.carbohydrates100g ?: 0.0,
+                                    source = FoodSource.OPENFOODFACTS,
+                                    offId = product.code ?: barcode,
+                                ),
+                            )
+                        BarcodeLookupOutcome.Found(checkNotNull(foodItemDao.getById(id)))
+                    }
+                },
+                onFailure = { error ->
+                    if (error is HttpException && error.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+                        BarcodeLookupOutcome.NotFound
+                    } else {
+                        BarcodeLookupOutcome.NetworkError
+                    }
+                },
+            )
     }
 
     suspend fun addManualFood(
@@ -71,14 +134,15 @@ class FoodRepository(
         proteinPer100g: Double,
         fatPer100g: Double,
         carbsPer100g: Double,
-    ): Long = foodItemDao.insert(
-        FoodItem(
-            name = name,
-            caloriesPer100g = caloriesPer100g,
-            proteinPer100g = proteinPer100g,
-            fatPer100g = fatPer100g,
-            carbsPer100g = carbsPer100g,
-            source = FoodSource.MANUAL,
-        ),
-    )
+    ): Long =
+        foodItemDao.insert(
+            FoodItem(
+                name = name,
+                caloriesPer100g = caloriesPer100g,
+                proteinPer100g = proteinPer100g,
+                fatPer100g = fatPer100g,
+                carbsPer100g = carbsPer100g,
+                source = FoodSource.MANUAL,
+            ),
+        )
 }

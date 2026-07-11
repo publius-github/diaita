@@ -38,6 +38,6 @@ interface FoodItemDao {
     @Query("SELECT COUNT(*) FROM food_items")
     suspend fun count(): Int
 
-    @Query("SELECT name FROM food_items WHERE source = :source")
-    suspend fun getNamesBySource(source: FoodSource): List<String>
+    @Query("SELECT * FROM food_items WHERE source = :source")
+    suspend fun getBySource(source: FoodSource): List<FoodItem>
 }

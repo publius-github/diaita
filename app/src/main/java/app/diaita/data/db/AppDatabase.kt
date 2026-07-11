@@ -19,6 +19,7 @@ import app.diaita.data.db.entities.MealPresetItem
 import app.diaita.data.db.entities.MonthlyAggregate
 import app.diaita.data.db.entities.WeightEntry
 import app.diaita.data.seed.SeedDatabaseCallback
+import app.diaita.data.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 
 @Database(
@@ -31,34 +32,46 @@ import kotlinx.coroutines.CoroutineScope
         WeightEntry::class,
         MonthlyAggregate::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun foodItemDao(): FoodItemDao
+
     abstract fun diaryEntryDao(): DiaryEntryDao
+
     abstract fun mealPresetDao(): MealPresetDao
+
     abstract fun dailyGoalDao(): DailyGoalDao
+
     abstract fun weightEntryDao(): WeightEntryDao
+
     abstract fun monthlyAggregateDao(): MonthlyAggregateDao
 
     companion object {
-        @Volatile private var INSTANCE: AppDatabase? = null
+        const val DATABASE_NAME = "calorie_counter.db"
 
-        fun getInstance(context: Context, appScope: CoroutineScope): AppDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "calorie_counter.db",
-                )
-                    .addCallback(SeedDatabaseCallback(appScope) { INSTANCE!! })
-                    // No real user data to preserve yet at this stage of development — just recreate on
-                    // schema changes instead of writing Migrations for a still-actively-evolving schema.
-                    .fallbackToDestructiveMigration()
+        @Volatile private var instance: AppDatabase? = null
+
+        fun getInstance(
+            context: Context,
+            appScope: CoroutineScope,
+        ): AppDatabase =
+            instance ?: synchronized(this) {
+                instance ?: Room
+                    .databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        DATABASE_NAME,
+                    ).addCallback(
+                        SeedDatabaseCallback(
+                            appScope,
+                            SettingsRepository(context.applicationContext),
+                        ) { instance!! },
+                    ).addMigrations(*Migrations.all)
                     .build()
-                    .also { INSTANCE = it }
+                    .also { instance = it }
             }
     }
 }

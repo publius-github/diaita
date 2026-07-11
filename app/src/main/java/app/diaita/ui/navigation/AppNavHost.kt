@@ -35,14 +35,19 @@ import app.diaita.ui.presets.PresetListScreen
 import app.diaita.ui.settings.BackupScreen
 import app.diaita.ui.settings.SettingsScreen
 
-private data class BottomNavItem(val screen: Screen, val labelRes: Int, val icon: ImageVector)
-
-private val bottomNavItems = listOf(
-    BottomNavItem(Screen.Diary, R.string.nav_today, Icons.Filled.Today),
-    BottomNavItem(Screen.PresetList, R.string.nav_presets, Icons.Filled.List),
-    BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
-    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
+private data class BottomNavItem(
+    val screen: Screen,
+    val labelRes: Int,
+    val icon: ImageVector,
 )
+
+private val bottomNavItems =
+    listOf(
+        BottomNavItem(Screen.Diary, R.string.nav_today, Icons.Filled.Today),
+        BottomNavItem(Screen.PresetList, R.string.nav_presets, Icons.Filled.List),
+        BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
+        BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
+    )
 
 @Composable
 fun AppNavHost(navController: NavHostController = rememberNavController()) {
@@ -78,7 +83,10 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(Screen.Diary.route) {
-                DiaryScreen(onAddFoodClick = { navController.navigate(Screen.AddFood.route) })
+                DiaryScreen(
+                    onAddFoodClick = { navController.navigate(Screen.AddFood.route) },
+                    onOpenGoals = { navController.navigate(Screen.Goals.route) },
+                )
             }
             composable(Screen.AddFood.route) {
                 AddFoodScreen(onDone = { navController.popBackStack() })
@@ -100,12 +108,13 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             }
             composable(
                 route = Screen.PresetEdit.route,
-                arguments = listOf(
-                    navArgument("presetId") {
-                        type = NavType.LongType
-                        defaultValue = -1L
-                    },
-                ),
+                arguments =
+                    listOf(
+                        navArgument("presetId") {
+                            type = NavType.LongType
+                            defaultValue = -1L
+                        },
+                    ),
             ) { entry ->
                 val presetId = entry.arguments?.getLong("presetId") ?: -1L
                 PresetEditScreen(

@@ -46,9 +46,10 @@ class GoalsViewModel(
                             proteinTarget = goal.proteinTargetG.toString(),
                             fatTarget = goal.fatTargetG.toString(),
                             carbsTarget = goal.carbsTargetG.toString(),
-                            weightTarget = goal.weightTargetKg
-                                ?.let { kg -> String.format(Locale.US, "%.1f", kg) }
-                                .orEmpty(),
+                            weightTarget =
+                                goal.weightTargetKg
+                                    ?.let { kg -> String.format(Locale.US, "%.1f", kg) }
+                                    .orEmpty(),
                         )
                     }
                 }
@@ -57,9 +58,13 @@ class GoalsViewModel(
     }
 
     fun onCalorieTargetChanged(value: String) = _uiState.update { it.copy(calorieTarget = value, hasError = false) }
+
     fun onProteinTargetChanged(value: String) = _uiState.update { it.copy(proteinTarget = value, hasError = false) }
+
     fun onFatTargetChanged(value: String) = _uiState.update { it.copy(fatTarget = value, hasError = false) }
+
     fun onCarbsTargetChanged(value: String) = _uiState.update { it.copy(carbsTarget = value, hasError = false) }
+
     fun onWeightTargetChanged(value: String) = _uiState.update { it.copy(weightTarget = value, hasError = false) }
 
     /**
@@ -101,4 +106,9 @@ class GoalsViewModel(
         }
     }
 
+    /** Applies a calculator suggestion: sets the calorie target and derives macros via the quick split. */
+    fun applyCalculatedCalories(calories: Int) {
+        _uiState.update { it.copy(calorieTarget = calories.toString(), hasError = false) }
+        applyQuickSplit()
+    }
 }

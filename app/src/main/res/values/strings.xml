@@ -8,8 +8,8 @@
     <string name="save">Save</string>
     <string name="log">Log</string>
     <string name="undo">Undo</string>
-    <string name="deleted">Deleted</string>
     <string name="back">Back</string>
+    <string name="close">Close</string>
 
     <!-- Bottom nav -->
     <string name="nav_today">Today</string>
@@ -26,9 +26,9 @@
     <string name="macro_carbs_short">C</string>
     <string name="macro_goal_reached">Goal reached</string>
     <string name="diary_empty">Nothing logged yet today — tap + to add your first food.</string>
+    <string name="first_run_goal_body">Set a daily calorie goal to make the ring and day-part bars meaningful.</string>
+    <string name="first_run_goal_button">Set goal</string>
     <string name="add_food">Add food</string>
-    <string name="delete_confirm_title">Delete \"%1$s\"?</string>
-    <string name="delete_confirm_body">You can undo this from the snackbar right after.</string>
     <string name="diary_food_subtitle">%1$s · %2$d g — %3$d kcal</string>
     <string name="diary_preset_subtitle">%1$s · %2$d items — %3$d kcal</string>
     <string name="deleted_named">Deleted \"%1$s\"</string>
@@ -39,17 +39,27 @@
     <string name="day_part_evening">Evening</string>
     <string name="day_part_kcal">%1$d / %2$d</string>
 
-    <!-- Pace message (rotates daily within each mood) -->
-    <string name="pace_empty">Clean slate. Log your first meal and let\'s make it a good day.</string>
+    <!-- Pace message (random pick within each mood) -->
+    <string name="pace_empty_1">Clean slate. Log your first meal and let\'s make it a good day.</string>
+    <string name="pace_empty_2">Nothing logged yet. The day is full of possibilities — mostly edible ones.</string>
+    <string name="pace_empty_3">Empty diary, full potential. What\'s for breakfast?</string>
+    <string name="pace_empty_4">Zero kcal so far. Even the fridge is getting suspicious.</string>
+    <string name="pace_empty_5">Your diary is emptier than the fridge on Sunday night. Fix one of those.</string>
     <string name="pace_ok_1">Right on track — keep it rolling.</string>
     <string name="pace_ok_2">Nice pacing. Your future self approves.</string>
     <string name="pace_ok_3">Steady as she goes. Looking good.</string>
+    <string name="pace_ok_4">Textbook day so far. Frame it.</string>
+    <string name="pace_ok_5">Balanced like a Greek philosopher. Nothing in excess.</string>
     <string name="pace_warn_1">Easy, champ — that was more than the plan allows for this time of day.</string>
     <string name="pace_warn_2">You\'re ahead of schedule. Maybe let the next snack walk on by.</string>
     <string name="pace_warn_3">Slow down — at this pace dinner will be a glass of water.</string>
+    <string name="pace_warn_4">That time-of-day budget is gone. The rest of the day is on thin ice.</string>
+    <string name="pace_warn_5">Front-loading calories, are we? Your evening self just filed a complaint.</string>
     <string name="pace_over_1">Goal obliterated. Put the fork down and step away from the fridge.</string>
     <string name="pace_over_2">You didn\'t cross the limit, you drove a truck through it. Kitchen\'s closed.</string>
     <string name="pace_over_3">That\'s enough. The couch and a glass of water are your only friends tonight.</string>
+    <string name="pace_over_4">Impressive. The goal never stood a chance. Neither did the snacks.</string>
+    <string name="pace_over_5">Just apologize to the scale in advance and go to bed.</string>
 
     <!-- Meal slots -->
     <string name="meal_breakfast">Breakfast</string>
@@ -84,12 +94,24 @@
     <string name="no_presets_addfood">No presets yet — create one from the Presets tab.</string>
     <string name="preset_items_kcal_tap_to_log">%1$d items · %2$d kcal — tap to log</string>
 
-    <!-- Quantity dialog -->
+    <!-- Barcode scanning -->
+    <string name="scan_barcode">Scan barcode</string>
+    <string name="scan_prompt">Point the camera at the product barcode</string>
+    <string name="scan_not_found">Product not found — try searching by name or add it manually</string>
+
+    <!-- Repeat yesterday -->
+    <string name="repeat_yesterday">Repeat yesterday</string>
+    <string name="nothing_to_copy">Yesterday is empty — nothing to copy</string>
+
+    <!-- Quantity sheet -->
     <string name="quantity_grams">Quantity (grams)</string>
-    <string name="use_default_serving">Use default serving (%1$d g)</string>
+    <string name="hundred_grams_chip">100 g</string>
+    <string name="serving_chip">Serving (%1$d g)</string>
+    <string name="kcal_estimate">≈ %1$d kcal</string>
 
     <!-- Presets -->
     <string name="new_preset">New preset</string>
+    <string name="edit_preset">Edit preset</string>
     <string name="no_presets_yet">No presets yet — tap + to create one (e.g. \"My usual breakfast\").</string>
     <string name="items_count_kcal">%1$d items · %2$d kcal</string>
     <string name="log_preset">Log preset</string>
@@ -97,7 +119,7 @@
     <string name="preset_name_label">Preset name (e.g. \"My usual breakfast\")</string>
     <string name="items_in_preset">Items in this preset</string>
     <string name="no_items_yet">None yet — tap \"Add food\" below to add one.</string>
-    <string name="item_with_grams">%1$s — %2$d g</string>
+    <string name="item_grams_kcal">%1$d g — %2$d kcal</string>
     <string name="remove">Remove</string>
     <string name="search_to_add">Search foods to add</string>
     <string name="save_preset">Save preset</string>
@@ -116,14 +138,50 @@
     <string name="goal_saved">Goal saved</string>
     <string name="backup_title">Backup</string>
 
+    <!-- Goal calculator -->
+    <string name="calc_open">Not sure? Calculate for me</string>
+    <string name="calc_title">Calorie calculator</string>
+    <string name="calc_sex_male">Male</string>
+    <string name="calc_sex_female">Female</string>
+    <string name="calc_age">Age</string>
+    <string name="calc_height">Height (cm)</string>
+    <string name="calc_weight">Weight (kg)</string>
+    <string name="calc_activity">Activity</string>
+    <string name="activity_sedentary">Sedentary</string>
+    <string name="activity_light">Light</string>
+    <string name="activity_moderate">Moderate</string>
+    <string name="activity_active">Active</string>
+    <string name="calc_plan">Goal</string>
+    <string name="plan_lose">Lose weight</string>
+    <string name="plan_maintain">Maintain</string>
+    <string name="plan_gain">Gain</string>
+    <string name="calc_result">≈ %1$d kcal/day</string>
+    <string name="apply">Apply</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_goals">Daily goals</string>
     <string name="settings_goals_desc">Calories, macros and weight target</string>
-    <string name="settings_backup_desc">Export your diary to a CSV file</string>
+    <string name="settings_backup_desc">Back up, restore or export your data</string>
     <string name="settings_off_desc">Look up foods online while searching</string>
     <string name="export_csv">Export diary (CSV)</string>
     <string name="diary_exported">Diary exported</string>
+    <string name="backup_full_hint">A full backup contains your entire diary, foods, presets, goals and weight history in a single file.</string>
+    <string name="backup_csv_hint">CSV export is for viewing in a spreadsheet — it cannot be restored.</string>
+    <string name="backup_export_db">Export full backup</string>
+    <string name="backup_exported">Backup saved</string>
+    <string name="backup_export_failed">Could not save the backup</string>
+    <string name="backup_restore">Restore from backup</string>
+    <string name="restore">Restore</string>
+    <string name="restore_confirm_title">Restore from backup?</string>
+    <string name="restore_confirm_body">This replaces all current data with the backup. The app will restart afterwards.</string>
+    <string name="restore_failed_invalid">That file is not a valid Diaita backup</string>
+    <string name="restore_failed_newer">This backup was made by a newer app version — update the app first</string>
+    <string name="restore_failed_generic">Restore failed — nothing was changed</string>
+    <string name="settings_reminder">Daily reminder</string>
+    <string name="settings_reminder_desc">Evening nudge when nothing is logged yet</string>
+    <string name="reminder_channel">Reminders</string>
+    <string name="reminder_text">You haven\'t logged anything today — it takes 30 seconds.</string>
 
     <!-- History -->
     <string name="history_title_days">Last %1$d days</string>
@@ -142,6 +200,8 @@
     <string name="weight_target_line">Target: %1$s kg</string>
     <string name="weight_error">Enter a valid weight</string>
     <string name="monthly_averages">Monthly averages</string>
+    <string name="chart_calories_a11y">Calorie bar chart for the last %1$d days, average %2$d kcal per day</string>
+    <string name="chart_weight_a11y">Weight chart, latest %1$s kg</string>
     <string name="monthly_avg_row">%1$s — avg %2$d kcal/day</string>
 
     <!-- Day detail -->

@@ -17,7 +17,10 @@ data class PresetWithItems(
     val items: List<MealPresetItem>,
 )
 
-data class PresetCalories(val presetId: Long, val calories: Double)
+data class PresetCalories(
+    val presetId: Long,
+    val calories: Double,
+)
 
 @Dao
 interface MealPresetDao {
@@ -34,7 +37,10 @@ interface MealPresetDao {
     suspend fun deleteItem(item: MealPresetItem)
 
     @Query("UPDATE meal_presets SET name = :name WHERE id = :presetId")
-    suspend fun renamePreset(presetId: Long, name: String)
+    suspend fun renamePreset(
+        presetId: Long,
+        name: String,
+    )
 
     @Query("DELETE FROM meal_preset_items WHERE presetId = :presetId")
     suspend fun deleteItemsForPreset(presetId: Long)

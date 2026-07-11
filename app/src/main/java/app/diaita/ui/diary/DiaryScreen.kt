@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -53,38 +54,48 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.ui.AppViewModelProvider
-import app.diaita.ui.addfood.QuantityDialog
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
+import app.diaita.ui.common.MealSlotPicker
+import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.label
 import app.diaita.util.DateUtils
-import java.time.LocalDate
 import java.util.Locale
 
 @Composable
 fun DiaryScreen(
     onAddFoodClick: () -> Unit,
+    onOpenGoals: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val confirmDeleteRow by viewModel.confirmDeleteRow.collectAsStateWithLifecycle()
     val editingEntry by viewModel.editingEntry.collectAsStateWithLifecycle()
+    val editingPresetRow by viewModel.editingPresetRow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
     var showWeightDialog by remember { mutableStateOf(false) }
-    val deletedMessage = stringResource(R.string.deleted)
     val undoLabel = stringResource(R.string.undo)
 
     LaunchedEffect(Unit) {
         viewModel.undoEvent.collect { event ->
-            val result = snackbarHostState.showSnackbar(
-                message = deletedMessage,
-                actionLabel = undoLabel,
-                duration = SnackbarDuration.Short,
-            )
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.deleted_named, event.title),
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Short,
+                )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.undoDelete(event.entries)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.copyResultEvent.collect { copied ->
+            if (copied == 0) {
+                snackbarHostState.showSnackbar(context.getString(R.string.nothing_to_copy))
             }
         }
     }
@@ -99,12 +110,17 @@ fun DiaryScreen(
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(16.dp),
         ) {
             DailyTotalsCard(uiState)
+            if (uiState.loaded && uiState.goalCalories == null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                SetGoalBanner(onOpenGoals = onOpenGoals)
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = { showWeightDialog = true }) {
@@ -127,18 +143,28 @@ fun DiaryScreen(
                     stringResource(R.string.diary_empty),
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(onClick = viewModel::copyYesterday) {
+                    Text(stringResource(R.string.repeat_yesterday))
+                }
             } else {
-                val showHeaders = uiState.sections.size > 1 ||
-                    uiState.sections.firstOrNull()?.slot != MealSlot.UNSPECIFIED
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val showHeaders =
+                    uiState.sections.size > 1 ||
+                        uiState.sections.firstOrNull()?.slot != MealSlot.UNSPECIFIED
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    // clearance so the FAB never covers the last entry
+                    contentPadding = PaddingValues(bottom = 88.dp),
+                ) {
                     uiState.sections.forEach { section ->
                         if (showHeaders) {
                             item(key = "header_${section.slot}") {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 4.dp)
-                                        .animateItem(),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp)
+                                            .animateItem(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
@@ -161,14 +187,10 @@ fun DiaryScreen(
                             Box(modifier = Modifier.animateItem()) {
                                 DiaryRowCard(
                                     row = row,
-                                    onClick = if (row is DiaryRow.Food) {
-                                        { viewModel.requestEdit(row) }
-                                    } else {
-                                        null
-                                    },
+                                    onClick = { viewModel.requestEdit(row) },
                                     onDelete = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.requestDelete(row)
+                                        viewModel.delete(row)
                                     },
                                 )
                             }
@@ -189,26 +211,8 @@ fun DiaryScreen(
         )
     }
 
-    confirmDeleteRow?.let { row ->
-        val title = when (row) {
-            is DiaryRow.Food -> row.entryWithFood.food.name
-            is DiaryRow.Preset -> row.presetName
-        }
-        AlertDialog(
-            onDismissRequest = viewModel::cancelDelete,
-            title = { Text(stringResource(R.string.delete_confirm_title, title)) },
-            text = { Text(stringResource(R.string.delete_confirm_body)) },
-            confirmButton = {
-                Button(onClick = viewModel::confirmDelete) { Text(stringResource(R.string.delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::cancelDelete) { Text(stringResource(R.string.cancel)) }
-            },
-        )
-    }
-
     editingEntry?.let { entryWithFood ->
-        QuantityDialog(
+        QuantitySheet(
             food = entryWithFood.food,
             initialQuantityGrams = entryWithFood.entry.quantityGrams,
             initialMealSlot = entryWithFood.entry.mealSlot,
@@ -218,13 +222,63 @@ fun DiaryScreen(
             onConfirm = { grams, slot -> viewModel.confirmEdit(grams, slot) },
         )
     }
+
+    editingPresetRow?.let { presetRow ->
+        var selectedSlot by remember(presetRow) {
+            mutableStateOf(
+                presetRow.entries
+                    .first()
+                    .entry.mealSlot,
+            )
+        }
+        AlertDialog(
+            onDismissRequest = viewModel::cancelEdit,
+            title = { Text(presetRow.presetName) },
+            text = {
+                MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmPresetSlot(selectedSlot) }) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::cancelEdit) { Text(stringResource(R.string.cancel)) }
+            },
+        )
+    }
+}
+
+/** Nudges a fresh install towards setting a calorie goal — the ring is meaningless without one. */
+@Composable
+private fun SetGoalBanner(onOpenGoals: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier =
+                Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.first_run_goal_body),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onOpenGoals) {
+                Text(stringResource(R.string.first_run_goal_button))
+            }
+        }
+    }
 }
 
 @Composable
 private fun DailyTotalsCard(uiState: DiaryUiState) {
-    val isOverGoal = uiState.goalCalories != null &&
-        uiState.goalCalories > 0 &&
-        uiState.totalCalories > uiState.goalCalories
+    val isOverGoal =
+        uiState.goalCalories != null &&
+            uiState.goalCalories > 0 &&
+            uiState.totalCalories > uiState.goalCalories
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -263,8 +317,9 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 Spacer(modifier = Modifier.height(8.dp))
                 PaceMessage(uiState = uiState, goalCalories = uiState.goalCalories)
             }
-            val hasMacroGoals = listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
-                .any { it > 0 }
+            val hasMacroGoals =
+                listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
+                    .any { it > 0 }
             if (hasMacroGoals) {
                 Spacer(modifier = Modifier.height(12.dp))
                 MacroBar(
@@ -294,34 +349,69 @@ private enum class PaceMood { EMPTY, ON_TRACK, AHEAD, OVER }
 /**
  * A one-liner "coach" reaction to today's pace: encouraging while on plan, wary once a
  * day-part budget is exceeded, and openly rude once the whole daily goal is blown.
- * Within each mood the phrase rotates by day of year so it doesn't get stale.
+ * A random phrase is picked from the mood's pool and stays put until the mood changes.
  */
 @Composable
-private fun PaceMessage(uiState: DiaryUiState, goalCalories: Int) {
-    val mood = when {
-        uiState.totalCalories > goalCalories -> PaceMood.OVER
-        DayPart.entries.any { part ->
-            (uiState.dayPartCalories[part] ?: 0.0) > goalCalories * part.share
-        } -> PaceMood.AHEAD
-        uiState.isEmpty -> PaceMood.EMPTY
-        else -> PaceMood.ON_TRACK
-    }
-    val variants = when (mood) {
-        PaceMood.EMPTY -> listOf(R.string.pace_empty)
-        PaceMood.ON_TRACK -> listOf(R.string.pace_ok_1, R.string.pace_ok_2, R.string.pace_ok_3)
-        PaceMood.AHEAD -> listOf(R.string.pace_warn_1, R.string.pace_warn_2, R.string.pace_warn_3)
-        PaceMood.OVER -> listOf(R.string.pace_over_1, R.string.pace_over_2, R.string.pace_over_3)
-    }
-    val dayOfYear = remember { LocalDate.now().dayOfYear }
+private fun PaceMessage(
+    uiState: DiaryUiState,
+    goalCalories: Int,
+) {
+    val mood =
+        when {
+            uiState.totalCalories > goalCalories -> PaceMood.OVER
+            DayPart.entries.any { part ->
+                (uiState.dayPartCalories[part] ?: 0.0) > goalCalories * part.share
+            } -> PaceMood.AHEAD
+            uiState.isEmpty -> PaceMood.EMPTY
+            else -> PaceMood.ON_TRACK
+        }
+    val messageRes =
+        remember(mood) {
+            when (mood) {
+                PaceMood.EMPTY ->
+                    listOf(
+                        R.string.pace_empty_1,
+                        R.string.pace_empty_2,
+                        R.string.pace_empty_3,
+                        R.string.pace_empty_4,
+                        R.string.pace_empty_5,
+                    )
+                PaceMood.ON_TRACK ->
+                    listOf(
+                        R.string.pace_ok_1,
+                        R.string.pace_ok_2,
+                        R.string.pace_ok_3,
+                        R.string.pace_ok_4,
+                        R.string.pace_ok_5,
+                    )
+                PaceMood.AHEAD ->
+                    listOf(
+                        R.string.pace_warn_1,
+                        R.string.pace_warn_2,
+                        R.string.pace_warn_3,
+                        R.string.pace_warn_4,
+                        R.string.pace_warn_5,
+                    )
+                PaceMood.OVER ->
+                    listOf(
+                        R.string.pace_over_1,
+                        R.string.pace_over_2,
+                        R.string.pace_over_3,
+                        R.string.pace_over_4,
+                        R.string.pace_over_5,
+                    )
+            }.random()
+        }
     Text(
-        stringResource(variants[dayOfYear % variants.size]),
+        stringResource(messageRes),
         style = MaterialTheme.typography.bodySmall,
         fontStyle = FontStyle.Italic,
-        color = when (mood) {
-            PaceMood.OVER -> MaterialTheme.colorScheme.error
-            PaceMood.AHEAD -> MaterialTheme.colorScheme.tertiary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        },
+        color =
+            when (mood) {
+                PaceMood.OVER -> MaterialTheme.colorScheme.error
+                PaceMood.AHEAD -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            },
     )
 }
 
@@ -333,7 +423,10 @@ private fun PaceMessage(uiState: DiaryUiState, goalCalories: Int) {
  * suggests for that part of the day.
  */
 @Composable
-private fun DayPartBalanceBar(dayPartCalories: Map<DayPart, Double>, goalCalories: Int) {
+private fun DayPartBalanceBar(
+    dayPartCalories: Map<DayPart, Double>,
+    goalCalories: Int,
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         DayPart.entries.forEach { part ->
             DayPartSegment(
@@ -347,15 +440,21 @@ private fun DayPartBalanceBar(dayPartCalories: Map<DayPart, Double>, goalCalorie
 }
 
 @Composable
-private fun DayPartSegment(part: DayPart, consumed: Double, target: Int, modifier: Modifier = Modifier) {
+private fun DayPartSegment(
+    part: DayPart,
+    consumed: Double,
+    target: Int,
+    modifier: Modifier = Modifier,
+) {
     val isOver = target > 0 && consumed > target
     val progress = if (target > 0) (consumed / target).toFloat().coerceIn(0f, 1f) else 0f
     Column(modifier = modifier) {
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
             color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
         Row(
@@ -366,31 +465,37 @@ private fun DayPartSegment(part: DayPart, consumed: Double, target: Int, modifie
             Text(
                 stringResource(R.string.day_part_kcal, consumed.toInt(), target),
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isOver) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                color =
+                    if (isOver) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
             )
         }
     }
 }
 
 @Composable
-private fun DayPart.label(): String = stringResource(
-    when (this) {
-        DayPart.MORNING -> R.string.day_part_morning
-        DayPart.DAY -> R.string.day_part_day
-        DayPart.EVENING -> R.string.day_part_evening
-    },
-)
+private fun DayPart.label(): String =
+    stringResource(
+        when (this) {
+            DayPart.MORNING -> R.string.day_part_morning
+            DayPart.DAY -> R.string.day_part_day
+            DayPart.EVENING -> R.string.day_part_evening
+        },
+    )
 
 /**
  * A small per-macro progress bar. Progress is clamped at 100% and the color never changes on
  * exceeding the target (per user preference) — a green check circle marks a reached goal instead.
  */
 @Composable
-private fun MacroBar(label: String, consumed: Double, targetG: Int?) {
+private fun MacroBar(
+    label: String,
+    consumed: Double,
+    targetG: Int?,
+) {
     if (targetG == null || targetG <= 0) return
     val progress = (consumed / targetG).toFloat().coerceIn(0f, 1f)
     val reached = consumed >= targetG
@@ -403,9 +508,10 @@ private fun MacroBar(label: String, consumed: Double, targetG: Int?) {
         )
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier
-                .weight(1f)
-                .height(6.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(6.dp),
         )
         Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterEnd) {
             if (reached) {
@@ -420,43 +526,58 @@ private fun MacroBar(label: String, consumed: Double, targetG: Int?) {
     }
 }
 
-private fun rowKey(row: DiaryRow): Long = when (row) {
-    is DiaryRow.Food -> row.entryWithFood.entry.id
-    is DiaryRow.Preset -> row.entries.first().entry.id
-}
+private fun rowKey(row: DiaryRow): Long =
+    when (row) {
+        is DiaryRow.Food -> row.entryWithFood.entry.id
+        is DiaryRow.Preset ->
+            row.entries
+                .first()
+                .entry.id
+    }
 
 @Composable
-private fun DiaryRowCard(row: DiaryRow, onClick: (() -> Unit)?, onDelete: () -> Unit) {
-    val title = when (row) {
-        is DiaryRow.Food -> row.entryWithFood.food.name
-        is DiaryRow.Preset -> row.presetName
-    }
+private fun DiaryRowCard(
+    row: DiaryRow,
+    onClick: (() -> Unit)?,
+    onDelete: () -> Unit,
+) {
+    val title =
+        when (row) {
+            is DiaryRow.Food -> row.entryWithFood.food.name
+            is DiaryRow.Preset -> row.presetName
+        }
     val time = DateUtils.formatTime(row.loggedAt)
-    val subtitle = when (row) {
-        is DiaryRow.Food -> stringResource(
-            R.string.diary_food_subtitle,
-            time,
-            row.entryWithFood.entry.quantityGrams.toInt(),
-            row.calories.toInt(),
-        )
-        is DiaryRow.Preset -> stringResource(
-            R.string.diary_preset_subtitle,
-            time,
-            row.entries.size,
-            row.calories.toInt(),
-        )
-    }
-    val cardModifier = if (onClick != null) {
-        Modifier.fillMaxWidth().clickable(onClick = onClick)
-    } else {
-        Modifier.fillMaxWidth()
-    }
+    val subtitle =
+        when (row) {
+            is DiaryRow.Food ->
+                stringResource(
+                    R.string.diary_food_subtitle,
+                    time,
+                    row.entryWithFood.entry.quantityGrams
+                        .toInt(),
+                    row.calories.toInt(),
+                )
+            is DiaryRow.Preset ->
+                stringResource(
+                    R.string.diary_preset_subtitle,
+                    time,
+                    row.entries.size,
+                    row.calories.toInt(),
+                )
+        }
+    val cardModifier =
+        if (onClick != null) {
+            Modifier.fillMaxWidth().clickable(onClick = onClick)
+        } else {
+            Modifier.fillMaxWidth()
+        }
 
     Card(modifier = cardModifier) {
         Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column {

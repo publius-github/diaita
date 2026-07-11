@@ -38,7 +38,10 @@ class PresetRepository(
 
     suspend fun getWithItems(presetId: Long): PresetWithItems? = mealPresetDao.getWithItems(presetId)
 
-    suspend fun createPreset(name: String, items: List<Pair<Long, Double>>): Long =
+    suspend fun createPreset(
+        name: String,
+        items: List<Pair<Long, Double>>,
+    ): Long =
         database.withTransaction {
             val presetId = mealPresetDao.insertPreset(MealPreset(name = name))
             items.forEach { (foodItemId, quantityGrams) ->
@@ -50,7 +53,11 @@ class PresetRepository(
         }
 
     /** Replaces the preset's name and full item list in one transaction (simplest correct update path). */
-    suspend fun updatePreset(presetId: Long, name: String, items: List<Pair<Long, Double>>) {
+    suspend fun updatePreset(
+        presetId: Long,
+        name: String,
+        items: List<Pair<Long, Double>>,
+    ) {
         database.withTransaction {
             mealPresetDao.renamePreset(presetId, name)
             mealPresetDao.deleteItemsForPreset(presetId)
@@ -77,7 +84,10 @@ class PresetRepository(
      * tagged with [DiaryEntry.sourcePresetId]/[DiaryEntry.sourcePresetName] and a shared [loggedAt]
      * timestamp so the Diary screen can display them as one grouped row instead of N separate foods.
      */
-    suspend fun logPreset(presetId: Long, logDate: String) {
+    suspend fun logPreset(
+        presetId: Long,
+        logDate: String,
+    ) {
         database.withTransaction {
             val presetWithItems = mealPresetDao.getWithItems(presetId) ?: return@withTransaction
             val diaryEntryDao = database.diaryEntryDao()

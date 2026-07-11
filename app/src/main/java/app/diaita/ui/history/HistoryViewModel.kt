@@ -49,33 +49,34 @@ class HistoryViewModel(
     private val weightRepository: WeightRepository,
     monthlyAverages: Flow<List<MonthlyAggregate>>,
 ) : ViewModel() {
-
     private val selectedIndexFlow = MutableStateFlow<Int?>(null)
     private val rangeDaysFlow = MutableStateFlow(DEFAULT_RANGE_DAYS)
 
-    val uiState: StateFlow<HistoryUiState> = rangeDaysFlow.flatMapLatest { rangeDays ->
-        val toDate = LocalDate.now()
-        val fromDate = toDate.minusDays(rangeDays - 1L)
-        val fromIso = fromDate.format(ISO_FORMATTER)
-        val toIso = toDate.format(ISO_FORMATTER)
-        combine(
-            diaryRepository.historyTotals(fromIso, toIso),
-            goalRepository.getGoal(),
-            weightRepository.range(fromIso, toIso),
-            monthlyAverages,
-            selectedIndexFlow,
-        ) { totals, goal, weights, aggregates, selectedIndex ->
-            HistoryUiState(
-                rangeDays = rangeDays,
-                days = buildFullRange(fromDate, toDate, totals, goal?.calorieTarget),
-                goalCalories = goal?.calorieTarget,
-                weightTargetKg = goal?.weightTargetKg,
-                selectedIndex = selectedIndex,
-                weights = weights,
-                monthlyAverages = aggregates,
-            )
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryUiState())
+    val uiState: StateFlow<HistoryUiState> =
+        rangeDaysFlow
+            .flatMapLatest { rangeDays ->
+                val toDate = LocalDate.now()
+                val fromDate = toDate.minusDays(rangeDays - 1L)
+                val fromIso = fromDate.format(ISO_FORMATTER)
+                val toIso = toDate.format(ISO_FORMATTER)
+                combine(
+                    diaryRepository.historyTotals(fromIso, toIso),
+                    goalRepository.getGoal(),
+                    weightRepository.range(fromIso, toIso),
+                    monthlyAverages,
+                    selectedIndexFlow,
+                ) { totals, goal, weights, aggregates, selectedIndex ->
+                    HistoryUiState(
+                        rangeDays = rangeDays,
+                        days = buildFullRange(fromDate, toDate, totals, goal?.calorieTarget),
+                        goalCalories = goal?.calorieTarget,
+                        weightTargetKg = goal?.weightTargetKg,
+                        selectedIndex = selectedIndex,
+                        weights = weights,
+                        monthlyAverages = aggregates,
+                    )
+                }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryUiState())
 
     private fun buildFullRange(
         fromDate: LocalDate,

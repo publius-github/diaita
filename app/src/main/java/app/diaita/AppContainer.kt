@@ -1,6 +1,7 @@
 package app.diaita
 
 import android.content.Context
+import app.diaita.data.backup.DatabaseBackupManager
 import app.diaita.data.connectivity.ConnectivityObserver
 import app.diaita.data.db.AppDatabase
 import app.diaita.data.remote.OpenFoodFactsClient
@@ -15,7 +16,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
 /** Manual DI container: one instance per process, owned by [CalorieCounterApplication]. */
-class AppContainer(context: Context) {
+class AppContainer(
+    context: Context,
+) {
     val appScope = CoroutineScope(SupervisorJob())
 
     val database: AppDatabase = AppDatabase.getInstance(context, appScope)
@@ -32,4 +35,7 @@ class AppContainer(context: Context) {
     }
     val weightRepository: WeightRepository by lazy { WeightRepository(database.weightEntryDao()) }
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(context.applicationContext) }
+    val backupManager: DatabaseBackupManager by lazy {
+        DatabaseBackupManager(context.applicationContext, database)
+    }
 }

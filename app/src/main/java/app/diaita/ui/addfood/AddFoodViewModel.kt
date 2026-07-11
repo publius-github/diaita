@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.repository.BarcodeLookupOutcome
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.OffSearchOutcome
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.util.DateUtils
+import app.diaita.util.normalizedDecimalOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +22,8 @@ import kotlinx.coroutines.launch
 
 enum class AddFoodTab { FOODS, PRESETS }
 
+enum class ScanError { NOT_FOUND, NETWORK }
+
 data class AddFoodUiState(
     val selectedTab: AddFoodTab = AddFoodTab.FOODS,
     val showManualEntry: Boolean = false,
@@ -29,6 +33,8 @@ data class AddFoodUiState(
     val isOnline: Boolean = true,
     val openFoodFactsEnabled: Boolean = true,
     val searchHadNetworkError: Boolean = false,
+    val offSearching: Boolean = false,
+    val scanError: ScanError? = null,
     val foodPendingQuantity: FoodItem? = null,
     val manualName: String = "",
     val manualCalories: String = "",
@@ -44,7 +50,6 @@ class AddFoodViewModel(
     private val diaryRepository: DiaryRepository,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(AddFoodUiState())
     val uiState: StateFlow<AddFoodUiState> = _uiState.asStateFlow()
 
@@ -59,7 +64,8 @@ class AddFoodViewModel(
         }
         // Recently logged foods for the quick-access chip row.
         viewModelScope.launch {
-            diaryRepository.recentFoods()
+            diaryRepository
+                .recentFoods()
                 .collect { foods -> _uiState.update { it.copy(recentFoods = foods) } }
         }
         // The persisted OpenFoodFacts toggle is the single source of truth (DataStore).
@@ -75,12 +81,16 @@ class AddFoodViewModel(
                     val online = foodRepository.isOnline()
                     _uiState.update { it.copy(isOnline = online) }
                     if (online && _uiState.value.openFoodFactsEnabled && query.isNotBlank()) {
+                        _uiState.update { it.copy(offSearching = true) }
                         val outcome = foodRepository.refreshFromOpenFoodFacts(query)
                         _uiState.update {
-                            it.copy(searchHadNetworkError = outcome is OffSearchOutcome.NetworkError)
+                            it.copy(
+                                offSearching = false,
+                                searchHadNetworkError = outcome is OffSearchOutcome.NetworkError,
+                            )
                         }
                     } else {
-                        _uiState.update { it.copy(searchHadNetworkError = false) }
+                        _uiState.update { it.copy(searchHadNetworkError = false, offSearching = false) }
                     }
                 }
         }
@@ -91,15 +101,36 @@ class AddFoodViewModel(
     fun onShowManualEntryChanged(show: Boolean) = _uiState.update { it.copy(showManualEntry = show) }
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update { it.copy(searchQuery = query, scanError = null) }
         searchQueryFlow.value = query
+    }
+
+    fun onBarcodeScanned(barcode: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(scanError = null, offSearching = true) }
+            val outcome = foodRepository.lookupByBarcode(barcode)
+            _uiState.update { state ->
+                when (outcome) {
+                    is BarcodeLookupOutcome.Found ->
+                        state.copy(offSearching = false, foodPendingQuantity = outcome.food)
+                    BarcodeLookupOutcome.NotFound ->
+                        state.copy(offSearching = false, scanError = ScanError.NOT_FOUND)
+                    BarcodeLookupOutcome.NetworkError ->
+                        state.copy(offSearching = false, scanError = ScanError.NETWORK)
+                }
+            }
+        }
     }
 
     fun onFoodSelected(food: FoodItem) = _uiState.update { it.copy(foodPendingQuantity = food) }
 
     fun dismissQuantityDialog() = _uiState.update { it.copy(foodPendingQuantity = null) }
 
-    fun confirmQuantity(foodItemId: Long, quantityGrams: Double, mealSlot: MealSlot) {
+    fun confirmQuantity(
+        foodItemId: Long,
+        quantityGrams: Double,
+        mealSlot: MealSlot,
+    ) {
         viewModelScope.launch {
             diaryRepository.logFood(foodItemId, quantityGrams, DateUtils.today(), mealSlot)
             _uiState.update { it.copy(foodPendingQuantity = null, justLogged = true) }
@@ -107,17 +138,23 @@ class AddFoodViewModel(
     }
 
     fun onManualNameChanged(value: String) = _uiState.update { it.copy(manualName = value, manualHasError = false) }
-    fun onManualCaloriesChanged(value: String) = _uiState.update { it.copy(manualCalories = value, manualHasError = false) }
-    fun onManualProteinChanged(value: String) = _uiState.update { it.copy(manualProtein = value, manualHasError = false) }
+
+    fun onManualCaloriesChanged(value: String) =
+        _uiState.update { it.copy(manualCalories = value, manualHasError = false) }
+
+    fun onManualProteinChanged(value: String) =
+        _uiState.update { it.copy(manualProtein = value, manualHasError = false) }
+
     fun onManualFatChanged(value: String) = _uiState.update { it.copy(manualFat = value, manualHasError = false) }
+
     fun onManualCarbsChanged(value: String) = _uiState.update { it.copy(manualCarbs = value, manualHasError = false) }
 
     fun saveManualFood() {
         val state = _uiState.value
-        val calories = state.manualCalories.toDoubleOrNull()
-        val protein = state.manualProtein.toDoubleOrNull()
-        val fat = state.manualFat.toDoubleOrNull()
-        val carbs = state.manualCarbs.toDoubleOrNull()
+        val calories = state.manualCalories.normalizedDecimalOrNull()
+        val protein = state.manualProtein.normalizedDecimalOrNull()
+        val fat = state.manualFat.normalizedDecimalOrNull()
+        val carbs = state.manualCarbs.normalizedDecimalOrNull()
         if (state.manualName.isBlank() || calories == null || protein == null || fat == null || carbs == null) {
             _uiState.update { it.copy(manualHasError = true) }
             return
@@ -134,15 +171,16 @@ class AddFoodViewModel(
                     manualCarbs = "",
                     showManualEntry = false,
                     // reuse the same quantity-dialog flow used by search results
-                    foodPendingQuantity = FoodItem(
-                        id = id,
-                        name = name,
-                        caloriesPer100g = calories,
-                        proteinPer100g = protein,
-                        fatPer100g = fat,
-                        carbsPer100g = carbs,
-                        source = FoodSource.MANUAL,
-                    ),
+                    foodPendingQuantity =
+                        FoodItem(
+                            id = id,
+                            name = name,
+                            caloriesPer100g = calories,
+                            proteinPer100g = protein,
+                            fatPer100g = fat,
+                            carbsPer100g = carbs,
+                            source = FoodSource.MANUAL,
+                        ),
                 )
             }
         }

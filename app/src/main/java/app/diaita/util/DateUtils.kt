@@ -14,7 +14,11 @@ object DateUtils {
     fun today(): String = LocalDate.now().format(isoFormatter)
 
     fun formatTime(epochMillis: Long): String =
-        Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalTime().format(timeFormatter)
+        Instant
+            .ofEpochMilli(epochMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalTime()
+            .format(timeFormatter)
 
     /**
      * The meal slot a log made right now most likely belongs to. Thresholds match the

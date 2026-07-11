@@ -13,5 +13,8 @@ interface WeightEntryDao {
     suspend fun upsert(entry: WeightEntry)
 
     @Query("SELECT * FROM weight_entries WHERE date BETWEEN :fromDate AND :toDate ORDER BY date ASC")
-    fun range(fromDate: String, toDate: String): Flow<List<WeightEntry>>
+    fun range(
+        fromDate: String,
+        toDate: String,
+    ): Flow<List<WeightEntry>>
 }

@@ -14,8 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -27,7 +25,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,7 +51,6 @@ fun PresetListScreen(
 ) {
     val presets by viewModel.presets.collectAsStateWithLifecycle()
     val justLogged by viewModel.justLogged.collectAsStateWithLifecycle()
-    val confirmDeletePreset by viewModel.confirmDeletePreset.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -69,11 +65,12 @@ fun PresetListScreen(
 
     LaunchedEffect(Unit) {
         viewModel.undoEvent.collect { presetWithItems ->
-            val result = snackbarHostState.showSnackbar(
-                message = context.getString(R.string.deleted_named, presetWithItems.preset.name),
-                actionLabel = undoLabel,
-                duration = SnackbarDuration.Short,
-            )
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.deleted_named, presetWithItems.preset.name),
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Short,
+                )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.undoDeletePreset(presetWithItems)
             }
@@ -91,33 +88,37 @@ fun PresetListScreen(
     ) { innerPadding ->
         if (presets.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .padding(16.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(stringResource(R.string.no_presets_yet))
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(presets, key = { it.preset.id }) { presetWithItems ->
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateItem()
-                            .clickable { onEditPresetClick(presetWithItems.preset.id) },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .animateItem()
+                                .clickable { onEditPresetClick(presetWithItems.preset.id) },
                     ) {
                         Row(
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .fillMaxWidth(),
+                            modifier =
+                                Modifier
+                                    .padding(12.dp)
+                                    .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Column {
@@ -146,7 +147,7 @@ fun PresetListScreen(
                                 IconButton(
                                     onClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.requestDeletePreset(presetWithItems.preset)
+                                        viewModel.deletePreset(presetWithItems.preset)
                                     },
                                 ) {
                                     Icon(
@@ -160,19 +161,5 @@ fun PresetListScreen(
                 }
             }
         }
-    }
-
-    confirmDeletePreset?.let { preset ->
-        AlertDialog(
-            onDismissRequest = viewModel::cancelDeletePreset,
-            title = { Text(stringResource(R.string.delete_confirm_title, preset.name)) },
-            text = { Text(stringResource(R.string.delete_confirm_body)) },
-            confirmButton = {
-                Button(onClick = viewModel::confirmDeletePreset) { Text(stringResource(R.string.delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::cancelDeletePreset) { Text(stringResource(R.string.cancel)) }
-            },
-        )
     }
 }

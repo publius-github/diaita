@@ -28,21 +28,22 @@ class DayDetailViewModel(
 ) : ViewModel() {
     private val date: String = savedStateHandle["date"] ?: DateUtils.today()
 
-    val uiState: StateFlow<DayDetailUiState> = combine(
-        diaryRepository.entriesForDate(date),
-        diaryRepository.dailyTotals(date),
-    ) { entries, totals ->
-        DayDetailUiState(
-            date = date,
-            sections = buildDiarySections(entries),
-            totalCalories = totals.totalCalories,
-            totalProtein = totals.totalProtein,
-            totalFat = totals.totalFat,
-            totalCarbs = totals.totalCarbs,
+    val uiState: StateFlow<DayDetailUiState> =
+        combine(
+            diaryRepository.entriesForDate(date),
+            diaryRepository.dailyTotals(date),
+        ) { entries, totals ->
+            DayDetailUiState(
+                date = date,
+                sections = buildDiarySections(entries),
+                totalCalories = totals.totalCalories,
+                totalProtein = totals.totalProtein,
+                totalFat = totals.totalFat,
+                totalCarbs = totals.totalCarbs,
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = DayDetailUiState(date = date),
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = DayDetailUiState(date = date),
-    )
 }
