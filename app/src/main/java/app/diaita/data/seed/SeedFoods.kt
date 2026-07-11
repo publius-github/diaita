@@ -4,18 +4,20 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 
 /**
- * ~370 common foods with per-100g macros, shipped in-app so search works fully offline.
+ * ~395 common foods with per-100g macros, shipped in-app so search works fully offline.
  * Covers whole foods (grains, meat, fish, vegetables, fruits) plus everyday processed
  * food (sausages, cookies, chips, wafers, sauces, salads, cheeses, curds) — aimed at
  * covering ~95% of daily logging without the network. Values are widely accepted
  * approximate nutrition figures, not medical-grade data.
  *
- * For anything typically bought raw and cooked at home (meat, poultry, fish, some
- * vegetables), the catalog lists the raw form first — for weighing before you cook,
- * the only way to know how much you actually used — plus at most two common cooked
- * forms (e.g. boiled + fried/roasted). No item should have more than 2-3 prep
- * variants; different cuts of the same animal (breast/thigh/wing) are separate
- * entries because their macros genuinely differ, not because of prep method.
+ * For anything typically bought raw and cooked at home (meat, poultry, fish, grains,
+ * some vegetables), the catalog lists the raw/dry form first — for weighing before
+ * you cook, the only way to know how much you actually used, since cooked yield
+ * (water absorption for grains, moisture loss for meat) can't be inferred after the
+ * fact — plus at most two common cooked forms (e.g. boiled + fried/roasted). No item
+ * should have more than 2-3 prep variants; different cuts of the same animal
+ * (breast/thigh/wing) are separate entries because their macros genuinely differ,
+ * not because of prep method.
  *
  * Each entry carries a stable [FoodItem.seedKey]; names are display data and may be
  * edited freely. Any change here (new entry, corrected macros, renamed food, added
@@ -24,7 +26,7 @@ import app.diaita.data.db.entities.FoodSource
  */
 object SeedFoods {
     /** Bump on every catalog change so existing installs pick it up on next app start. */
-    const val CATALOG_VERSION = 3
+    const val CATALOG_VERSION = 4
 
     private fun food(
         key: String,
@@ -47,25 +49,43 @@ object SeedFoods {
 
     val all: List<FoodItem> =
         listOf(
-            // Grains, cereals & starches
+            // Grains, cereals & starches — dry weight first: this is what you actually
+            // scoop and measure before cooking, since dry-to-cooked yield varies (~2.5-3x
+            // for rice/pasta) and can't be inferred after the fact.
+            food("white_rice_dry", "White rice, dry", 365.0, 7.1, 0.7, 80.0),
             food("white_rice_cooked", "White rice, cooked", 130.0, 2.7, 0.3, 28.0),
+            food("brown_rice_dry", "Brown rice, dry", 370.0, 7.9, 2.9, 77.0),
             food("brown_rice_cooked", "Brown rice, cooked", 123.0, 2.6, 1.0, 26.0),
+            food("basmati_rice_dry", "Basmati rice, dry", 349.0, 8.1, 0.6, 77.0),
             food("basmati_rice_cooked", "Basmati rice, cooked", 121.0, 3.5, 0.4, 25.0),
+            food("wild_rice_dry", "Wild rice, dry", 357.0, 14.7, 1.1, 74.0),
             food("wild_rice_cooked", "Wild rice, cooked", 101.0, 4.0, 0.3, 21.0),
+            food("pasta_dry", "Pasta, dry", 371.0, 13.0, 1.5, 75.0),
             food("pasta_cooked", "Pasta, cooked", 131.0, 5.0, 1.1, 25.0),
+            food("whole_wheat_pasta_dry", "Whole wheat pasta, dry", 348.0, 14.6, 2.5, 71.0),
             food("whole_wheat_pasta_cooked", "Whole wheat pasta, cooked", 124.0, 5.3, 0.5, 26.0),
+            food("egg_noodles_dry", "Egg noodles, dry", 384.0, 14.0, 4.5, 71.0),
             food("egg_noodles_cooked", "Egg noodles, cooked", 138.0, 4.5, 2.1, 25.0),
+            food("rice_noodles_dry", "Rice noodles, dry", 364.0, 6.0, 0.6, 83.0),
             food("rice_noodles_cooked", "Rice noodles, cooked", 109.0, 0.9, 0.2, 25.0),
+            food("buckwheat_dry", "Buckwheat, dry (groats)", 343.0, 13.3, 3.4, 71.5),
             food("buckwheat_cooked", "Buckwheat, cooked", 92.0, 3.4, 0.6, 20.0),
             food("oats_dry", "Oats, dry", 389.0, 16.9, 6.9, 66.0),
             food("oatmeal_porridge_with_water", "Oatmeal porridge, with water", 71.0, 2.5, 1.5, 12.0),
             food("oatmeal_porridge_with_milk", "Oatmeal porridge, with milk", 102.0, 4.5, 3.8, 14.0),
+            food("quinoa_dry", "Quinoa, dry", 368.0, 14.1, 6.1, 64.0),
             food("quinoa_cooked", "Quinoa, cooked", 120.0, 4.4, 1.9, 21.0),
+            food("couscous_dry", "Couscous, dry", 376.0, 12.8, 0.6, 77.0),
             food("couscous_cooked", "Couscous, cooked", 112.0, 3.8, 0.2, 23.0),
+            food("bulgur_dry", "Bulgur, dry", 342.0, 12.3, 1.3, 76.0),
             food("bulgur_cooked", "Bulgur, cooked", 83.0, 3.1, 0.2, 19.0),
+            food("pearl_barley_dry", "Pearl barley, dry", 354.0, 9.9, 1.2, 77.0),
             food("pearl_barley_cooked", "Pearl barley, cooked", 123.0, 2.3, 0.4, 28.0),
+            food("millet_dry", "Millet, dry", 378.0, 11.0, 4.2, 73.0),
             food("millet_porridge_cooked", "Millet porridge, cooked", 119.0, 3.5, 1.0, 23.0),
-            food("semolina_porridge", "Semolina porridge", 98.0, 3.0, 3.0, 15.0),
+            food("semolina_dry", "Semolina, dry", 360.0, 12.7, 1.1, 73.0),
+            food("semolina_porridge", "Semolina porridge (with milk)", 98.0, 3.0, 3.0, 15.0),
+            food("polenta_dry", "Polenta/cornmeal, dry", 370.0, 8.1, 3.4, 77.0),
             food("polenta_cooked", "Polenta, cooked", 85.0, 1.8, 0.4, 18.0),
             food("corn_raw", "Corn, raw (kernels)", 86.0, 3.2, 1.2, 19.0),
             food("corn_boiled", "Corn, boiled", 96.0, 3.4, 1.5, 21.0),
@@ -73,6 +93,7 @@ object SeedFoods {
             food("potato_boiled", "Potato, boiled", 87.0, 1.9, 0.1, 20.0, servingGrams = 90.0),
             food("potato_baked", "Potato, baked", 93.0, 2.5, 0.1, 21.0),
             food("potato_mashed_with_milk", "Potato, mashed with milk", 83.0, 1.9, 1.2, 17.0),
+            food("sweet_potato_raw", "Sweet potato, raw", 86.0, 1.6, 0.1, 20.0),
             food("sweet_potato_boiled", "Sweet potato, boiled", 90.0, 2.0, 0.1, 21.0),
             food("muesli", "Muesli", 367.0, 8.2, 5.9, 72.0),
             food("granola", "Granola", 471.0, 10.0, 20.0, 64.0),
@@ -127,6 +148,7 @@ object SeedFoods {
             food("pork_chop_cooked", "Pork chop, fried/grilled", 231.0, 27.0, 13.0, 0.0),
             food("pork_tenderloin_cooked", "Pork tenderloin, roasted", 143.0, 26.0, 3.5, 0.0),
             food("pork_stewed", "Pork, stewed", 297.0, 26.0, 21.0, 0.0),
+            food("pork_belly_raw", "Pork belly, raw", 393.0, 9.3, 39.0, 0.0),
             food("pork_belly_cooked", "Pork belly, cooked", 518.0, 9.0, 53.0, 0.0),
             food("lamb_raw", "Lamb, raw", 158.0, 16.6, 10.0, 0.0),
             food("lamb_cooked", "Lamb, roasted/grilled", 294.0, 25.0, 21.0, 0.0),
@@ -306,11 +328,17 @@ object SeedFoods {
             food("raisins", "Raisins", 299.0, 3.1, 0.5, 79.0),
             food("dried_apricots", "Dried apricots", 241.0, 3.4, 0.5, 63.0),
             food("prunes", "Prunes", 240.0, 2.2, 0.4, 64.0),
-            // Legumes, nuts & seeds
+            // Legumes, nuts & seeds — dried beans/lentils cook the same way rice does
+            // (soak/boil, ~2.5x weight gain), so dry weight comes first here too.
+            food("black_beans_dry", "Black beans, dry", 341.0, 21.6, 1.4, 62.0),
             food("black_beans_cooked", "Black beans, cooked", 132.0, 8.9, 0.5, 24.0),
+            food("white_beans_dry", "White beans, dry", 333.0, 23.4, 0.9, 60.0),
             food("white_beans_cooked", "White beans, cooked", 139.0, 9.7, 0.4, 25.0),
+            food("kidney_beans_dry", "Kidney beans, dry", 333.0, 24.0, 0.8, 60.0),
             food("kidney_beans_cooked", "Kidney beans, cooked", 127.0, 8.7, 0.5, 23.0),
+            food("chickpeas_dry", "Chickpeas, dry", 364.0, 19.3, 6.0, 61.0),
             food("chickpeas_cooked", "Chickpeas, cooked", 164.0, 8.9, 2.6, 27.0),
+            food("lentils_dry", "Lentils, dry", 352.0, 25.8, 1.1, 60.0),
             food("lentils_cooked", "Lentils, cooked", 116.0, 9.0, 0.4, 20.0),
             food("edamame", "Edamame", 121.0, 12.0, 5.0, 9.0),
             food("hummus", "Hummus", 166.0, 8.0, 10.0, 14.0),
