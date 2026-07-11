@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Progress-ring motif matching the in-app calorie ring: a 270° white arc
+         with an amber dot filling the gap. Kept inside the adaptive-icon safe zone. -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M54,26 A28,28 0 1,1 26,54" />
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M34,29.5 a5.5,5.5 0 1,1 0,11 a5.5,5.5 0 1,1 0,-11" />
+</vector>

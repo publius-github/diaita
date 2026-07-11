@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Diaita</string>
+
+    <!-- Common -->
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="log">Log</string>
+    <string name="undo">Undo</string>
+    <string name="deleted">Deleted</string>
+    <string name="back">Back</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_today">Today</string>
+    <string name="nav_presets">Presets</string>
+    <string name="nav_history">History</string>
+    <string name="nav_goals">Goals</string>
+
+    <!-- Diary -->
+    <string name="today_title">Today</string>
+    <string name="kcal_amount">%1$d kcal</string>
+    <string name="macros_line">P: %1$dg   F: %2$dg   C: %3$dg</string>
+    <string name="macro_protein_short">P</string>
+    <string name="macro_fat_short">F</string>
+    <string name="macro_carbs_short">C</string>
+    <string name="macro_goal_reached">Goal reached</string>
+    <string name="diary_empty">Nothing logged yet today — tap + to add your first food.</string>
+    <string name="add_food">Add food</string>
+    <string name="delete_confirm_title">Delete \"%1$s\"?</string>
+    <string name="delete_confirm_body">You can undo this from the snackbar right after.</string>
+    <string name="diary_food_subtitle">%1$s · %2$d g — %3$d kcal</string>
+    <string name="diary_preset_subtitle">%1$s · %2$d items — %3$d kcal</string>
+    <string name="deleted_named">Deleted \"%1$s\"</string>
+
+    <!-- Meal slots -->
+    <string name="meal_breakfast">Breakfast</string>
+    <string name="meal_lunch">Lunch</string>
+    <string name="meal_dinner">Dinner</string>
+    <string name="meal_snack">Snack</string>
+    <string name="meal_other">Other</string>
+
+    <!-- Progress ring -->
+    <string name="ring_progress">%1$d\n/ %2$d kcal</string>
+    <string name="ring_no_goal">%1$d kcal\n(no goal set)</string>
+
+    <!-- Add food -->
+    <string name="tab_foods">Foods</string>
+    <string name="tab_presets">Presets</string>
+    <string name="search_foods">Search foods</string>
+    <string name="search_off_checkbox">Search OpenFoodFacts online</string>
+    <string name="offline_banner">Offline — showing saved foods only</string>
+    <string name="search_error_off">Couldn\'t reach OpenFoodFacts — check your connection</string>
+    <string name="no_matches">No matches found</string>
+    <string name="kcal_per_100g">%1$d kcal/100g</string>
+    <string name="add_manually">Can\'t find it? Add manually</string>
+    <string name="back_to_search">← Back to search</string>
+    <string name="recent_foods">Recent:</string>
+    <string name="name_label">Name</string>
+    <string name="calories_per_100">Calories / 100g</string>
+    <string name="protein_per_100">Protein g / 100g</string>
+    <string name="fat_per_100">Fat g / 100g</string>
+    <string name="carbs_per_100">Carbs g / 100g</string>
+    <string name="save_and_log">Save &amp; log</string>
+    <string name="manual_error">Fill in a name and valid numbers for calories/protein/fat/carbs</string>
+    <string name="no_presets_addfood">No presets yet — create one from the Presets tab.</string>
+    <string name="preset_items_tap_to_log">%1$d items — tap to log</string>
+
+    <!-- Quantity dialog -->
+    <string name="quantity_grams">Quantity (grams)</string>
+    <string name="use_default_serving">Use default serving (%1$d g)</string>
+
+    <!-- Presets -->
+    <string name="new_preset">New preset</string>
+    <string name="no_presets_yet">No presets yet — tap + to create one (e.g. \"My usual breakfast\").</string>
+    <string name="items_count">%1$d items</string>
+    <string name="log_preset">Log preset</string>
+    <string name="delete_preset">Delete preset</string>
+    <string name="preset_name_label">Preset name (e.g. \"My usual breakfast\")</string>
+    <string name="items_in_preset">Items in this preset</string>
+    <string name="no_items_yet">None yet — search below and tap a food to add it.</string>
+    <string name="item_with_grams">%1$s — %2$d g</string>
+    <string name="remove">Remove</string>
+    <string name="search_to_add">Search foods to add</string>
+    <string name="save_preset">Save preset</string>
+    <string name="preset_error">Give the preset a name and add at least one food</string>
+
+    <!-- Goals -->
+    <string name="daily_goal">Daily goal</string>
+    <string name="calories_label">Calories</string>
+    <string name="quick_split">Split 30% protein / 30% fat / 40% carbs</string>
+    <string name="protein_g">Protein (g)</string>
+    <string name="fat_g">Fat (g)</string>
+    <string name="carbs_g">Carbs (g)</string>
+    <string name="weight_target_kg">Weight target (kg) — optional</string>
+    <string name="goal_error">Enter valid numbers for all targets</string>
+    <string name="save_goal">Save goal</string>
+    <string name="goal_saved">Goal saved</string>
+    <string name="backup_title">Backup</string>
+    <string name="export_csv">Export diary (CSV)</string>
+    <string name="diary_exported">Diary exported</string>
+
+    <!-- History -->
+    <string name="history_title_days">Last %1$d days</string>
+    <string name="range_7_days">7 days</string>
+    <string name="range_30_days">30 days</string>
+    <string name="history_empty">No history yet — log some food to see it here.</string>
+    <string name="goal_line_label">Goal: %1$d kcal</string>
+    <string name="selected_day_info">%1$s — %2$d kcal</string>
+    <string name="view_day">View day →</string>
+    <string name="weight_title">Weight</string>
+    <string name="log_weight">Log weight</string>
+    <string name="weight_kg">Weight (kg)</string>
+    <string name="weight_empty">No weight entries yet — log your first weigh-in.</string>
+    <string name="latest_weight">Latest: %1$s kg</string>
+    <string name="weight_today">Weight today: %1$s kg</string>
+    <string name="weight_target_line">Target: %1$s kg</string>
+    <string name="weight_error">Enter a valid weight</string>
+    <string name="monthly_averages">Monthly averages</string>
+    <string name="monthly_avg_row">%1$s — avg %2$d kcal/day</string>
+
+    <!-- Day detail -->
+    <string name="day_detail_empty">Nothing was logged on this day.</string>
+</resources>
