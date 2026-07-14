@@ -101,10 +101,10 @@ interface DiaryEntryDao {
         JOIN (SELECT foodItemId, MAX(loggedAt) AS lastLogged FROM diary_entries GROUP BY foodItemId) recent
             ON f.id = recent.foodItemId
         ORDER BY recent.lastLogged DESC
-        LIMIT 10
+        LIMIT :limit
         """,
     )
-    fun recentFoods(): Flow<List<FoodItem>>
+    fun recentFoods(limit: Int): Flow<List<FoodItem>>
 
     /** Per-day macro totals for all days strictly before [beforeDate] — used by the retention job. */
     @Query(

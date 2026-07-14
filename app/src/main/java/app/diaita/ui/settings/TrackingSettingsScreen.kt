@@ -1,0 +1,240 @@
+package app.diaita.ui.settings
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.diaita.R
+import app.diaita.data.reminder.ReminderScheduler
+import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.WeightUnit
+import app.diaita.ui.AppViewModelProvider
+import kotlin.math.roundToInt
+
+/** Which time-of-day boundary the picker dialog is currently editing. */
+private enum class BoundaryTarget { MORNING_END, DAY_END }
+
+/** Which single-choice setting the radio dialog is currently editing. */
+private enum class ChoiceTarget { WEIGHT_UNIT, COACH_TONE }
+
+@Composable
+fun TrackingSettingsScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+) {
+    val trackMacros by viewModel.trackMacros.collectAsStateWithLifecycle()
+    val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
+    val dayPartShares by viewModel.dayPartShares.collectAsStateWithLifecycle()
+    val coachTone by viewModel.coachTone.collectAsStateWithLifecycle()
+    val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
+    val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
+    var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
+    var showSharesDialog by remember { mutableStateOf(false) }
+
+    SettingsSubScreen(
+        titleRes = R.string.settings_section_tracking,
+        onBack = onBack,
+        modifier = modifier,
+    ) {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_track_macros)) },
+            supportingContent = { Text(stringResource(R.string.settings_track_macros_desc)) },
+            trailingContent = {
+                Switch(checked = trackMacros, onCheckedChange = viewModel::setTrackMacros)
+            },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_weight_unit,
+            value = weightUnit.fullLabel(),
+            onClick = { choiceTarget = ChoiceTarget.WEIGHT_UNIT },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_coach,
+            descriptionRes = R.string.settings_coach_desc,
+            value = coachTone.label(),
+            onClick = { choiceTarget = ChoiceTarget.COACH_TONE },
+        )
+        HorizontalDivider()
+        TimeRow(
+            titleRes = R.string.settings_morning_end,
+            descriptionRes = R.string.settings_morning_end_desc,
+            minutes = dayPartBoundaries.morningEndMinutes,
+            onClick = { boundaryTarget = BoundaryTarget.MORNING_END },
+        )
+        HorizontalDivider()
+        TimeRow(
+            titleRes = R.string.settings_day_end,
+            descriptionRes = R.string.settings_day_end_desc,
+            minutes = dayPartBoundaries.dayEndMinutes,
+            onClick = { boundaryTarget = BoundaryTarget.DAY_END },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_day_part_shares,
+            value =
+                stringResource(
+                    R.string.day_part_shares_value,
+                    dayPartShares.morningPercent,
+                    dayPartShares.dayPercent,
+                    dayPartShares.eveningPercent,
+                ),
+            onClick = { showSharesDialog = true },
+        )
+        HorizontalDivider()
+    }
+
+    boundaryTarget?.let { target ->
+        SettingsTimePickerDialog(
+            titleRes =
+                when (target) {
+                    BoundaryTarget.MORNING_END -> R.string.settings_morning_end
+                    BoundaryTarget.DAY_END -> R.string.settings_day_end
+                },
+            initialMinutes =
+                when (target) {
+                    BoundaryTarget.MORNING_END -> dayPartBoundaries.morningEndMinutes
+                    BoundaryTarget.DAY_END -> dayPartBoundaries.dayEndMinutes
+                },
+            onDismiss = { boundaryTarget = null },
+            onConfirm = { minutes ->
+                val updated =
+                    when (target) {
+                        BoundaryTarget.MORNING_END -> viewModel.setMorningEndMinutes(minutes)
+                        BoundaryTarget.DAY_END -> viewModel.setDayEndMinutes(minutes)
+                    }
+                // Day-part reminders fire exactly at these boundaries — follow the change.
+                if (dayPartRemindersEnabled) {
+                    ReminderScheduler.scheduleDayPartReminders(context, updated)
+                }
+                boundaryTarget = null
+            },
+        )
+    }
+
+    when (choiceTarget) {
+        ChoiceTarget.WEIGHT_UNIT ->
+            ChoiceDialog(
+                titleRes = R.string.settings_weight_unit,
+                options =
+                    WeightUnit.entries.map { unit ->
+                        ChoiceOption(
+                            label = unit.fullLabel(),
+                            selected = unit == weightUnit,
+                            onSelect = { viewModel.setWeightUnit(unit) },
+                        )
+                    },
+                onDismiss = { choiceTarget = null },
+            )
+        ChoiceTarget.COACH_TONE ->
+            ChoiceDialog(
+                titleRes = R.string.settings_coach,
+                options =
+                    CoachTone.entries.map { tone ->
+                        ChoiceOption(
+                            label = tone.label(),
+                            selected = tone == coachTone,
+                            onSelect = { viewModel.setCoachTone(tone) },
+                        )
+                    },
+                onDismiss = { choiceTarget = null },
+            )
+        null -> Unit
+    }
+
+    if (showSharesDialog) {
+        DayPartSharesDialog(
+            current = dayPartShares,
+            onDismiss = { showSharesDialog = false },
+            onConfirm = { morning, day ->
+                viewModel.setDayPartShares(morning, day)
+                showSharesDialog = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun WeightUnit.fullLabel(): String =
+    stringResource(if (this == WeightUnit.KG) R.string.unit_kg_full else R.string.unit_lb_full)
+
+@Composable
+private fun CoachTone.label(): String =
+    stringResource(
+        when (this) {
+            CoachTone.OFF -> R.string.coach_off
+            CoachTone.GENTLE -> R.string.coach_gentle
+            CoachTone.SNARKY -> R.string.coach_snarky
+            CoachTone.BRUTAL -> R.string.coach_brutal
+        },
+    )
+
+/** Two sliders for morning/day percent; evening is derived so the three always sum to 100. */
+@Composable
+private fun DayPartSharesDialog(
+    current: DayPartShares,
+    onDismiss: () -> Unit,
+    onConfirm: (morningPercent: Int, dayPercent: Int) -> Unit,
+) {
+    var morning by remember { mutableIntStateOf(current.morningPercent) }
+    var day by remember { mutableIntStateOf(current.dayPercent) }
+    val sanitized = DayPartShares.sanitized(morning, day)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_day_part_shares)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.share_morning, sanitized.morningPercent))
+                Slider(
+                    value = sanitized.morningPercent.toFloat(),
+                    onValueChange = { morning = it.roundToInt() },
+                    valueRange = 10f..80f,
+                )
+                Text(stringResource(R.string.share_day, sanitized.dayPercent))
+                Slider(
+                    value = sanitized.dayPercent.toFloat(),
+                    onValueChange = { day = it.roundToInt() },
+                    valueRange = 10f..80f,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.share_evening, sanitized.eveningPercent),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(sanitized.morningPercent, sanitized.dayPercent) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}

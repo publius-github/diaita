@@ -8,6 +8,8 @@ import app.diaita.data.db.entities.WeightEntry
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.WeightRepository
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +37,7 @@ data class HistoryUiState(
     val selectedIndex: Int? = null,
     val weights: List<WeightEntry> = emptyList(),
     val monthlyAverages: List<MonthlyAggregate> = emptyList(),
+    val weightUnit: WeightUnit = WeightUnit.KG,
 ) {
     val selectedDay: HistoryDayUi? get() = selectedIndex?.let { days.getOrNull(it) }
     val hasAnyCalories: Boolean get() = days.any { it.calories > 0 }
@@ -48,6 +51,7 @@ class HistoryViewModel(
     goalRepository: GoalRepository,
     private val weightRepository: WeightRepository,
     monthlyAverages: Flow<List<MonthlyAggregate>>,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val selectedIndexFlow = MutableStateFlow<Int?>(null)
     private val rangeDaysFlow = MutableStateFlow(DEFAULT_RANGE_DAYS)
@@ -64,8 +68,8 @@ class HistoryViewModel(
                     goalRepository.getGoal(),
                     weightRepository.range(fromIso, toIso),
                     monthlyAverages,
-                    selectedIndexFlow,
-                ) { totals, goal, weights, aggregates, selectedIndex ->
+                    combine(selectedIndexFlow, settingsRepository.weightUnit, ::Pair),
+                ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit) ->
                     HistoryUiState(
                         rangeDays = rangeDays,
                         days = buildFullRange(fromDate, toDate, totals, goal?.calorieTarget),
@@ -74,6 +78,7 @@ class HistoryViewModel(
                         selectedIndex = selectedIndex,
                         weights = weights,
                         monthlyAverages = aggregates,
+                        weightUnit = weightUnit,
                     )
                 }
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryUiState())

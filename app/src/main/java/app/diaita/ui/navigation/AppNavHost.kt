@@ -1,11 +1,12 @@
 package app.diaita.ui.navigation
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,15 +26,21 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.diaita.R
+import app.diaita.ui.about.AboutScreen
 import app.diaita.ui.addfood.AddFoodScreen
 import app.diaita.ui.daydetail.DayDetailScreen
 import app.diaita.ui.diary.DiaryScreen
+import app.diaita.ui.goals.GoalWizardScreen
 import app.diaita.ui.goals.GoalsScreen
 import app.diaita.ui.history.HistoryScreen
 import app.diaita.ui.presets.PresetEditScreen
 import app.diaita.ui.presets.PresetListScreen
+import app.diaita.ui.settings.AppearanceSettingsScreen
 import app.diaita.ui.settings.BackupScreen
+import app.diaita.ui.settings.DataSettingsScreen
+import app.diaita.ui.settings.NotificationsSettingsScreen
 import app.diaita.ui.settings.SettingsScreen
+import app.diaita.ui.settings.TrackingSettingsScreen
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -43,7 +50,7 @@ private data class BottomNavItem(
 
 private val bottomNavItems =
     listOf(
-        BottomNavItem(Screen.Diary, R.string.nav_today, Icons.Filled.Today),
+        BottomNavItem(Screen.Diary, R.string.nav_home, Icons.Filled.Home),
         BottomNavItem(Screen.PresetList, R.string.nav_presets, Icons.Filled.List),
         BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
         BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
@@ -80,12 +87,18 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         NavHost(
             navController = navController,
             startDestination = Screen.Diary.route,
-            modifier = Modifier.padding(innerPadding),
+            // consumeWindowInsets stops nested Scaffolds (Diary, Goals, ...) from applying
+            // the status-bar inset a second time on top of this Scaffold's padding.
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
         ) {
             composable(Screen.Diary.route) {
                 DiaryScreen(
                     onAddFoodClick = { navController.navigate(Screen.AddFood.route) },
                     onOpenGoals = { navController.navigate(Screen.Goals.route) },
+                    onOpenWizard = { navController.navigate(Screen.GoalWizard.route) },
                 )
             }
             composable(Screen.AddFood.route) {
@@ -134,14 +147,43 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onGoalsClick = { navController.navigate(Screen.Goals.route) },
+                    onWizardClick = { navController.navigate(Screen.GoalWizard.route) },
+                    onAppearanceClick = { navController.navigate(Screen.SettingsAppearance.route) },
+                    onTrackingClick = { navController.navigate(Screen.SettingsTracking.route) },
+                    onNotificationsClick = { navController.navigate(Screen.SettingsNotifications.route) },
+                    onDataClick = { navController.navigate(Screen.SettingsData.route) },
+                    onAboutClick = { navController.navigate(Screen.About.route) },
+                )
+            }
+            composable(Screen.SettingsAppearance.route) {
+                AppearanceSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsTracking.route) {
+                TrackingSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsNotifications.route) {
+                NotificationsSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsData.route) {
+                DataSettingsScreen(
+                    onBack = { navController.popBackStack() },
                     onBackupClick = { navController.navigate(Screen.Backup.route) },
                 )
             }
             composable(Screen.Goals.route) {
-                GoalsScreen(onBack = { navController.popBackStack() })
+                GoalsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenWizard = { navController.navigate(Screen.GoalWizard.route) },
+                )
+            }
+            composable(Screen.GoalWizard.route) {
+                GoalWizardScreen(onDone = { navController.popBackStack() })
             }
             composable(Screen.Backup.route) {
                 BackupScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.About.route) {
+                AboutScreen(onBack = { navController.popBackStack() })
             }
         }
     }

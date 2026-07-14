@@ -32,8 +32,8 @@ android {
         targetSdk = 36
         // Bump versionCode on every APK shared outside this machine — Android refuses
         // to update an app whose versionCode did not increase.
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

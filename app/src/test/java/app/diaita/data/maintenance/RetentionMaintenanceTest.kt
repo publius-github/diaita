@@ -47,7 +47,7 @@ private class FakeDiaryEntryDao(
         toDate: String,
     ): Flow<List<DayTotal>> = flowOf(emptyList())
 
-    override fun recentFoods(): Flow<List<FoodItem>> = flowOf(emptyList())
+    override fun recentFoods(limit: Int): Flow<List<FoodItem>> = flowOf(emptyList())
 }
 
 private class FakeMonthlyAggregateDao(

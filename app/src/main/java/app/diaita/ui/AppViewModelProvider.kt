@@ -10,6 +10,7 @@ import app.diaita.CalorieCounterApplication
 import app.diaita.ui.addfood.AddFoodViewModel
 import app.diaita.ui.daydetail.DayDetailViewModel
 import app.diaita.ui.diary.DiaryViewModel
+import app.diaita.ui.goals.GoalWizardViewModel
 import app.diaita.ui.goals.GoalsViewModel
 import app.diaita.ui.history.HistoryViewModel
 import app.diaita.ui.presets.PresetViewModel
@@ -27,6 +28,7 @@ object AppViewModelProvider {
                     appContainer().diaryRepository,
                     appContainer().goalRepository,
                     appContainer().weightRepository,
+                    appContainer().settingsRepository,
                 )
             }
             initializer {
@@ -36,8 +38,16 @@ object AppViewModelProvider {
                     appContainer().settingsRepository,
                 )
             }
-            initializer { PresetViewModel(appContainer().presetRepository, appContainer().foodRepository) }
-            initializer { GoalsViewModel(appContainer().goalRepository) }
+            initializer {
+                PresetViewModel(
+                    appContainer().presetRepository,
+                    appContainer().foodRepository,
+                    appContainer().diaryRepository,
+                    appContainer().settingsRepository,
+                )
+            }
+            initializer { GoalsViewModel(appContainer().goalRepository, appContainer().settingsRepository) }
+            initializer { GoalWizardViewModel(appContainer().goalRepository, appContainer().settingsRepository) }
             initializer {
                 SettingsViewModel(
                     appContainer().settingsRepository,
@@ -51,6 +61,7 @@ object AppViewModelProvider {
                     appContainer().goalRepository,
                     appContainer().weightRepository,
                     appContainer().database.monthlyAggregateDao().getAll(),
+                    appContainer().settingsRepository,
                 )
             }
             initializer { DayDetailViewModel(appContainer().diaryRepository, createSavedStateHandle()) }

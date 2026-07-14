@@ -21,7 +21,7 @@ class DiaryRepository(
         toDate: String,
     ): Flow<List<DayTotal>> = diaryEntryDao.historyTotals(fromDate, toDate)
 
-    fun recentFoods(): Flow<List<FoodItem>> = diaryEntryDao.recentFoods()
+    fun recentFoods(limit: Int): Flow<List<FoodItem>> = diaryEntryDao.recentFoods(limit)
 
     suspend fun logFood(
         foodItemId: Long,

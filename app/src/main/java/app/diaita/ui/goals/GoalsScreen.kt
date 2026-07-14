@@ -27,9 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -39,18 +37,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.label
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsScreen(
     onBack: () -> Unit,
+    onOpenWizard: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: GoalsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val goalSavedMessage = stringResource(R.string.goal_saved)
-    var showCalculator by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.savedEvent.collect {
@@ -95,7 +94,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            TextButton(onClick = { showCalculator = true }) {
+            TextButton(onClick = onOpenWizard) {
                 Text(stringResource(R.string.calc_open))
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -145,7 +144,7 @@ fun GoalsScreen(
             OutlinedTextField(
                 value = state.weightTarget,
                 onValueChange = viewModel::onWeightTargetChanged,
-                label = { Text(stringResource(R.string.weight_target_kg)) },
+                label = { Text(stringResource(R.string.weight_target_label, state.weightUnit.label())) },
                 singleLine = true,
                 keyboardOptions =
                     KeyboardOptions(
@@ -163,15 +162,5 @@ fun GoalsScreen(
                 Text(stringResource(R.string.save_goal))
             }
         }
-    }
-
-    if (showCalculator) {
-        GoalCalculatorDialog(
-            onDismiss = { showCalculator = false },
-            onApply = { calories ->
-                viewModel.applyCalculatedCalories(calories)
-                showCalculator = false
-            },
-        )
     }
 }

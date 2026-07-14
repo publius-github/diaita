@@ -7,7 +7,7 @@ import app.diaita.data.db.dao.PresetWithItems
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
-import app.diaita.util.DateUtils
+import app.diaita.data.db.entities.MealSlot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -40,10 +40,11 @@ class PresetRepository(
 
     suspend fun createPreset(
         name: String,
+        mealSlot: MealSlot,
         items: List<Pair<Long, Double>>,
     ): Long =
         database.withTransaction {
-            val presetId = mealPresetDao.insertPreset(MealPreset(name = name))
+            val presetId = mealPresetDao.insertPreset(MealPreset(name = name, mealSlot = mealSlot))
             items.forEach { (foodItemId, quantityGrams) ->
                 mealPresetDao.insertItem(
                     MealPresetItem(presetId = presetId, foodItemId = foodItemId, quantityGrams = quantityGrams),
@@ -52,14 +53,15 @@ class PresetRepository(
             presetId
         }
 
-    /** Replaces the preset's name and full item list in one transaction (simplest correct update path). */
+    /** Replaces the preset's header (name + slot) and full item list in one transaction. */
     suspend fun updatePreset(
         presetId: Long,
         name: String,
+        mealSlot: MealSlot,
         items: List<Pair<Long, Double>>,
     ) {
         database.withTransaction {
-            mealPresetDao.renamePreset(presetId, name)
+            mealPresetDao.updatePresetHeader(presetId, name, mealSlot)
             mealPresetDao.deleteItemsForPreset(presetId)
             items.forEach { (foodItemId, quantityGrams) ->
                 mealPresetDao.insertItem(
@@ -87,14 +89,18 @@ class PresetRepository(
     suspend fun logPreset(
         presetId: Long,
         logDate: String,
+        fallbackSlot: MealSlot,
     ) {
         database.withTransaction {
             val presetWithItems = mealPresetDao.getWithItems(presetId) ?: return@withTransaction
             val diaryEntryDao = database.diaryEntryDao()
             val loggedAt = System.currentTimeMillis()
-            // Presets are one-tap logs with no slot picker, so infer the meal from the clock —
+            // A preset that declares its own meal logs under that meal; an unassigned (legacy)
+            // preset has no opinion, so use the caller-provided clock-based fallback. Either way
             // this is what places the log under the right Diary section and day-part segment.
-            val mealSlot = DateUtils.defaultMealSlotNow()
+            val mealSlot =
+                presetWithItems.preset.mealSlot.takeUnless { it == MealSlot.UNSPECIFIED }
+                    ?: fallbackSlot
             presetWithItems.items.forEach { item ->
                 diaryEntryDao.insert(
                     DiaryEntry(

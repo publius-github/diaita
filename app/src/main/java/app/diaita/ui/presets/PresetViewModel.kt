@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import app.diaita.data.db.dao.PresetWithItems
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealPreset
+import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.PresetRepository
 import app.diaita.data.repository.PresetSummary
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.ui.common.FoodSearchController
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,8 +34,7 @@ data class PresetEditUiState(
     /** Non-null when editing an existing preset rather than creating a new one. */
     val editingPresetId: Long? = null,
     val name: String = "",
-    val searchQuery: String = "",
-    val searchResults: List<FoodItem> = emptyList(),
+    val mealSlot: MealSlot = MealSlot.BREAKFAST,
     val foodPendingQuantity: FoodItem? = null,
     val draftItems: List<DraftPresetItem> = emptyList(),
     val hasError: Boolean = false,
@@ -41,6 +44,8 @@ data class PresetEditUiState(
 class PresetViewModel(
     private val presetRepository: PresetRepository,
     private val foodRepository: FoodRepository,
+    diaryRepository: DiaryRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     val presets: StateFlow<List<PresetSummary>> =
         presetRepository
@@ -50,25 +55,45 @@ class PresetViewModel(
     private val _justLogged = MutableStateFlow(false)
     val justLogged: StateFlow<Boolean> = _justLogged.asStateFlow()
 
-    private val _editState = MutableStateFlow(PresetEditUiState())
+    private val _editState = MutableStateFlow(PresetEditUiState(mealSlot = DateUtils.defaultMealSlotNow()))
     val editState: StateFlow<PresetEditUiState> = _editState.asStateFlow()
 
     private val _undoEvent = MutableSharedFlow<PresetWithItems>(extraBufferCapacity = 1)
     val undoEvent: SharedFlow<PresetWithItems> = _undoEvent.asSharedFlow()
 
-    private val searchQueryFlow = MutableStateFlow("")
-
     init {
+        // Align a fresh draft's default meal slot with the user's day-part settings. Guarded on
+        // editingPresetId so a concurrently loaded existing preset never gets its slot clobbered.
         viewModelScope.launch {
-            searchQueryFlow
-                .flatMapLatest { query -> foodRepository.search(query) }
-                .collect { results -> _editState.update { it.copy(searchResults = results) } }
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            _editState.update {
+                if (it.editingPresetId == null) {
+                    it.copy(mealSlot = DateUtils.defaultMealSlotNow(boundaries))
+                } else {
+                    it
+                }
+            }
         }
     }
 
+    /** Same search/scan/manual pane as the Add-food screen; a picked food opens the quantity dialog. */
+    val foodSearch =
+        FoodSearchController(
+            scope = viewModelScope,
+            foodRepository = foodRepository,
+            diaryRepository = diaryRepository,
+            settingsRepository = settingsRepository,
+            onFoodReady = { food -> _editState.update { it.copy(foodPendingQuantity = food) } },
+        )
+
     fun logPreset(presetId: Long) {
         viewModelScope.launch {
-            presetRepository.logPreset(presetId, DateUtils.today())
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            presetRepository.logPreset(
+                presetId,
+                DateUtils.today(),
+                fallbackSlot = DateUtils.defaultMealSlotNow(boundaries),
+            )
             _justLogged.value = true
         }
     }
@@ -107,6 +132,7 @@ class PresetViewModel(
                 it.copy(
                     editingPresetId = presetId,
                     name = presetWithItems.preset.name,
+                    mealSlot = presetWithItems.preset.mealSlot,
                     draftItems = draftItems,
                 )
             }
@@ -115,12 +141,7 @@ class PresetViewModel(
 
     fun onNameChanged(name: String) = _editState.update { it.copy(name = name, hasError = false) }
 
-    fun onSearchQueryChanged(query: String) {
-        _editState.update { it.copy(searchQuery = query) }
-        searchQueryFlow.value = query
-    }
-
-    fun onFoodSelected(food: FoodItem) = _editState.update { it.copy(foodPendingQuantity = food) }
+    fun onMealSlotChanged(mealSlot: MealSlot) = _editState.update { it.copy(mealSlot = mealSlot) }
 
     fun dismissQuantityDialog() = _editState.update { it.copy(foodPendingQuantity = null) }
 
@@ -134,6 +155,7 @@ class PresetViewModel(
                 foodPendingQuantity = null,
             )
         }
+        foodSearch.clearSearch()
     }
 
     fun removeDraftItem(item: DraftPresetItem) {
@@ -149,11 +171,14 @@ class PresetViewModel(
         viewModelScope.launch {
             val items = state.draftItems.map { it.food.id to it.quantityGrams }
             if (state.editingPresetId != null) {
-                presetRepository.updatePreset(state.editingPresetId, state.name.trim(), items)
+                presetRepository.updatePreset(state.editingPresetId, state.name.trim(), state.mealSlot, items)
             } else {
-                presetRepository.createPreset(state.name.trim(), items)
+                presetRepository.createPreset(state.name.trim(), state.mealSlot, items)
             }
-            _editState.update { PresetEditUiState(saved = true) }
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            _editState.update {
+                PresetEditUiState(saved = true, mealSlot = DateUtils.defaultMealSlotNow(boundaries))
+            }
         }
     }
 

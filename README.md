@@ -1,63 +1,140 @@
 # Diaita
 
-A simple offline-first calorie and macro tracker for Android: manual food entry, local + OpenFoodFacts search, meal presets (with editing), meal slots (breakfast/lunch/dinner/snack), daily goals, weight tracking, a 30-day history chart with day drill-down, monthly averages, and CSV export.
+[![CI](https://github.com/publius-github/diaita/actions/workflows/ci.yml/badge.svg)](https://github.com/publius-github/diaita/actions/workflows/ci.yml)
 
-The Android app id remains `app.diaita`; "Diaita" is the display name and launcher label.
+A simple, offline-first calorie, macro and weight tracker for Android. Log meals in
+seconds, reuse presets, and keep an eye on your pace through the day — no account,
+no cloud, all data stays on the device.
 
-See `the project notes` for the full architecture and phase-by-phase build log.
+Built with Kotlin and Jetpack Compose. The application id is
+`app.diaita`; "Diaita" is the display name.
+
+## Features
+
+**Food diary**
+- Log foods with per-meal slots (breakfast / lunch / dinner / snack) and day-part
+  grouping (morning / day / evening with configurable boundaries).
+- Running daily totals with a calorie progress ring and optional macro (P/F/C) tracking.
+- Edit quantities in place, delete with undo, log today's weight right from the Home screen.
+
+**Adding food**
+- Search the local food catalog (seeded with common foods) with instant results.
+- Online search via [OpenFoodFacts](https://openfoodfacts.org) (optional, can be turned
+  off) — results are cached locally, so previously found foods work offline.
+- Barcode scanner for packaged products.
+- Manual entry for anything else, plus a recent-foods quick row.
+
+**Presets**
+- Save recurring meals as presets and log them with one tap.
+- Presets show as a single collapsed row in the diary and can be edited later.
+
+**Goals and history**
+- Daily calorie and macro targets, optional weight target.
+- Calorie wizard to estimate daily needs.
+- 30-day history chart with over-goal highlighting and per-day drill-down.
+- Weight tracking with a trend chart and target line.
+- Entries older than 30 days are folded into monthly averages automatically.
+
+**Data ownership**
+- Full backup and restore to a single file.
+- CSV export of the diary for spreadsheets.
+- Optional daily reminders to log food and weight.
+
+## Tech stack
+
+| Area | Choice |
+| --- | --- |
+| Language / UI | Kotlin, Jetpack Compose (Material 3) |
+| Architecture | MVVM, single Activity, manual DI (`AppContainer`) |
+| Persistence | Room (exported schemas, tested migrations), DataStore Preferences |
+| Networking | Retrofit + OkHttp + kotlinx.serialization (OpenFoodFacts only) |
+| Background work | WorkManager (reminders), coroutine-based retention maintenance |
+| Charts | Hand-rolled Compose `Canvas` charts (no charting library) |
+| Quality | ktlint, unit tests, Room migration tests, GitHub Actions CI |
 
 ## Requirements
 
-- **Android Studio** (any recent version — developed against a 2026 release) with the Android SDK.
-- **JDK 17+** (bundled with Android Studio, no separate install needed).
-- SDK Platform **36** and Build-Tools **36.1.0** (Android Studio's SDK Manager will prompt to install these automatically on first Gradle sync if missing).
+- Android Studio (any recent version) with the Android SDK, or just a JDK 17+ for
+  command-line builds.
+- SDK Platform 36 (Android Studio installs it automatically on first Gradle sync).
+- Device or emulator running Android 8.0+ (`minSdk = 26`).
 
-The project pins its own Gradle/AGP/Kotlin versions via the Gradle wrapper and version catalog (`gradle/libs.versions.toml`), so no separate global installs of Gradle or Kotlin are required.
+Gradle, AGP and Kotlin versions are pinned by the Gradle wrapper and the version
+catalog (`gradle/libs.versions.toml`) — no global installs needed.
 
-## Build & run from Android Studio (recommended)
+## Build and run
 
-1. **File → Open**, select this project's folder.
-2. Wait for Gradle sync to finish (first sync downloads dependencies — can take a few minutes).
-3. Pick a target device from the device dropdown (create an emulator via **Device Manager** if needed — see `the project notes` Phase 0 for setup notes).
-4. Click **Run ▶**. This builds the debug APK and installs it on the selected device automatically.
+### Android Studio
 
-If a build ever fails with a stale-looking error after pulling new code, do a clean rebuild before assuming it's broken: **Build → Clean Project**, then **Build → Assemble Project**, then **Run** again.
+1. File → Open, select the project folder, wait for Gradle sync.
+2. Pick a device or emulator and press Run.
 
-## Build from the command line
-
-The project includes a Gradle wrapper, so no local Gradle install is required.
+### Command line
 
 ```bash
-# Windows
-gradlew.bat assembleDebug
-
 # macOS / Linux / WSL
 ./gradlew assembleDebug
+
+# Windows
+gradlew.bat assembleDebug
 ```
 
-The output APK is written to:
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
+
+### Install on a phone via adb
+
+1. Enable Developer Options (tap Build number 7 times) and USB debugging.
+2. Connect via USB and confirm the device shows up in `adb devices`.
+3. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
+
+## Release builds
+
+Release builds are minified (R8) and signed with a local keystore that is never
+committed. To produce a signed release APK, add to `local.properties`:
+
+```properties
+RELEASE_STORE_FILE=<path to your .jks, relative to the project root>
+RELEASE_STORE_PASSWORD=...
+RELEASE_KEY_ALIAS=...
+RELEASE_KEY_PASSWORD=...
+```
+
+Then run `./gradlew assembleRelease`. Without these properties the release build
+still compiles but produces an unsigned APK (this is what CI does).
+
+Bump `versionCode` in `app/build.gradle.kts` before sharing a new APK — Android
+refuses to update an app whose `versionCode` did not increase.
+
+## Testing and checks
+
+```bash
+./gradlew ktlintCheck        # code style
+./gradlew testDebugUnitTest  # unit tests
+./gradlew connectedAndroidTest  # Room migration tests (needs a device/emulator)
+```
+
+CI (GitHub Actions) runs ktlint, assembles debug and release, and runs unit tests
+on every push and pull request.
+
+## Project structure
 
 ```
-app/build/outputs/apk/debug/app-debug.apk
+app/src/main/java/app/diaita/
+├── data/          # Room entities/DAOs, repositories, OpenFoodFacts client,
+│                  # backup, CSV export, reminders, retention, settings
+├── ui/            # One package per screen (diary, addfood, presets, goals,
+│                  # history, daydetail, settings, about) + shared components
+└── util/          # Small helpers
+app/schemas/       # Exported Room schemas (fixtures for migration tests)
+the project notes       # Development log: architecture decisions and build history
 ```
 
-## Install the APK manually (no Play Store)
+## Privacy
 
-This app is debug-only, sideloaded via `adb` — it isn't published anywhere.
+The app makes network requests only to the OpenFoodFacts API, and only when online
+search is enabled. There is no analytics, no accounts and no data collection —
+everything is stored in a local database on the device.
 
-1. On the phone: **Settings → About phone** → tap **Build number** 7 times to unlock Developer Options.
-2. **Settings → Developer Options** → enable **USB debugging**.
-3. Connect the phone via USB and accept the "Allow USB debugging?" prompt.
-4. Verify it's detected: `adb devices` should list it as `device` (not `unauthorized`).
-5. Install the APK:
+## License
 
-   ```bash
-   adb install -r app/build/outputs/apk/debug/app-debug.apk
-   ```
-
-   (On Windows, use backslashes if running from `cmd`/PowerShell: `app\build\outputs\apk\debug\app-debug.apk`.)
-
-## Notes
-
-- No release/signed build is configured — this is a personal-use app distributed as a plain debug APK.
-- The local Room database resets on schema changes (`fallbackToDestructiveMigration()`), which is expected during active development — see `the project notes` for details.
+[MIT](LICENSE)
