@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.diaita.data.db.dao.PresetWithItems
 import app.diaita.data.db.entities.FoodItem
+import app.diaita.data.db.entities.FoodSource
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.PresetRepository
@@ -121,6 +122,37 @@ class PresetViewModel(
     }
 
     fun onFoodSelected(food: FoodItem) = _editState.update { it.copy(foodPendingQuantity = food) }
+
+    /**
+     * Saves a manually entered food and drops it into the same quantity-dialog flow as a
+     * search pick, so it lands in the draft after the user confirms grams.
+     * Field state and validation live in [app.diaita.ui.common.ManualFoodForm].
+     */
+    fun saveManualFood(
+        name: String,
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        fatPer100g: Double,
+        carbsPer100g: Double,
+    ) {
+        viewModelScope.launch {
+            val id = foodRepository.addManualFood(name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g)
+            _editState.update {
+                it.copy(
+                    foodPendingQuantity =
+                        FoodItem(
+                            id = id,
+                            name = name,
+                            caloriesPer100g = caloriesPer100g,
+                            proteinPer100g = proteinPer100g,
+                            fatPer100g = fatPer100g,
+                            carbsPer100g = carbsPer100g,
+                            source = FoodSource.MANUAL,
+                        ),
+                )
+            }
+        }
+    }
 
     fun dismissQuantityDialog() = _editState.update { it.copy(foodPendingQuantity = null) }
 

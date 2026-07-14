@@ -105,10 +105,4 @@ class GoalsViewModel(
             _savedEvent.emit(Unit)
         }
     }
-
-    /** Applies a calculator suggestion: sets the calorie target and derives macros via the quick split. */
-    fun applyCalculatedCalories(calories: Int) {
-        _uiState.update { it.copy(calorieTarget = calories.toString(), hasError = false) }
-        applyQuickSplit()
-    }
 }

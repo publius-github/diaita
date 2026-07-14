@@ -11,7 +11,6 @@ import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.OffSearchOutcome
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.util.DateUtils
-import app.diaita.util.normalizedDecimalOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,12 +35,6 @@ data class AddFoodUiState(
     val offSearching: Boolean = false,
     val scanError: ScanError? = null,
     val foodPendingQuantity: FoodItem? = null,
-    val manualName: String = "",
-    val manualCalories: String = "",
-    val manualProtein: String = "",
-    val manualFat: String = "",
-    val manualCarbs: String = "",
-    val manualHasError: Boolean = false,
     val justLogged: Boolean = false,
 )
 
@@ -137,48 +130,28 @@ class AddFoodViewModel(
         }
     }
 
-    fun onManualNameChanged(value: String) = _uiState.update { it.copy(manualName = value, manualHasError = false) }
-
-    fun onManualCaloriesChanged(value: String) =
-        _uiState.update { it.copy(manualCalories = value, manualHasError = false) }
-
-    fun onManualProteinChanged(value: String) =
-        _uiState.update { it.copy(manualProtein = value, manualHasError = false) }
-
-    fun onManualFatChanged(value: String) = _uiState.update { it.copy(manualFat = value, manualHasError = false) }
-
-    fun onManualCarbsChanged(value: String) = _uiState.update { it.copy(manualCarbs = value, manualHasError = false) }
-
-    fun saveManualFood() {
-        val state = _uiState.value
-        val calories = state.manualCalories.normalizedDecimalOrNull()
-        val protein = state.manualProtein.normalizedDecimalOrNull()
-        val fat = state.manualFat.normalizedDecimalOrNull()
-        val carbs = state.manualCarbs.normalizedDecimalOrNull()
-        if (state.manualName.isBlank() || calories == null || protein == null || fat == null || carbs == null) {
-            _uiState.update { it.copy(manualHasError = true) }
-            return
-        }
+    /** Field state and validation live in [app.diaita.ui.common.ManualFoodForm]. */
+    fun saveManualFood(
+        name: String,
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        fatPer100g: Double,
+        carbsPer100g: Double,
+    ) {
         viewModelScope.launch {
-            val name = state.manualName.trim()
-            val id = foodRepository.addManualFood(name, calories, protein, fat, carbs)
+            val id = foodRepository.addManualFood(name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g)
             _uiState.update {
                 it.copy(
-                    manualName = "",
-                    manualCalories = "",
-                    manualProtein = "",
-                    manualFat = "",
-                    manualCarbs = "",
                     showManualEntry = false,
                     // reuse the same quantity-dialog flow used by search results
                     foodPendingQuantity =
                         FoodItem(
                             id = id,
                             name = name,
-                            caloriesPer100g = calories,
-                            proteinPer100g = protein,
-                            fatPer100g = fat,
-                            carbsPer100g = carbs,
+                            caloriesPer100g = caloriesPer100g,
+                            proteinPer100g = proteinPer100g,
+                            fatPer100g = fatPer100g,
+                            carbsPer100g = carbsPer100g,
                             source = FoodSource.MANUAL,
                         ),
                 )

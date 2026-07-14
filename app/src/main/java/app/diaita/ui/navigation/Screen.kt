@@ -19,6 +19,8 @@ sealed class Screen(
 
     data object Goals : Screen("settings/goals")
 
+    data object GoalWizard : Screen("settings/goal-wizard")
+
     data object Backup : Screen("settings/backup")
 
     data object DayDetail : Screen("day/{date}") {

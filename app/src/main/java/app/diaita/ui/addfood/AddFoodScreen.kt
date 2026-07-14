@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,7 +47,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,6 +54,7 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.ManualFoodForm
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.presets.PresetViewModel
 import app.diaita.util.DateUtils
@@ -168,7 +167,11 @@ private fun FoodsTab(
                 .fillMaxSize(),
     ) {
         if (uiState.showManualEntry) {
-            ManualEntryForm(uiState, viewModel)
+            ManualFoodForm(
+                saveLabel = stringResource(R.string.save_and_log),
+                onBack = { viewModel.onShowManualEntryChanged(false) },
+                onSave = viewModel::saveManualFood,
+            )
         } else {
             SearchForm(uiState, viewModel)
         }
@@ -277,83 +280,6 @@ private fun SearchForm(
             Text(stringResource(R.string.add_manually))
         }
     }
-}
-
-@Composable
-private fun ManualEntryForm(
-    uiState: AddFoodUiState,
-    viewModel: AddFoodViewModel,
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        TextButton(onClick = { viewModel.onShowManualEntryChanged(false) }) {
-            Text(stringResource(R.string.back_to_search))
-        }
-        OutlinedTextField(
-            value = uiState.manualName,
-            onValueChange = viewModel::onManualNameChanged,
-            label = { Text(stringResource(R.string.name_label)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ManualMacroField(
-            value = uiState.manualCalories,
-            onValueChange = viewModel::onManualCaloriesChanged,
-            labelRes = R.string.calories_per_100,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ManualMacroField(
-            value = uiState.manualProtein,
-            onValueChange = viewModel::onManualProteinChanged,
-            labelRes = R.string.protein_per_100,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ManualMacroField(
-            value = uiState.manualFat,
-            onValueChange = viewModel::onManualFatChanged,
-            labelRes = R.string.fat_per_100,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ManualMacroField(
-            value = uiState.manualCarbs,
-            onValueChange = viewModel::onManualCarbsChanged,
-            labelRes = R.string.carbs_per_100,
-            imeAction = ImeAction.Done,
-            onDone = viewModel::saveManualFood,
-        )
-        if (uiState.manualHasError) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(stringResource(R.string.manual_error), color = MaterialTheme.colorScheme.error)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = viewModel::saveManualFood, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.save_and_log))
-        }
-    }
-}
-
-@Composable
-private fun ManualMacroField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    labelRes: Int,
-    imeAction: ImeAction = ImeAction.Next,
-    onDone: (() -> Unit)? = null,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(stringResource(labelRes)) },
-        singleLine = true,
-        keyboardOptions =
-            KeyboardOptions(
-                keyboardType = KeyboardType.Decimal,
-                imeAction = imeAction,
-            ),
-        keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
-        modifier = Modifier.fillMaxWidth(),
-    )
 }
 
 @Composable

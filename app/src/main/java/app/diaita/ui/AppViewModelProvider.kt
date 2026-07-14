@@ -10,6 +10,7 @@ import app.diaita.CalorieCounterApplication
 import app.diaita.ui.addfood.AddFoodViewModel
 import app.diaita.ui.daydetail.DayDetailViewModel
 import app.diaita.ui.diary.DiaryViewModel
+import app.diaita.ui.goals.GoalWizardViewModel
 import app.diaita.ui.goals.GoalsViewModel
 import app.diaita.ui.history.HistoryViewModel
 import app.diaita.ui.presets.PresetViewModel
@@ -38,6 +39,7 @@ object AppViewModelProvider {
             }
             initializer { PresetViewModel(appContainer().presetRepository, appContainer().foodRepository) }
             initializer { GoalsViewModel(appContainer().goalRepository) }
+            initializer { GoalWizardViewModel(appContainer().goalRepository) }
             initializer {
                 SettingsViewModel(
                     appContainer().settingsRepository,

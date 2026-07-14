@@ -66,6 +66,7 @@ import java.util.Locale
 fun DiaryScreen(
     onAddFoodClick: () -> Unit,
     onOpenGoals: () -> Unit,
+    onOpenWizard: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
@@ -114,12 +115,12 @@ fun DiaryScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
         ) {
             DailyTotalsCard(uiState)
             if (uiState.loaded && uiState.goalCalories == null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                SetGoalBanner(onOpenGoals = onOpenGoals)
+                SetGoalBanner(onOpenGoals = onOpenGoals, onOpenWizard = onOpenWizard)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -251,23 +252,31 @@ fun DiaryScreen(
 
 /** Nudges a fresh install towards setting a calorie goal — the ring is meaningless without one. */
 @Composable
-private fun SetGoalBanner(onOpenGoals: () -> Unit) {
+private fun SetGoalBanner(
+    onOpenGoals: () -> Unit,
+    onOpenWizard: () -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
+        Column(
             modifier =
                 Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 stringResource(R.string.first_run_goal_body),
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = onOpenGoals) {
-                Text(stringResource(R.string.first_run_goal_button))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onOpenWizard) {
+                    Text(stringResource(R.string.first_run_goal_wizard))
+                }
+                TextButton(onClick = onOpenGoals) {
+                    Text(stringResource(R.string.first_run_goal_manual))
+                }
             }
         }
     }
@@ -572,19 +581,22 @@ private fun DiaryRowCard(
             Modifier.fillMaxWidth()
         }
 
+    // Compact row: the default 48dp IconButton touch target plus uniform 12dp padding used
+    // to inflate every entry to ~72dp; trimming both fits noticeably more rows per screen.
     Card(modifier = cardModifier) {
         Row(
             modifier =
                 Modifier
-                    .padding(12.dp)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
                     .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall)
             }
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                 Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
             }
         }

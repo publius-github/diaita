@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.ManualFoodForm
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.util.NutrientMath
 
@@ -203,6 +204,7 @@ private fun FoodPicker(
     modifier: Modifier = Modifier,
 ) {
     val focusRequester = remember { FocusRequester() }
+    var showManualEntry by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -227,28 +229,45 @@ private fun FoodPicker(
                     .fillMaxSize()
                     .padding(16.dp),
         ) {
-            OutlinedTextField(
-                value = state.searchQuery,
-                onValueChange = viewModel::onSearchQueryChanged,
-                label = { Text(stringResource(R.string.search_to_add)) },
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester),
-            )
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(state.searchResults, key = { it.id }) { food ->
-                    ListItem(
-                        headlineContent = { Text(food.name) },
-                        supportingContent = {
-                            Text(stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()))
-                        },
-                        modifier = Modifier.clickable { viewModel.onFoodSelected(food) },
-                    )
+            if (showManualEntry) {
+                ManualFoodForm(
+                    saveLabel = stringResource(R.string.save_and_add),
+                    onBack = { showManualEntry = false },
+                    onSave = { name, calories, protein, fat, carbs ->
+                        viewModel.saveManualFood(name, calories, protein, fat, carbs)
+                        showManualEntry = false
+                    },
+                )
+            } else {
+                OutlinedTextField(
+                    value = state.searchQuery,
+                    onValueChange = viewModel::onSearchQueryChanged,
+                    label = { Text(stringResource(R.string.search_to_add)) },
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                )
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(state.searchResults, key = { it.id }) { food ->
+                        ListItem(
+                            headlineContent = { Text(food.name) },
+                            supportingContent = {
+                                Text(stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()))
+                            },
+                            modifier = Modifier.clickable { viewModel.onFoodSelected(food) },
+                        )
+                    }
+                }
+                TextButton(
+                    onClick = { showManualEntry = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.add_manually))
                 }
             }
         }

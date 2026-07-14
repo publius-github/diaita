@@ -33,6 +33,7 @@ import app.diaita.ui.AppViewModelProvider
 @Composable
 fun SettingsScreen(
     onGoalsClick: () -> Unit,
+    onWizardClick: () -> Unit,
     onBackupClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -79,6 +80,15 @@ fun SettingsScreen(
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
             },
             modifier = Modifier.clickable(onClick = onGoalsClick),
+        )
+        HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_wizard)) },
+            supportingContent = { Text(stringResource(R.string.settings_wizard_desc)) },
+            trailingContent = {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            },
+            modifier = Modifier.clickable(onClick = onWizardClick),
         )
         HorizontalDivider()
         ListItem(

@@ -1,5 +1,6 @@
 package app.diaita.ui.navigation
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -28,6 +29,7 @@ import app.diaita.R
 import app.diaita.ui.addfood.AddFoodScreen
 import app.diaita.ui.daydetail.DayDetailScreen
 import app.diaita.ui.diary.DiaryScreen
+import app.diaita.ui.goals.GoalWizardScreen
 import app.diaita.ui.goals.GoalsScreen
 import app.diaita.ui.history.HistoryScreen
 import app.diaita.ui.presets.PresetEditScreen
@@ -80,12 +82,18 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         NavHost(
             navController = navController,
             startDestination = Screen.Diary.route,
-            modifier = Modifier.padding(innerPadding),
+            // consumeWindowInsets stops nested Scaffolds (Diary, Goals, ...) from applying
+            // the status-bar inset a second time on top of this Scaffold's padding.
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
         ) {
             composable(Screen.Diary.route) {
                 DiaryScreen(
                     onAddFoodClick = { navController.navigate(Screen.AddFood.route) },
                     onOpenGoals = { navController.navigate(Screen.Goals.route) },
+                    onOpenWizard = { navController.navigate(Screen.GoalWizard.route) },
                 )
             }
             composable(Screen.AddFood.route) {
@@ -134,11 +142,18 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onGoalsClick = { navController.navigate(Screen.Goals.route) },
+                    onWizardClick = { navController.navigate(Screen.GoalWizard.route) },
                     onBackupClick = { navController.navigate(Screen.Backup.route) },
                 )
             }
             composable(Screen.Goals.route) {
-                GoalsScreen(onBack = { navController.popBackStack() })
+                GoalsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenWizard = { navController.navigate(Screen.GoalWizard.route) },
+                )
+            }
+            composable(Screen.GoalWizard.route) {
+                GoalWizardScreen(onDone = { navController.popBackStack() })
             }
             composable(Screen.Backup.route) {
                 BackupScreen(onBack = { navController.popBackStack() })

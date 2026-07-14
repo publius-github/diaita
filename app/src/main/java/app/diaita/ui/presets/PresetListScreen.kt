@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -114,12 +117,15 @@ fun PresetListScreen(
                                 .animateItem()
                                 .clickable { onEditPresetClick(presetWithItems.preset.id) },
                     ) {
+                        // Same compact-row treatment as the diary list: trimmed vertical
+                        // padding and 36dp icon buttons instead of the default 48dp.
                         Row(
                             modifier =
                                 Modifier
-                                    .padding(12.dp)
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
                                     .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column {
                                 Text(presetWithItems.preset.name, style = MaterialTheme.typography.bodyLarge)
@@ -132,23 +138,26 @@ fun PresetListScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
                                     onClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.logPreset(presetWithItems.preset.id)
                                     },
+                                    modifier = Modifier.size(36.dp),
                                 ) {
                                     Icon(
                                         Icons.Filled.PlayArrow,
                                         contentDescription = stringResource(R.string.log_preset),
                                     )
                                 }
+                                Spacer(modifier = Modifier.width(4.dp))
                                 IconButton(
                                     onClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.deletePreset(presetWithItems.preset)
                                     },
+                                    modifier = Modifier.size(36.dp),
                                 ) {
                                     Icon(
                                         Icons.Filled.Delete,
