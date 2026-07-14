@@ -58,6 +58,7 @@ import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
 import app.diaita.ui.common.MealSlotPicker
+import app.diaita.ui.common.progressTrackColor
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.label
 import app.diaita.util.DateUtils
@@ -466,6 +467,7 @@ private fun DayPartSegment(
                     .fillMaxWidth()
                     .height(6.dp),
             color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            trackColor = progressTrackColor(),
         )
         // Label and figures are stacked, not side-by-side: a narrow (30%-width) segment can't
         // fit "Morning" next to two 4-digit numbers, so the label takes the first line and the
@@ -527,6 +529,7 @@ private fun MacroBar(
                 Modifier
                     .weight(1f)
                     .height(6.dp),
+            trackColor = progressTrackColor(),
         )
         Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterEnd) {
             if (reached) {

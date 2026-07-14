@@ -12,7 +12,7 @@
     <string name="close">Close</string>
 
     <!-- Bottom nav -->
-    <string name="nav_today">Today</string>
+    <string name="nav_home">Home</string>
     <string name="nav_presets">Presets</string>
     <string name="nav_history">History</string>
     <string name="nav_settings">Settings</string>

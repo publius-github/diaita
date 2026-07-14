@@ -31,6 +31,7 @@ fun MacroProgressRing(
                 modifier = Modifier.fillMaxSize(),
                 strokeWidth = 10.dp,
                 color = ringColor,
+                trackColor = progressTrackColor(),
             )
             Text(
                 stringResource(R.string.ring_progress, consumedCalories.toInt(), goalCalories),

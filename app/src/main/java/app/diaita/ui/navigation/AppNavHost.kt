@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -45,7 +45,7 @@ private data class BottomNavItem(
 
 private val bottomNavItems =
     listOf(
-        BottomNavItem(Screen.Diary, R.string.nav_today, Icons.Filled.Today),
+        BottomNavItem(Screen.Diary, R.string.nav_home, Icons.Filled.Home),
         BottomNavItem(Screen.PresetList, R.string.nav_presets, Icons.Filled.List),
         BottomNavItem(Screen.History, R.string.nav_history, Icons.Filled.History),
         BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
