@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -466,22 +467,27 @@ private fun DayPartSegment(
                     .height(6.dp),
             color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(part.label(), style = MaterialTheme.typography.labelSmall)
-            Text(
-                stringResource(R.string.day_part_kcal, consumed.toInt(), target),
-                style = MaterialTheme.typography.labelSmall,
-                color =
-                    if (isOver) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-            )
-        }
+        // Label and figures are stacked, not side-by-side: a narrow (30%-width) segment can't
+        // fit "Morning" next to two 4-digit numbers, so the label takes the first line and the
+        // consumed/target pair gets the full segment width on its own single line.
+        Text(
+            part.label(),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            stringResource(R.string.day_part_kcal, consumed.toInt(), target),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false,
+            color =
+                if (isOver) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+        )
     }
 }
 
@@ -587,7 +593,7 @@ private fun DiaryRowCard(
         Row(
             modifier =
                 Modifier
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .padding(horizontal = 12.dp, vertical = 9.dp)
                     .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,

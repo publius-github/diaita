@@ -122,7 +122,7 @@ fun PresetListScreen(
                         Row(
                             modifier =
                                 Modifier
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .padding(horizontal = 12.dp, vertical = 9.dp)
                                     .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
