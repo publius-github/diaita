@@ -26,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.diaita.R
+import app.diaita.ui.about.AboutScreen
 import app.diaita.ui.addfood.AddFoodScreen
 import app.diaita.ui.daydetail.DayDetailScreen
 import app.diaita.ui.diary.DiaryScreen
@@ -34,8 +35,12 @@ import app.diaita.ui.goals.GoalsScreen
 import app.diaita.ui.history.HistoryScreen
 import app.diaita.ui.presets.PresetEditScreen
 import app.diaita.ui.presets.PresetListScreen
+import app.diaita.ui.settings.AppearanceSettingsScreen
 import app.diaita.ui.settings.BackupScreen
+import app.diaita.ui.settings.DataSettingsScreen
+import app.diaita.ui.settings.NotificationsSettingsScreen
 import app.diaita.ui.settings.SettingsScreen
+import app.diaita.ui.settings.TrackingSettingsScreen
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -143,6 +148,25 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 SettingsScreen(
                     onGoalsClick = { navController.navigate(Screen.Goals.route) },
                     onWizardClick = { navController.navigate(Screen.GoalWizard.route) },
+                    onAppearanceClick = { navController.navigate(Screen.SettingsAppearance.route) },
+                    onTrackingClick = { navController.navigate(Screen.SettingsTracking.route) },
+                    onNotificationsClick = { navController.navigate(Screen.SettingsNotifications.route) },
+                    onDataClick = { navController.navigate(Screen.SettingsData.route) },
+                    onAboutClick = { navController.navigate(Screen.About.route) },
+                )
+            }
+            composable(Screen.SettingsAppearance.route) {
+                AppearanceSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsTracking.route) {
+                TrackingSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsNotifications.route) {
+                NotificationsSettingsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.SettingsData.route) {
+                DataSettingsScreen(
+                    onBack = { navController.popBackStack() },
                     onBackupClick = { navController.navigate(Screen.Backup.route) },
                 )
             }
@@ -157,6 +181,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             }
             composable(Screen.Backup.route) {
                 BackupScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.About.route) {
+                AboutScreen(onBack = { navController.popBackStack() })
             }
         }
     }

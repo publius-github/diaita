@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,7 +45,7 @@ class PresetViewModel(
     private val presetRepository: PresetRepository,
     private val foodRepository: FoodRepository,
     diaryRepository: DiaryRepository,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     val presets: StateFlow<List<PresetSummary>> =
         presetRepository
@@ -60,6 +61,21 @@ class PresetViewModel(
     private val _undoEvent = MutableSharedFlow<PresetWithItems>(extraBufferCapacity = 1)
     val undoEvent: SharedFlow<PresetWithItems> = _undoEvent.asSharedFlow()
 
+    init {
+        // Align a fresh draft's default meal slot with the user's day-part settings. Guarded on
+        // editingPresetId so a concurrently loaded existing preset never gets its slot clobbered.
+        viewModelScope.launch {
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            _editState.update {
+                if (it.editingPresetId == null) {
+                    it.copy(mealSlot = DateUtils.defaultMealSlotNow(boundaries))
+                } else {
+                    it
+                }
+            }
+        }
+    }
+
     /** Same search/scan/manual pane as the Add-food screen; a picked food opens the quantity dialog. */
     val foodSearch =
         FoodSearchController(
@@ -72,7 +88,12 @@ class PresetViewModel(
 
     fun logPreset(presetId: Long) {
         viewModelScope.launch {
-            presetRepository.logPreset(presetId, DateUtils.today())
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            presetRepository.logPreset(
+                presetId,
+                DateUtils.today(),
+                fallbackSlot = DateUtils.defaultMealSlotNow(boundaries),
+            )
             _justLogged.value = true
         }
     }
@@ -154,7 +175,10 @@ class PresetViewModel(
             } else {
                 presetRepository.createPreset(state.name.trim(), state.mealSlot, items)
             }
-            _editState.update { PresetEditUiState(saved = true, mealSlot = DateUtils.defaultMealSlotNow()) }
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            _editState.update {
+                PresetEditUiState(saved = true, mealSlot = DateUtils.defaultMealSlotNow(boundaries))
+            }
         }
     }
 

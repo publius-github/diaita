@@ -73,7 +73,7 @@ fun PresetSectionHeader(section: PresetSection) {
  * Tap-to-log preset list used by the Add-food screen's Presets tab: grouped by meal slot with
  * the same section headers as the management screen, each preset a tappable [ListItem].
  */
-fun LazyListScope.PresetLogList(
+fun LazyListScope.presetLogList(
     presets: List<PresetSummary>,
     onLogPreset: (Long) -> Unit,
 ) {

@@ -95,10 +95,10 @@ class FoodSearchController(
                 .flatMapLatest { query -> foodRepository.search(query) }
                 .collect { results -> _state.update { it.copy(searchResults = results) } }
         }
-        // Recently logged foods for the quick-access chip row.
+        // Recently logged foods for the quick-access chip row; the count is user-configurable.
         scope.launch {
-            diaryRepository
-                .recentFoods()
+            settingsRepository.recentFoodsCount
+                .flatMapLatest { count -> diaryRepository.recentFoods(count) }
                 .collect { foods -> _state.update { it.copy(recentFoods = foods) } }
         }
         // The persisted OpenFoodFacts toggle is the single source of truth (DataStore).

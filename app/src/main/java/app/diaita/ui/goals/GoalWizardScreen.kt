@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.label
 import app.diaita.util.ExerciseLevel
 import app.diaita.util.WeightPlan
 import app.diaita.util.WorkActivity
@@ -177,7 +178,7 @@ private fun AboutYouStep(
     OutlinedTextField(
         value = state.weightText,
         onValueChange = viewModel::onWeightChanged,
-        label = { Text(stringResource(R.string.calc_weight)) },
+        label = { Text(stringResource(R.string.calc_weight_label, state.weightUnit.label())) },
         singleLine = true,
         keyboardOptions =
             KeyboardOptions(

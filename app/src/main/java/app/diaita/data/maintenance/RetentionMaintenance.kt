@@ -9,7 +9,8 @@ import java.time.format.DateTimeFormatter
 /**
  * Retention policy, run as a cheap idempotent check on every app start:
  * - raw [app.diaita.data.db.entities.DiaryEntry] rows are kept for
- *   [RAW_RETENTION_DAYS] (a full year, so "what did I eat back then" keeps working);
+ *   [retentionDays] (user-configurable, default a full year, so "what did I eat back
+ *   then" keeps working);
  * - anything older gets folded into per-month averages ([MonthlyAggregate]) and the raw
  *   rows deleted. Aggregates are kept indefinitely — they are a handful of rows per year.
  *
@@ -20,11 +21,12 @@ class RetentionMaintenance(
     private val diaryEntryDao: DiaryEntryDao,
     private val aggregateDao: MonthlyAggregateDao,
     private val today: LocalDate = LocalDate.now(),
+    private val retentionDays: Int = RAW_RETENTION_DAYS,
 ) {
     suspend fun run() {
         val cutoffDate =
             today
-                .minusDays(RAW_RETENTION_DAYS - 1L)
+                .minusDays(retentionDays - 1L)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE)
 
         val oldDays = diaryEntryDao.dailyTotalsBefore(cutoffDate)

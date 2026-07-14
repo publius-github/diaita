@@ -3,12 +3,15 @@ package app.diaita.ui.goals
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.diaita.data.repository.GoalRepository
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WeightUnit
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -18,12 +21,15 @@ data class GoalsUiState(
     val proteinTarget: String = "",
     val fatTarget: String = "",
     val carbsTarget: String = "",
+    /** Weight target text in the user's display unit; converted to kg on save. */
     val weightTarget: String = "",
+    val weightUnit: WeightUnit = WeightUnit.KG,
     val hasError: Boolean = false,
 )
 
 class GoalsViewModel(
     private val goalRepository: GoalRepository,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GoalsUiState())
     val uiState: StateFlow<GoalsUiState> = _uiState.asStateFlow()
@@ -38,22 +44,26 @@ class GoalsViewModel(
 
     init {
         viewModelScope.launch {
-            goalRepository.getGoal().collect { goal ->
-                if (goal != null) {
+            combine(goalRepository.getGoal(), settingsRepository.weightUnit, ::Pair)
+                .collect { (goal, unit) ->
                     _uiState.update {
-                        it.copy(
-                            calorieTarget = goal.calorieTarget.toString(),
-                            proteinTarget = goal.proteinTargetG.toString(),
-                            fatTarget = goal.fatTargetG.toString(),
-                            carbsTarget = goal.carbsTargetG.toString(),
-                            weightTarget =
-                                goal.weightTargetKg
-                                    ?.let { kg -> String.format(Locale.US, "%.1f", kg) }
-                                    .orEmpty(),
-                        )
+                        if (goal != null) {
+                            it.copy(
+                                calorieTarget = goal.calorieTarget.toString(),
+                                proteinTarget = goal.proteinTargetG.toString(),
+                                fatTarget = goal.fatTargetG.toString(),
+                                carbsTarget = goal.carbsTargetG.toString(),
+                                weightTarget =
+                                    goal.weightTargetKg
+                                        ?.let { kg -> String.format(Locale.US, "%.1f", unit.fromKg(kg)) }
+                                        .orEmpty(),
+                                weightUnit = unit,
+                            )
+                        } else {
+                            it.copy(weightUnit = unit)
+                        }
                     }
                 }
-            }
         }
     }
 
@@ -92,9 +102,10 @@ class GoalsViewModel(
         val protein = state.proteinTarget.toIntOrNull()
         val fat = state.fatTarget.toIntOrNull()
         val carbs = state.carbsTarget.toIntOrNull()
-        // Weight target is optional: blank = no target; non-blank must parse.
+        // Weight target is optional: blank = no target; non-blank must parse. The typed value
+        // is in the display unit and stored in kg.
         val weightText = state.weightTarget.trim().replace(',', '.')
-        val weight = if (weightText.isBlank()) null else weightText.toDoubleOrNull()
+        val weight = if (weightText.isBlank()) null else weightText.toDoubleOrNull()?.let(state.weightUnit::toKg)
         val weightInvalid = weightText.isNotBlank() && (weight == null || weight <= 0)
         if (calories == null || protein == null || fat == null || carbs == null || weightInvalid) {
             _uiState.update { it.copy(hasError = true) }

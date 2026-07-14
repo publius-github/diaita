@@ -2,6 +2,7 @@ package app.diaita
 
 import android.app.Application
 import app.diaita.data.maintenance.RetentionMaintenance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class CalorieCounterApplication : Application() {
@@ -16,6 +17,7 @@ class CalorieCounterApplication : Application() {
                 RetentionMaintenance(
                     container.database.diaryEntryDao(),
                     container.database.monthlyAggregateDao(),
+                    retentionDays = container.settingsRepository.retentionDays.first(),
                 ).run()
             }
         }

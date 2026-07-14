@@ -1,6 +1,7 @@
 package app.diaita.util
 
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.settings.DayPartBoundaries
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -21,15 +22,16 @@ object DateUtils {
             .format(timeFormatter)
 
     /**
-     * The meal slot a log made right now most likely belongs to. Thresholds match the
-     * day-part mapping on the Diary screen (before 12:00 = morning, before 17:00 = day,
-     * later = evening) so auto-slotted entries land in the matching bar segment.
+     * The meal slot a log made right now most likely belongs to. Thresholds are the same
+     * user-configurable [DayPartBoundaries] as the day-part mapping on the Diary screen,
+     * so auto-slotted entries land in the matching bar segment.
      */
-    fun defaultMealSlotNow(): MealSlot {
-        val hour = LocalTime.now().hour
+    fun defaultMealSlotNow(boundaries: DayPartBoundaries = DayPartBoundaries()): MealSlot {
+        val now = LocalTime.now()
+        val minutes = now.hour * 60 + now.minute
         return when {
-            hour < 12 -> MealSlot.BREAKFAST
-            hour < 17 -> MealSlot.LUNCH
+            minutes < boundaries.morningEndMinutes -> MealSlot.BREAKFAST
+            minutes < boundaries.dayEndMinutes -> MealSlot.LUNCH
             else -> MealSlot.DINNER
         }
     }

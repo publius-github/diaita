@@ -43,8 +43,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.db.entities.WeightEntry
+import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
+import app.diaita.ui.common.label
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -141,6 +143,7 @@ fun HistoryScreen(
             WeightLineChart(
                 weights = uiState.weights,
                 targetKg = uiState.weightTargetKg,
+                weightUnit = uiState.weightUnit,
                 windowStart = windowStart,
                 totalDays = uiState.days.size.coerceAtLeast(1),
                 modifier = Modifier.fillMaxWidth(),
@@ -149,13 +152,18 @@ fun HistoryScreen(
             Text(
                 stringResource(
                     R.string.latest_weight,
-                    String.format(Locale.US, "%.1f", uiState.weights.last().weightKg),
+                    String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(uiState.weights.last().weightKg)),
+                    uiState.weightUnit.label(),
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
             uiState.weightTargetKg?.let { target ->
                 Text(
-                    stringResource(R.string.weight_target_line, String.format(Locale.US, "%.1f", target)),
+                    stringResource(
+                        R.string.weight_target_line,
+                        String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(target)),
+                        uiState.weightUnit.label(),
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -188,9 +196,10 @@ fun HistoryScreen(
 
     if (showWeightDialog) {
         LogWeightDialog(
+            weightUnit = uiState.weightUnit,
             onDismiss = { showWeightDialog = false },
-            onConfirm = { weight ->
-                viewModel.logWeight(weight)
+            onConfirm = { weightKg ->
+                viewModel.logWeight(weightKg)
                 showWeightDialog = false
             },
         )
@@ -357,6 +366,7 @@ private fun weightGridStep(span: Double): Double =
 private fun WeightLineChart(
     weights: List<WeightEntry>,
     targetKg: Double?,
+    weightUnit: WeightUnit,
     windowStart: LocalDate,
     totalDays: Int,
     modifier: Modifier = Modifier,
@@ -369,7 +379,8 @@ private fun WeightLineChart(
     val chartDescription =
         stringResource(
             R.string.chart_weight_a11y,
-            String.format(Locale.US, "%.1f", weights.last().weightKg),
+            String.format(Locale.US, "%.1f", weightUnit.fromKg(weights.last().weightKg)),
+            weightUnit.label(),
         )
 
     Canvas(
@@ -384,10 +395,14 @@ private fun WeightLineChart(
         val chartHeight = size.height - bottomPad
         val slot = chartWidth / totalDays
 
-        // Padded whole-kg scale: the bottom of the chart is a static axis, never a data value,
+        // All chart math runs in the display unit so axis labels stay round numbers.
+        val displayValues = weights.map { weightUnit.fromKg(it.weightKg) }
+        val displayTarget = targetKg?.let { weightUnit.fromKg(it) }
+
+        // Padded whole-unit scale: the bottom of the chart is a static axis, never a data value,
         // so points and the target line always sit clearly above it (and below the top).
-        val rawMin = minOf(weights.minOf { it.weightKg }, targetKg ?: Double.MAX_VALUE)
-        val rawMax = maxOf(weights.maxOf { it.weightKg }, targetKg ?: Double.MIN_VALUE)
+        val rawMin = minOf(displayValues.min(), displayTarget ?: Double.MAX_VALUE)
+        val rawMax = maxOf(displayValues.max(), displayTarget ?: Double.MIN_VALUE)
         val scaleLow = floor(rawMin - 1.0)
         val scaleHigh = ceil(rawMax + 1.0)
         val span = (scaleHigh - scaleLow).coerceAtLeast(2.0)
@@ -402,7 +417,7 @@ private fun WeightLineChart(
             }
         val centerPaint = Paint(axisPaint).apply { textAlign = Paint.Align.CENTER }
 
-        fun yFor(kg: Double): Float = (chartHeight - (kg - scaleLow) / span * chartHeight).toFloat()
+        fun yFor(value: Double): Float = (chartHeight - (value - scaleLow) / span * chartHeight).toFloat()
 
         fun xFor(entry: WeightEntry): Float {
             val dayIndex =
@@ -435,8 +450,8 @@ private fun WeightLineChart(
         }
 
         // Dashed target line, labeled at the right end just above the line.
-        if (targetKg != null) {
-            val y = yFor(targetKg)
+        if (displayTarget != null) {
+            val y = yFor(displayTarget)
             drawLine(
                 color = labelColor,
                 start = Offset(leftPad, y),
@@ -445,7 +460,7 @@ private fun WeightLineChart(
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f)),
             )
             drawContext.canvas.nativeCanvas.drawText(
-                String.format(Locale.US, "%.1f", targetKg),
+                String.format(Locale.US, "%.1f", displayTarget),
                 size.width - 2.dp.toPx(),
                 y - 4.dp.toPx(),
                 axisPaint,
@@ -454,18 +469,18 @@ private fun WeightLineChart(
 
         // Points, connecting lines, and a value label above each point.
         weights.forEachIndexed { index, entry ->
-            val point = Offset(xFor(entry), yFor(entry.weightKg))
+            val point = Offset(xFor(entry), yFor(displayValues[index]))
             drawCircle(color = lineColor, radius = 4.dp.toPx(), center = point)
             if (index > 0) {
                 drawLine(
                     color = lineColor,
-                    start = Offset(xFor(weights[index - 1]), yFor(weights[index - 1].weightKg)),
+                    start = Offset(xFor(weights[index - 1]), yFor(displayValues[index - 1])),
                     end = point,
                     strokeWidth = 2.dp.toPx(),
                 )
             }
             drawContext.canvas.nativeCanvas.drawText(
-                String.format(Locale.US, "%.1f", entry.weightKg),
+                String.format(Locale.US, "%.1f", displayValues[index]),
                 point.x,
                 point.y - 6.dp.toPx(),
                 centerPaint,

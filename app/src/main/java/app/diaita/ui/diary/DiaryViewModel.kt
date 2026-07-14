@@ -8,6 +8,11 @@ import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.WeightRepository
+import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DateUtils
 import app.diaita.util.NutrientMath
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -62,6 +67,11 @@ data class DiaryUiState(
     val goalFatG: Int? = null,
     val goalCarbsG: Int? = null,
     val todayWeightKg: Double? = null,
+    /** Mirrors the "track macros" setting — hides the P/F/C progress UI when false. */
+    val trackMacros: Boolean = true,
+    val dayPartShares: DayPartShares = DayPartShares(),
+    val coachTone: CoachTone = CoachTone.SNARKY,
+    val weightUnit: WeightUnit = WeightUnit.KG,
 ) {
     val isEmpty: Boolean get() = sections.isEmpty()
 }
@@ -72,10 +82,20 @@ data class UndoDeleteEvent(
     val title: String,
 )
 
+/** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
+private data class HomeSettings(
+    val trackMacros: Boolean,
+    val boundaries: DayPartBoundaries,
+    val shares: DayPartShares,
+    val coachTone: CoachTone,
+    val weightUnit: WeightUnit,
+)
+
 class DiaryViewModel(
     private val diaryRepository: DiaryRepository,
     private val goalRepository: GoalRepository,
     private val weightRepository: WeightRepository,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val today = DateUtils.today()
 
@@ -85,11 +105,19 @@ class DiaryViewModel(
             diaryRepository.dailyTotals(today),
             goalRepository.getGoal(),
             weightRepository.range(today, today),
-        ) { entries, totals, goal, todayWeights ->
+            combine(
+                settingsRepository.trackMacros,
+                settingsRepository.dayPartBoundaries,
+                settingsRepository.dayPartShares,
+                settingsRepository.coachTone,
+                settingsRepository.weightUnit,
+                ::HomeSettings,
+            ),
+        ) { entries, totals, goal, todayWeights, settings ->
             DiaryUiState(
                 loaded = true,
                 sections = buildDiarySections(entries),
-                dayPartCalories = buildDayPartCalories(entries),
+                dayPartCalories = buildDayPartCalories(entries, settings.boundaries),
                 totalCalories = totals.totalCalories,
                 totalProtein = totals.totalProtein,
                 totalFat = totals.totalFat,
@@ -99,6 +127,10 @@ class DiaryViewModel(
                 goalFatG = goal?.fatTargetG,
                 goalCarbsG = goal?.carbsTargetG,
                 todayWeightKg = todayWeights.firstOrNull()?.weightKg,
+                trackMacros = settings.trackMacros,
+                dayPartShares = settings.shares,
+                coachTone = settings.coachTone,
+                weightUnit = settings.weightUnit,
             )
         }.stateIn(
             scope = viewModelScope,

@@ -28,6 +28,7 @@ object AppViewModelProvider {
                     appContainer().diaryRepository,
                     appContainer().goalRepository,
                     appContainer().weightRepository,
+                    appContainer().settingsRepository,
                 )
             }
             initializer {
@@ -45,8 +46,8 @@ object AppViewModelProvider {
                     appContainer().settingsRepository,
                 )
             }
-            initializer { GoalsViewModel(appContainer().goalRepository) }
-            initializer { GoalWizardViewModel(appContainer().goalRepository) }
+            initializer { GoalsViewModel(appContainer().goalRepository, appContainer().settingsRepository) }
+            initializer { GoalWizardViewModel(appContainer().goalRepository, appContainer().settingsRepository) }
             initializer {
                 SettingsViewModel(
                     appContainer().settingsRepository,
@@ -60,6 +61,7 @@ object AppViewModelProvider {
                     appContainer().goalRepository,
                     appContainer().weightRepository,
                     appContainer().database.monthlyAggregateDao().getAll(),
+                    appContainer().settingsRepository,
                 )
             }
             initializer { DayDetailViewModel(appContainer().diaryRepository, createSavedStateHandle()) }

@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.label
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,7 +144,7 @@ fun GoalsScreen(
             OutlinedTextField(
                 value = state.weightTarget,
                 onValueChange = viewModel::onWeightTargetChanged,
-                label = { Text(stringResource(R.string.weight_target_kg)) },
+                label = { Text(stringResource(R.string.weight_target_label, state.weightUnit.label())) },
                 singleLine = true,
                 keyboardOptions =
                     KeyboardOptions(

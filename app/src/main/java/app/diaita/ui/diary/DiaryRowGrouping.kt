@@ -3,6 +3,8 @@ package app.diaita.ui.diary
 import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.DayPartShares
 import app.diaita.util.NutrientMath
 import java.time.Instant
 import java.time.ZoneId
@@ -13,18 +15,19 @@ data class DiarySection(
 )
 
 /**
- * Thirds of the day for the balance bar on the Diary screen. [share] is the healthy-eating
- * reference share of the daily calorie budget: ~30% in the morning (breakfast), ~40% during
- * the day (lunch plus afternoon snack), ~30% in the evening (dinner) — a common dietitian
- * guideline for distributing calories across the day.
+ * Thirds of the day for the balance bar on the Diary screen. The reference share of the
+ * daily calorie budget per part is the user-configurable [DayPartShares] (default 30/40/30,
+ * a common dietitian guideline for distributing calories across the day).
  */
-enum class DayPart(
-    val share: Float,
-) {
-    MORNING(0.30f),
-    DAY(0.40f),
-    EVENING(0.30f),
-}
+enum class DayPart { MORNING, DAY, EVENING }
+
+/** The fraction (0..1) of the daily budget this configuration assigns to [part]. */
+fun DayPartShares.shareOf(part: DayPart): Float =
+    when (part) {
+        DayPart.MORNING -> morningPercent
+        DayPart.DAY -> dayPercent
+        DayPart.EVENING -> eveningPercent
+    } / 100f
 
 private val SECTION_ORDER =
     listOf(
@@ -67,27 +70,35 @@ fun buildDiarySections(entries: List<DiaryEntryWithFood>): List<DiarySection> =
 
 /**
  * Maps an entry to a third of the day: explicit meal slots map directly, while snacks and
- * unslotted entries fall back to the wall-clock hour they were logged at.
+ * unslotted entries fall back to the wall-clock time they were logged at, split by the
+ * user-configurable [DayPartBoundaries].
  */
-fun dayPartOf(entry: DiaryEntry): DayPart =
+fun dayPartOf(
+    entry: DiaryEntry,
+    boundaries: DayPartBoundaries = DayPartBoundaries(),
+): DayPart =
     when (entry.mealSlot) {
         MealSlot.BREAKFAST -> DayPart.MORNING
         MealSlot.LUNCH -> DayPart.DAY
         MealSlot.DINNER -> DayPart.EVENING
         MealSlot.SNACK, MealSlot.UNSPECIFIED -> {
-            val hour = Instant.ofEpochMilli(entry.loggedAt).atZone(ZoneId.systemDefault()).hour
+            val time = Instant.ofEpochMilli(entry.loggedAt).atZone(ZoneId.systemDefault())
+            val minutes = time.hour * 60 + time.minute
             when {
-                hour < 12 -> DayPart.MORNING
-                hour < 17 -> DayPart.DAY
+                minutes < boundaries.morningEndMinutes -> DayPart.MORNING
+                minutes < boundaries.dayEndMinutes -> DayPart.DAY
                 else -> DayPart.EVENING
             }
         }
     }
 
 /** Total consumed calories per third of the day, for the balance bar. */
-fun buildDayPartCalories(entries: List<DiaryEntryWithFood>): Map<DayPart, Double> =
+fun buildDayPartCalories(
+    entries: List<DiaryEntryWithFood>,
+    boundaries: DayPartBoundaries = DayPartBoundaries(),
+): Map<DayPart, Double> =
     entries
-        .groupBy { dayPartOf(it.entry) }
+        .groupBy { dayPartOf(it.entry, boundaries) }
         .mapValues { (_, grouped) ->
             grouped.sumOf { NutrientMath.caloriesFor(it.food, it.entry.quantityGrams) }
         }

@@ -17,4 +17,8 @@ interface WeightEntryDao {
         fromDate: String,
         toDate: String,
     ): Flow<List<WeightEntry>>
+
+    /** One-shot lookup used by the weight-reminder worker. */
+    @Query("SELECT * FROM weight_entries WHERE date = :date")
+    suspend fun forDateOnce(date: String): List<WeightEntry>
 }

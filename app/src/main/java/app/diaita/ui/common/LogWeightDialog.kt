@@ -22,10 +22,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import app.diaita.R
+import app.diaita.data.settings.WeightUnit
 import app.diaita.util.normalizedDecimalOrNull
 
+/** Weight input in the user's display unit; [onConfirm] always receives kilograms. */
 @Composable
 fun LogWeightDialog(
+    weightUnit: WeightUnit,
     onDismiss: () -> Unit,
     onConfirm: (Double) -> Unit,
 ) {
@@ -35,7 +38,7 @@ fun LogWeightDialog(
 
     val confirm = {
         val weight = weightText.normalizedDecimalOrNull()
-        if (weight != null && weight > 0) onConfirm(weight) else hasError = true
+        if (weight != null && weight > 0) onConfirm(weightUnit.toKg(weight)) else hasError = true
     }
 
     AlertDialog(
@@ -49,7 +52,7 @@ fun LogWeightDialog(
                         weightText = it
                         hasError = false
                     },
-                    label = { Text(stringResource(R.string.weight_kg)) },
+                    label = { Text(stringResource(R.string.weight_input_label, weightUnit.label())) },
                     singleLine = true,
                     keyboardOptions =
                         KeyboardOptions(

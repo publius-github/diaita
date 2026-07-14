@@ -54,13 +54,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartShares
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
 import app.diaita.ui.common.MealSlotPicker
-import app.diaita.ui.common.progressTrackColor
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.label
+import app.diaita.ui.common.progressTrackColor
 import app.diaita.util.DateUtils
 import java.util.Locale
 
@@ -133,7 +135,8 @@ fun DiaryScreen(
                     Text(
                         stringResource(
                             R.string.weight_today,
-                            String.format(Locale.US, "%.1f", weight),
+                            String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(weight)),
+                            uiState.weightUnit.label(),
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 12.dp),
@@ -206,9 +209,10 @@ fun DiaryScreen(
 
     if (showWeightDialog) {
         LogWeightDialog(
+            weightUnit = uiState.weightUnit,
             onDismiss = { showWeightDialog = false },
-            onConfirm = { weight ->
-                viewModel.logWeight(weight)
+            onConfirm = { weightKg ->
+                viewModel.logWeight(weightKg)
                 showWeightDialog = false
             },
         )
@@ -304,15 +308,17 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
-                    Text(
-                        stringResource(
-                            R.string.macros_line,
-                            uiState.totalProtein.toInt(),
-                            uiState.totalFat.toInt(),
-                            uiState.totalCarbs.toInt(),
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    if (uiState.trackMacros) {
+                        Text(
+                            stringResource(
+                                R.string.macros_line,
+                                uiState.totalProtein.toInt(),
+                                uiState.totalFat.toInt(),
+                                uiState.totalCarbs.toInt(),
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
                 MacroProgressRing(
                     consumedCalories = uiState.totalCalories,
@@ -324,14 +330,17 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 DayPartBalanceBar(
                     dayPartCalories = uiState.dayPartCalories,
                     goalCalories = uiState.goalCalories,
+                    shares = uiState.dayPartShares,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                PaceMessage(uiState = uiState, goalCalories = uiState.goalCalories)
+                if (uiState.coachTone != CoachTone.OFF) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    PaceMessage(uiState = uiState, goalCalories = uiState.goalCalories)
+                }
             }
             val hasMacroGoals =
                 listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
                     .any { it > 0 }
-            if (hasMacroGoals) {
+            if (hasMacroGoals && uiState.trackMacros) {
                 Spacer(modifier = Modifier.height(12.dp))
                 MacroBar(
                     label = stringResource(R.string.macro_protein_short),
@@ -357,27 +366,75 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
 
 private enum class PaceMood { EMPTY, ON_TRACK, AHEAD, OVER }
 
-/**
- * A one-liner "coach" reaction to today's pace: encouraging while on plan, wary once a
- * day-part budget is exceeded, and openly rude once the whole daily goal is blown.
- * A random phrase is picked from the mood's pool and stays put until the mood changes.
- */
-@Composable
-private fun PaceMessage(
-    uiState: DiaryUiState,
-    goalCalories: Int,
-) {
-    val mood =
-        when {
-            uiState.totalCalories > goalCalories -> PaceMood.OVER
-            DayPart.entries.any { part ->
-                (uiState.dayPartCalories[part] ?: 0.0) > goalCalories * part.share
-            } -> PaceMood.AHEAD
-            uiState.isEmpty -> PaceMood.EMPTY
-            else -> PaceMood.ON_TRACK
-        }
-    val messageRes =
-        remember(mood) {
+/** Message pools per mood for each coach voice; the snarky set is the app's original one. */
+private fun paceMessagePool(
+    mood: PaceMood,
+    tone: CoachTone,
+): List<Int> =
+    when (tone) {
+        CoachTone.GENTLE ->
+            when (mood) {
+                PaceMood.EMPTY ->
+                    listOf(
+                        R.string.pace_empty_gentle_1,
+                        R.string.pace_empty_gentle_2,
+                        R.string.pace_empty_gentle_3,
+                    )
+                PaceMood.ON_TRACK ->
+                    listOf(
+                        R.string.pace_ok_gentle_1,
+                        R.string.pace_ok_gentle_2,
+                        R.string.pace_ok_gentle_3,
+                    )
+                PaceMood.AHEAD ->
+                    listOf(
+                        R.string.pace_warn_gentle_1,
+                        R.string.pace_warn_gentle_2,
+                        R.string.pace_warn_gentle_3,
+                    )
+                PaceMood.OVER ->
+                    listOf(
+                        R.string.pace_over_gentle_1,
+                        R.string.pace_over_gentle_2,
+                        R.string.pace_over_gentle_3,
+                    )
+            }
+        CoachTone.BRUTAL ->
+            when (mood) {
+                PaceMood.EMPTY ->
+                    listOf(
+                        R.string.pace_empty_brutal_1,
+                        R.string.pace_empty_brutal_2,
+                        R.string.pace_empty_brutal_3,
+                        R.string.pace_empty_brutal_4,
+                        R.string.pace_empty_brutal_5,
+                    )
+                PaceMood.ON_TRACK ->
+                    listOf(
+                        R.string.pace_ok_brutal_1,
+                        R.string.pace_ok_brutal_2,
+                        R.string.pace_ok_brutal_3,
+                        R.string.pace_ok_brutal_4,
+                        R.string.pace_ok_brutal_5,
+                    )
+                PaceMood.AHEAD ->
+                    listOf(
+                        R.string.pace_warn_brutal_1,
+                        R.string.pace_warn_brutal_2,
+                        R.string.pace_warn_brutal_3,
+                        R.string.pace_warn_brutal_4,
+                        R.string.pace_warn_brutal_5,
+                    )
+                PaceMood.OVER ->
+                    listOf(
+                        R.string.pace_over_brutal_1,
+                        R.string.pace_over_brutal_2,
+                        R.string.pace_over_brutal_3,
+                        R.string.pace_over_brutal_4,
+                        R.string.pace_over_brutal_5,
+                    )
+            }
+        else ->
             when (mood) {
                 PaceMood.EMPTY ->
                     listOf(
@@ -411,7 +468,33 @@ private fun PaceMessage(
                         R.string.pace_over_4,
                         R.string.pace_over_5,
                     )
-            }.random()
+            }
+    }
+
+/**
+ * A one-liner "coach" reaction to today's pace: encouraging while on plan, wary once a
+ * day-part budget is exceeded, and (in the snarky voice) openly rude once the whole daily
+ * goal is blown. A random phrase is picked from the mood's pool and stays put until the
+ * mood or the configured tone changes. The caller hides it entirely for [CoachTone.OFF].
+ */
+@Composable
+private fun PaceMessage(
+    uiState: DiaryUiState,
+    goalCalories: Int,
+) {
+    val mood =
+        when {
+            uiState.totalCalories > goalCalories -> PaceMood.OVER
+            DayPart.entries.any { part ->
+                (uiState.dayPartCalories[part] ?: 0.0) >
+                    goalCalories * uiState.dayPartShares.shareOf(part)
+            } -> PaceMood.AHEAD
+            uiState.isEmpty -> PaceMood.EMPTY
+            else -> PaceMood.ON_TRACK
+        }
+    val messageRes =
+        remember(mood, uiState.coachTone) {
+            paceMessagePool(mood, uiState.coachTone).random()
         }
     Text(
         stringResource(messageRes),
@@ -428,23 +511,25 @@ private fun PaceMessage(
 
 /**
  * The daily calorie bar split into three segments — morning / day / evening — sized by the
- * healthy-eating reference shares from [DayPart.share] (30/40/30). Each segment fills with
- * that part's consumed calories against its own sub-target, turning red when exceeded, so
- * after logging e.g. breakfast you immediately see whether you ate more than the guideline
- * suggests for that part of the day.
+ * user-configurable [DayPartShares] (default 30/40/30). Each segment fills with that part's
+ * consumed calories against its own sub-target, turning red when exceeded, so after logging
+ * e.g. breakfast you immediately see whether you ate more than the guideline suggests for
+ * that part of the day.
  */
 @Composable
 private fun DayPartBalanceBar(
     dayPartCalories: Map<DayPart, Double>,
     goalCalories: Int,
+    shares: DayPartShares,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         DayPart.entries.forEach { part ->
+            val share = shares.shareOf(part)
             DayPartSegment(
                 part = part,
                 consumed = dayPartCalories[part] ?: 0.0,
-                target = (goalCalories * part.share).toInt(),
-                modifier = Modifier.weight(part.share),
+                target = (goalCalories * share).toInt(),
+                modifier = Modifier.weight(share),
             )
         }
     }

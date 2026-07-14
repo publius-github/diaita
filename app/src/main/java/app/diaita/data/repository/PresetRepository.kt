@@ -8,7 +8,6 @@ import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
 import app.diaita.data.db.entities.MealSlot
-import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -90,17 +89,18 @@ class PresetRepository(
     suspend fun logPreset(
         presetId: Long,
         logDate: String,
+        fallbackSlot: MealSlot,
     ) {
         database.withTransaction {
             val presetWithItems = mealPresetDao.getWithItems(presetId) ?: return@withTransaction
             val diaryEntryDao = database.diaryEntryDao()
             val loggedAt = System.currentTimeMillis()
             // A preset that declares its own meal logs under that meal; an unassigned (legacy)
-            // preset has no opinion, so fall back to the clock. Either way this is what places
-            // the log under the right Diary section and day-part segment.
+            // preset has no opinion, so use the caller-provided clock-based fallback. Either way
+            // this is what places the log under the right Diary section and day-part segment.
             val mealSlot =
                 presetWithItems.preset.mealSlot.takeUnless { it == MealSlot.UNSPECIFIED }
-                    ?: DateUtils.defaultMealSlotNow()
+                    ?: fallbackSlot
             presetWithItems.items.forEach { item ->
                 diaryEntryDao.insert(
                     DiaryEntry(

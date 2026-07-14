@@ -3,6 +3,8 @@ package app.diaita.ui.goals
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.diaita.data.repository.GoalRepository
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WeightUnit
 import app.diaita.util.ExerciseLevel
 import app.diaita.util.GoalCalculator
 import app.diaita.util.WeightPlan
@@ -37,10 +39,17 @@ data class GoalWizardUiState(
     val exercise: ExerciseLevel = ExerciseLevel.NONE,
     val plan: WeightPlan = WeightPlan.MAINTAIN,
     val currentGoalCalories: Int? = null,
+    /** Unit the weight field is typed in; the BMR math below always runs on kilograms. */
+    val weightUnit: WeightUnit = WeightUnit.KG,
 ) {
     val age: Int? get() = ageText.toIntOrNull()?.takeIf { it in 10..100 }
     val height: Double? get() = heightText.normalizedDecimalOrNull()?.takeIf { it in 100.0..250.0 }
-    val weight: Double? get() = weightText.normalizedDecimalOrNull()?.takeIf { it in 30.0..300.0 }
+    val weight: Double?
+        get() =
+            weightText
+                .normalizedDecimalOrNull()
+                ?.let(weightUnit::toKg)
+                ?.takeIf { it in 30.0..300.0 }
     val aboutYouValid: Boolean get() = age != null && height != null && weight != null
 
     val result: WizardResult?
@@ -62,6 +71,7 @@ data class GoalWizardUiState(
 
 class GoalWizardViewModel(
     private val goalRepository: GoalRepository,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GoalWizardUiState())
     val uiState: StateFlow<GoalWizardUiState> = _uiState.asStateFlow()
@@ -74,6 +84,11 @@ class GoalWizardViewModel(
         viewModelScope.launch {
             goalRepository.getGoal().collect { goal ->
                 _uiState.update { it.copy(currentGoalCalories = goal?.calorieTarget) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.weightUnit.collect { unit ->
+                _uiState.update { it.copy(weightUnit = unit) }
             }
         }
     }

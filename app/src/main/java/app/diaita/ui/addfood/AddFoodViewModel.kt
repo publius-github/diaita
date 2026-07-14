@@ -6,12 +6,15 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.FoodRepository
+import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.ui.common.FoodSearchController
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,6 +33,11 @@ class AddFoodViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AddFoodUiState())
     val uiState: StateFlow<AddFoodUiState> = _uiState.asStateFlow()
+
+    /** User-configured day-part cut-offs, used to suggest the meal slot for a new log. */
+    val dayPartBoundaries: StateFlow<DayPartBoundaries> =
+        settingsRepository.dayPartBoundaries
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartBoundaries())
 
     /** Shared search/scan/manual logic; a picked food opens the quantity dialog to log it. */
     val foodSearch =

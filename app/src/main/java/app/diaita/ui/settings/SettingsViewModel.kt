@@ -6,7 +6,12 @@ import androidx.lifecycle.viewModelScope
 import app.diaita.data.backup.DatabaseBackupManager
 import app.diaita.data.backup.RestoreOutcome
 import app.diaita.data.repository.ExportRepository
+import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.ThemeMode
+import app.diaita.data.settings.WeightUnit
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -25,6 +30,94 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setOpenFoodFactsEnabled(enabled) }
     }
 
+    // --- Tracking ---
+
+    val trackMacros: StateFlow<Boolean> =
+        settingsRepository.trackMacros
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setTrackMacros(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setTrackMacros(enabled) }
+    }
+
+    val dayPartBoundaries: StateFlow<DayPartBoundaries> =
+        settingsRepository.dayPartBoundaries
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartBoundaries())
+
+    /**
+     * Keeps morning-end strictly before day-end (at least [MIN_DAY_PART_GAP_MINUTES] apart).
+     * Returns the sanitized result so the caller can e.g. reschedule day-part reminders.
+     */
+    fun setMorningEndMinutes(minutes: Int): DayPartBoundaries {
+        val current = dayPartBoundaries.value
+        val updated =
+            current.copy(
+                morningEndMinutes = minutes.coerceAtMost(current.dayEndMinutes - MIN_DAY_PART_GAP_MINUTES),
+            )
+        viewModelScope.launch { settingsRepository.setDayPartBoundaries(updated) }
+        return updated
+    }
+
+    /** Counterpart of [setMorningEndMinutes] for the day/evening boundary. */
+    fun setDayEndMinutes(minutes: Int): DayPartBoundaries {
+        val current = dayPartBoundaries.value
+        val updated =
+            current.copy(
+                dayEndMinutes = minutes.coerceAtLeast(current.morningEndMinutes + MIN_DAY_PART_GAP_MINUTES),
+            )
+        viewModelScope.launch { settingsRepository.setDayPartBoundaries(updated) }
+        return updated
+    }
+
+    val dayPartShares: StateFlow<DayPartShares> =
+        settingsRepository.dayPartShares
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartShares())
+
+    fun setDayPartShares(
+        morningPercent: Int,
+        dayPercent: Int,
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setDayPartShares(DayPartShares.sanitized(morningPercent, dayPercent))
+        }
+    }
+
+    val coachTone: StateFlow<CoachTone> =
+        settingsRepository.coachTone
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CoachTone.SNARKY)
+
+    fun setCoachTone(tone: CoachTone) {
+        viewModelScope.launch { settingsRepository.setCoachTone(tone) }
+    }
+
+    val weightUnit: StateFlow<WeightUnit> =
+        settingsRepository.weightUnit
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeightUnit.KG)
+
+    fun setWeightUnit(unit: WeightUnit) {
+        viewModelScope.launch { settingsRepository.setWeightUnit(unit) }
+    }
+
+    // --- Appearance ---
+
+    val themeMode: StateFlow<ThemeMode> =
+        settingsRepository.themeMode
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.SYSTEM)
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    val dynamicColor: StateFlow<Boolean> =
+        settingsRepository.dynamicColor
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
+    }
+
+    // --- Notifications ---
+
     val reminderEnabled: StateFlow<Boolean> =
         settingsRepository.reminderEnabled
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -33,9 +126,81 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setReminderEnabled(enabled) }
     }
 
+    val reminderTimeMinutes: StateFlow<Int> =
+        settingsRepository.reminderTimeMinutes
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SettingsRepository.DEFAULT_REMINDER_MINUTES,
+            )
+
+    fun setReminderTimeMinutes(minutes: Int) {
+        viewModelScope.launch { settingsRepository.setReminderTimeMinutes(minutes) }
+    }
+
+    val weightReminderEnabled: StateFlow<Boolean> =
+        settingsRepository.weightReminderEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setWeightReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setWeightReminderEnabled(enabled) }
+    }
+
+    val weightReminderTimeMinutes: StateFlow<Int> =
+        settingsRepository.weightReminderTimeMinutes
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SettingsRepository.DEFAULT_WEIGHT_REMINDER_MINUTES,
+            )
+
+    fun setWeightReminderTimeMinutes(minutes: Int) {
+        viewModelScope.launch { settingsRepository.setWeightReminderTimeMinutes(minutes) }
+    }
+
+    val dayPartRemindersEnabled: StateFlow<Boolean> =
+        settingsRepository.dayPartRemindersEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setDayPartRemindersEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setDayPartRemindersEnabled(enabled) }
+    }
+
+    // --- Data ---
+
+    val recentFoodsCount: StateFlow<Int> =
+        settingsRepository.recentFoodsCount
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SettingsRepository.DEFAULT_RECENT_FOODS_COUNT,
+            )
+
+    fun setRecentFoodsCount(count: Int) {
+        viewModelScope.launch { settingsRepository.setRecentFoodsCount(count.coerceIn(RECENT_FOODS_RANGE)) }
+    }
+
+    val retentionDays: StateFlow<Int> =
+        settingsRepository.retentionDays
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SettingsRepository.DEFAULT_RETENTION_DAYS,
+            )
+
+    fun setRetentionDays(days: Int) {
+        viewModelScope.launch { settingsRepository.setRetentionDays(days) }
+    }
+
     suspend fun exportDiaryCsv(): String = exportRepository.exportDiaryCsv()
 
     suspend fun exportDatabase(uri: Uri): Boolean = runCatching { backupManager.exportTo(uri) }.isSuccess
 
     suspend fun restoreDatabase(uri: Uri): RestoreOutcome = backupManager.restoreFrom(uri)
+
+    companion object {
+        const val MIN_DAY_PART_GAP_MINUTES = 60
+        val RECENT_FOODS_RANGE = 5..20
+        val RETENTION_OPTIONS_DAYS = listOf(90, 180, 365, 730)
+    }
 }

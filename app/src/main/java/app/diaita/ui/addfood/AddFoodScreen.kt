@@ -1,6 +1,5 @@
 package app.diaita.ui.addfood
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,8 +32,8 @@ import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.rememberFoodBarcodeScanner
-import app.diaita.ui.presets.PresetLogList
 import app.diaita.ui.presets.PresetViewModel
+import app.diaita.ui.presets.presetLogList
 import app.diaita.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +45,7 @@ fun AddFoodScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchState by viewModel.foodSearch.state.collectAsStateWithLifecycle()
+    val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
     val launchScan = rememberFoodBarcodeScanner(viewModel.foodSearch::onBarcodeScanned)
 
@@ -117,7 +117,7 @@ fun AddFoodScreen(
     uiState.foodPendingQuantity?.let { food ->
         QuantitySheet(
             food = food,
-            initialMealSlot = DateUtils.defaultMealSlotNow(),
+            initialMealSlot = DateUtils.defaultMealSlotNow(dayPartBoundaries),
             showMealSlotPicker = true,
             onDismiss = viewModel::dismissQuantityDialog,
             onConfirm = { grams, slot ->
@@ -161,7 +161,7 @@ private fun PresetsTab(
                     .padding(16.dp)
                     .fillMaxSize(),
         ) {
-            PresetLogList(
+            presetLogList(
                 presets = presets,
                 onLogPreset = { presetId ->
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
