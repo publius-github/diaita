@@ -9,6 +9,7 @@ import androidx.room.Relation
 import androidx.room.Transaction
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
+import app.diaita.data.db.entities.MealSlot
 import kotlinx.coroutines.flow.Flow
 
 data class PresetWithItems(
@@ -36,10 +37,11 @@ interface MealPresetDao {
     @Delete
     suspend fun deleteItem(item: MealPresetItem)
 
-    @Query("UPDATE meal_presets SET name = :name WHERE id = :presetId")
-    suspend fun renamePreset(
+    @Query("UPDATE meal_presets SET name = :name, mealSlot = :mealSlot WHERE id = :presetId")
+    suspend fun updatePresetHeader(
         presetId: Long,
         name: String,
+        mealSlot: MealSlot,
     )
 
     @Query("DELETE FROM meal_preset_items WHERE presetId = :presetId")

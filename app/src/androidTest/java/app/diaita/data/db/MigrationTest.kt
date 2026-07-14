@@ -51,4 +51,20 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun migrate5To6_defaultsExistingPresetsToUnspecifiedSlot() {
+        helper.createDatabase(testDbName, 5).use { db ->
+            db.execSQL(
+                "INSERT INTO meal_presets (name, createdAt) VALUES ('My usual breakfast', 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 6, true, Migrations.MIGRATION_5_6).use { db ->
+            db.query("SELECT mealSlot FROM meal_presets WHERE name = 'My usual breakfast'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("UNSPECIFIED", cursor.getString(0))
+            }
+        }
+    }
 }

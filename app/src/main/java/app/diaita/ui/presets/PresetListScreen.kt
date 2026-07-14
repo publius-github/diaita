@@ -109,64 +109,77 @@ fun PresetListScreen(
                         .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(presets, key = { it.preset.id }) { presetWithItems ->
-                    Card(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .animateItem()
-                                .clickable { onEditPresetClick(presetWithItems.preset.id) },
-                    ) {
-                        // Same compact-row treatment as the diary list: trimmed vertical
-                        // padding and 36dp icon buttons instead of the default 48dp.
-                        Row(
-                            modifier =
-                                Modifier
-                                    .padding(horizontal = 12.dp, vertical = 9.dp)
-                                    .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column {
-                                Text(presetWithItems.preset.name, style = MaterialTheme.typography.bodyLarge)
-                                Text(
-                                    stringResource(
-                                        R.string.items_count_kcal,
-                                        presetWithItems.items.size,
-                                        presetWithItems.totalCalories.toInt(),
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.logPreset(presetWithItems.preset.id)
-                                    },
-                                    modifier = Modifier.size(36.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Filled.PlayArrow,
-                                        contentDescription = stringResource(R.string.log_preset),
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.deletePreset(presetWithItems.preset)
-                                    },
-                                    modifier = Modifier.size(36.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.delete_preset),
-                                    )
-                                }
-                            }
-                        }
+                groupPresetsBySlot(presets).forEach { section ->
+                    item(key = "header_${section.slot}") { PresetSectionHeader(section) }
+                    items(section.presets, key = { it.preset.id }) { presetWithItems ->
+                        PresetCard(
+                            name = presetWithItems.preset.name,
+                            itemCount = presetWithItems.items.size,
+                            totalCalories = presetWithItems.totalCalories.toInt(),
+                            onClick = { onEditPresetClick(presetWithItems.preset.id) },
+                            onLog = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                viewModel.logPreset(presetWithItems.preset.id)
+                            },
+                            onDelete = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                viewModel.deletePreset(presetWithItems.preset)
+                            },
+                            modifier = Modifier.animateItem(),
+                        )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PresetCard(
+    name: String,
+    itemCount: Int,
+    totalCalories: Int,
+    onClick: () -> Unit,
+    onLog: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+    ) {
+        // Same compact-row treatment as the diary list: trimmed vertical
+        // padding and 36dp icon buttons instead of the default 48dp.
+        Row(
+            modifier =
+                Modifier
+                    .padding(horizontal = 12.dp, vertical = 9.dp)
+                    .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(name, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.items_count_kcal, itemCount, totalCalories),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onLog, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(R.string.log_preset),
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.delete_preset),
+                    )
                 }
             }
         }

@@ -7,5 +7,7 @@ import androidx.room.PrimaryKey
 data class MealPreset(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    /** Which meal this preset belongs to, so the list can group it like the Diary screen. */
+    val mealSlot: MealSlot = MealSlot.UNSPECIFIED,
     val createdAt: Long = System.currentTimeMillis(),
 )

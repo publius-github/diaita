@@ -37,7 +37,14 @@ object AppViewModelProvider {
                     appContainer().settingsRepository,
                 )
             }
-            initializer { PresetViewModel(appContainer().presetRepository, appContainer().foodRepository) }
+            initializer {
+                PresetViewModel(
+                    appContainer().presetRepository,
+                    appContainer().foodRepository,
+                    appContainer().diaryRepository,
+                    appContainer().settingsRepository,
+                )
+            }
             initializer { GoalsViewModel(appContainer().goalRepository) }
             initializer { GoalWizardViewModel(appContainer().goalRepository) }
             initializer {

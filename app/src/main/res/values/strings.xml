@@ -119,6 +119,7 @@
     <string name="log_preset">Log preset</string>
     <string name="delete_preset">Delete preset</string>
     <string name="preset_name_label">Preset name (e.g. \"My usual breakfast\")</string>
+    <string name="preset_meal_label">Meal</string>
     <string name="items_in_preset">Items in this preset</string>
     <string name="no_items_yet">None yet — tap \"Add food\" below to add one.</string>
     <string name="item_grams_kcal">%1$d g — %2$d kcal</string>
