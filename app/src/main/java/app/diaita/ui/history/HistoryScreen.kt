@@ -82,6 +82,13 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        uiState.maintenanceCalories?.takeIf { it != uiState.goalCalories }?.let { maintenance ->
+            Text(
+                stringResource(R.string.maintenance_line_label, maintenance),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
@@ -102,6 +109,7 @@ fun HistoryScreen(
             CalorieBarChart(
                 days = uiState.days,
                 goalCalories = uiState.goalCalories,
+                maintenanceCalories = uiState.maintenanceCalories,
                 selectedIndex = uiState.selectedIndex,
                 onBarTap = viewModel::onBarSelected,
                 modifier = Modifier.fillMaxWidth(),
@@ -116,7 +124,12 @@ fun HistoryScreen(
                             day.calories.toInt(),
                         ),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (day.isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        color =
+                            when (day.zone) {
+                                CalorieZone.OFF_TRACK -> MaterialTheme.colorScheme.error
+                                CalorieZone.BETWEEN -> MaterialTheme.colorScheme.tertiary
+                                CalorieZone.ON_TRACK -> Color.Unspecified
+                            },
                     )
                     TextButton(onClick = { onViewDay(day.date) }) {
                         Text(stringResource(R.string.view_day))
@@ -217,19 +230,28 @@ private fun labelEvery(totalDays: Int): Int = if (totalDays <= 7) 1 else 5
 private fun CalorieBarChart(
     days: List<HistoryDayUi>,
     goalCalories: Int?,
+    maintenanceCalories: Int?,
     selectedIndex: Int?,
     onBarTap: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val barColor = MaterialTheme.colorScheme.primary
-    val overGoalColor = MaterialTheme.colorScheme.error
+    val betweenColor = MaterialTheme.colorScheme.tertiary
+    val offTrackColor = MaterialTheme.colorScheme.error
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val selectionColor = MaterialTheme.colorScheme.tertiary
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
 
     val maxCalories = days.maxOf { it.calories }
-    val chartMax = (maxOf(maxCalories, goalCalories?.toDouble() ?: 0.0) * 1.15).coerceAtLeast(100.0)
+    val chartMax =
+        (
+            maxOf(
+                maxCalories,
+                goalCalories?.toDouble() ?: 0.0,
+                maintenanceCalories?.toDouble() ?: 0.0,
+            ) * 1.15
+        ).coerceAtLeast(100.0)
     val gridStep = calorieGridStep(chartMax)
     val labelStep = labelEvery(days.size)
     val chartDescription =
@@ -307,7 +329,12 @@ private fun CalorieBarChart(
             val barHeight = (day.calories / chartMax * chartHeight).toFloat()
             val left = leftPad + index * slot + (slot - barWidth) / 2f
             drawRoundRect(
-                color = if (day.isOverGoal) overGoalColor else barColor,
+                color =
+                    when (day.zone) {
+                        CalorieZone.OFF_TRACK -> offTrackColor
+                        CalorieZone.BETWEEN -> betweenColor
+                        CalorieZone.ON_TRACK -> barColor
+                    },
                 topLeft = Offset(left, chartHeight - barHeight),
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(3f, 3f),
@@ -323,6 +350,19 @@ private fun CalorieBarChart(
                 end = Offset(size.width, goalY),
                 strokeWidth = 2.dp.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f)),
+            )
+        }
+
+        // Dashed maintenance (TDEE) line — tertiary color and a shorter dash so it reads
+        // differently from the goal line. Skipped when it coincides with the goal (MAINTAIN plan).
+        if (maintenanceCalories != null && maintenanceCalories > 0 && maintenanceCalories != goalCalories) {
+            val maintenanceY = yFor(maintenanceCalories.toDouble())
+            drawLine(
+                color = betweenColor,
+                start = Offset(leftPad, maintenanceY),
+                end = Offset(size.width, maintenanceY),
+                strokeWidth = 2.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)),
             )
         }
 

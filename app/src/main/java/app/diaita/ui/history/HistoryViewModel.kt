@@ -26,13 +26,15 @@ data class HistoryDayUi(
     val date: String,
     val label: String,
     val calories: Double,
-    val isOverGoal: Boolean,
+    val zone: CalorieZone,
 )
 
 data class HistoryUiState(
     val rangeDays: Int = HistoryViewModel.DEFAULT_RANGE_DAYS,
     val days: List<HistoryDayUi> = emptyList(),
     val goalCalories: Int? = null,
+    /** Wizard-estimated TDEE; null until the wizard has been completed. */
+    val maintenanceCalories: Int? = null,
     val weightTargetKg: Double? = null,
     val selectedIndex: Int? = null,
     val weights: List<WeightEntry> = emptyList(),
@@ -72,8 +74,9 @@ class HistoryViewModel(
                 ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit) ->
                     HistoryUiState(
                         rangeDays = rangeDays,
-                        days = buildFullRange(fromDate, toDate, totals, goal?.calorieTarget),
+                        days = buildFullRange(fromDate, toDate, totals, goal?.calorieTarget, goal?.maintenanceCalories),
                         goalCalories = goal?.calorieTarget,
+                        maintenanceCalories = goal?.maintenanceCalories,
                         weightTargetKg = goal?.weightTargetKg,
                         selectedIndex = selectedIndex,
                         weights = weights,
@@ -88,6 +91,7 @@ class HistoryViewModel(
         toDate: LocalDate,
         totals: List<DayTotal>,
         goalCalories: Int?,
+        maintenanceCalories: Int?,
     ): List<HistoryDayUi> {
         val caloriesByDate = totals.associate { it.logDate to it.totalCalories }
         val days = mutableListOf<HistoryDayUi>()
@@ -100,7 +104,7 @@ class HistoryViewModel(
                     date = iso,
                     label = date.format(LABEL_FORMATTER),
                     calories = calories,
-                    isOverGoal = goalCalories != null && goalCalories > 0 && calories > goalCalories,
+                    zone = calorieZone(calories, goalCalories, maintenanceCalories),
                 ),
             )
             date = date.plusDays(1)

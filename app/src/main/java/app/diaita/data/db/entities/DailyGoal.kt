@@ -12,5 +12,10 @@ data class DailyGoal(
     val fatTargetG: Int,
     val carbsTargetG: Int,
     val weightTargetKg: Double? = null,
+    /**
+     * TDEE estimated by the goal wizard, kcal/day. Null until the wizard has been completed
+     * (manually set goals have no body-stats basis to derive it from).
+     */
+    val maintenanceCalories: Int? = null,
     val updatedAt: Long = System.currentTimeMillis(),
 )

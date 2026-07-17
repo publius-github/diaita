@@ -45,5 +45,16 @@ object Migrations {
             }
         }
 
-    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6)
+    /**
+     * Adds the wizard-estimated maintenance (TDEE) column to the goal row. Existing goals
+     * stay NULL — maintenance only becomes known the next time the wizard is completed.
+     */
+    val MIGRATION_6_7 =
+        object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE daily_goals ADD COLUMN maintenanceCalories INTEGER")
+            }
+        }
+
+    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
 }

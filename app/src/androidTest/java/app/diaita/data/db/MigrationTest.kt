@@ -67,4 +67,26 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun migrate6To7_existingGoalHasNullMaintenance() {
+        helper.createDatabase(testDbName, 6).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO daily_goals
+                    (id, calorieTarget, proteinTargetG, fatTargetG, carbsTargetG, weightTargetKg, updatedAt)
+                VALUES
+                    (1, 2000, 150, 55, 225, NULL, 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 7, true, Migrations.MIGRATION_6_7).use { db ->
+            db.query("SELECT calorieTarget, maintenanceCalories FROM daily_goals WHERE id = 1").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(2000, cursor.getInt(0))
+                assertEquals(true, cursor.isNull(1))
+            }
+        }
+    }
 }

@@ -113,7 +113,8 @@ class GoalWizardViewModel(
 
     /**
      * Persists the suggestion as the daily goal: calories from the wizard, macros from the
-     * same 30/25/45 split the Goals screen uses, weight target carried over unchanged.
+     * same 30/25/45 split the Goals screen uses, weight target carried over unchanged. The
+     * wizard's TDEE is stored as maintenance so History can draw the second reference line.
      */
     fun applyAsGoal() {
         val result = _uiState.value.result ?: return
@@ -126,6 +127,7 @@ class GoalWizardViewModel(
                 fatTargetG = (calories * 0.25 / 9).toInt(),
                 carbsTargetG = (calories * 0.45 / 4).toInt(),
                 weightTargetKg = existingWeightTarget,
+                maintenanceCalories = result.tdee,
             )
             _savedEvent.emit(Unit)
         }
