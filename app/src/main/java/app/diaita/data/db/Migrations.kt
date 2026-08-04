@@ -56,5 +56,17 @@ object Migrations {
             }
         }
 
-    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+    /**
+     * Adds the user-correction flag to foods. Existing rows default to not-edited; the flag
+     * flips when the user fixes an entry from search, and seed syncs skip flagged rows so
+     * catalog updates never clobber a deliberate correction.
+     */
+    val MIGRATION_7_8 =
+        object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE food_items ADD COLUMN editedByUser INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
 }

@@ -36,6 +36,7 @@ object AppViewModelProvider {
                     appContainer().foodRepository,
                     appContainer().diaryRepository,
                     appContainer().settingsRepository,
+                    createSavedStateHandle(),
                 )
             }
             initializer {

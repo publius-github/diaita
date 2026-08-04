@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
  * [SeedFoods.CATALOG_VERSION], every entry is upserted by [SeedFoods]' stable seedKey —
  * existing rows get their name/macros/serving refreshed (so corrections reach existing
  * installs), missing rows are inserted. Rows keep their primary key, so diary entries
- * referencing them are unaffected.
+ * referencing them are unaffected. Rows the user has corrected ([FoodItem.editedByUser])
+ * are never refreshed — a deliberate local fix outranks the shipped catalog.
  *
  * [databaseProvider] is invoked lazily (Room only opens the underlying SQLite file, and
  * fires callbacks, on first real query) so it's safe for it to reference a database
@@ -42,6 +43,8 @@ class SeedDatabaseCallback(
                 val existing = existingByKey[seed.seedKey]
                 if (existing == null) {
                     foodItemDao.insert(seed)
+                } else if (existing.editedByUser) {
+                    // A deliberate user correction outranks the shipped catalog — leave it alone.
                 } else {
                     foodItemDao.update(
                         existing.copy(

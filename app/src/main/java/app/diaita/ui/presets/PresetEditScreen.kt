@@ -2,7 +2,6 @@ package app.diaita.ui.presets
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,7 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -42,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.QuantitySheet
@@ -134,36 +132,28 @@ fun PresetEditScreen(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(state.draftItems) { draftItem ->
-                        // Same shape as a diary row (name over grams+kcal, minus the time),
-                        // so it's obvious which item is the calorie heavyweight when trimming.
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(draftItem.food.name, style = MaterialTheme.typography.bodyLarge)
-                                Text(
-                                    stringResource(
-                                        R.string.item_grams_kcal,
-                                        draftItem.quantityGrams.toInt(),
-                                        NutrientMath.caloriesFor(draftItem.food, draftItem.quantityGrams).toInt(),
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            TextButton(onClick = { viewModel.removeDraftItem(draftItem) }) {
-                                Text(stringResource(R.string.remove))
-                            }
-                        }
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    itemsIndexed(state.draftItems) { index, draftItem ->
+                        // The same shared card as a diary row, so both lists render (and
+                        // evolve) identically; tapping a row edits its quantity.
+                        FoodRowCard(
+                            title = draftItem.food.name,
+                            subtitle =
+                                stringResource(
+                                    R.string.item_grams_kcal,
+                                    draftItem.quantityGrams.toInt(),
+                                    NutrientMath.caloriesFor(draftItem.food, draftItem.quantityGrams).toInt(),
+                                ),
+                            onClick = { viewModel.requestEditDraftItem(index) },
+                            onDelete = { viewModel.removeDraftItem(index) },
+                        )
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = { showFoodPicker = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -193,6 +183,19 @@ fun PresetEditScreen(
                 showFoodPicker = false
             },
         )
+    }
+
+    // Tapping an existing item reopens the same quantity sheet the diary edit uses.
+    state.editingDraftIndex?.let { index ->
+        state.draftItems.getOrNull(index)?.let { draftItem ->
+            QuantitySheet(
+                food = draftItem.food,
+                initialQuantityGrams = draftItem.quantityGrams,
+                confirmLabel = stringResource(R.string.save),
+                onDismiss = viewModel::cancelDraftItemEdit,
+                onConfirm = { grams, _ -> viewModel.confirmDraftItemEdit(grams) },
+            )
+        }
     }
 }
 
@@ -240,6 +243,9 @@ private fun FoodPicker(
             onSearchQueryChanged = viewModel.foodSearch::onSearchQueryChanged,
             onFoodSelected = viewModel.foodSearch::onFoodSelected,
             onManualSave = viewModel.foodSearch::saveManualFood,
+            onEditFood = viewModel.foodSearch::onEditFood,
+            onEditSave = viewModel.foodSearch::saveEditedFood,
+            onEditDismiss = viewModel.foodSearch::dismissEdit,
             modifier =
                 Modifier
                     .padding(innerPadding)

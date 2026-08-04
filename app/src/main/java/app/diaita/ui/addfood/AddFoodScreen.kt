@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -31,6 +32,7 @@ import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.QuantitySheet
+import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.rememberFoodBarcodeScanner
 import app.diaita.ui.presets.PresetViewModel
 import app.diaita.ui.presets.presetLogList
@@ -60,7 +62,20 @@ fun AddFoodScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_food)) },
+                title = {
+                    Column {
+                        Text(stringResource(R.string.add_food))
+                        // Backfilling another day is rare enough that the date deserves a
+                        // callout — otherwise a log quietly lands somewhere unexpected.
+                        if (viewModel.logDate != DateUtils.today()) {
+                            Text(
+                                friendlyDateLabel(viewModel.logDate),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onDone) {
                         Icon(
@@ -107,9 +122,13 @@ fun AddFoodScreen(
                         onSearchQueryChanged = viewModel.foodSearch::onSearchQueryChanged,
                         onFoodSelected = viewModel.foodSearch::onFoodSelected,
                         onManualSave = viewModel.foodSearch::saveManualFood,
+                        onEditFood = viewModel.foodSearch::onEditFood,
+                        onEditSave = viewModel.foodSearch::saveEditedFood,
+                        onEditDismiss = viewModel.foodSearch::dismissEdit,
                         modifier = Modifier.padding(16.dp),
+                        onQuickAdd = viewModel::showQuickAdd,
                     )
-                AddFoodTab.PRESETS -> PresetsTab(onLogged = onDone)
+                AddFoodTab.PRESETS -> PresetsTab(onLogged = onDone, logDate = viewModel.logDate)
             }
         }
     }
@@ -117,6 +136,7 @@ fun AddFoodScreen(
     uiState.foodPendingQuantity?.let { food ->
         QuantitySheet(
             food = food,
+            initialQuantityGrams = uiState.pendingQuantitySuggestion,
             initialMealSlot = DateUtils.defaultMealSlotNow(dayPartBoundaries),
             showMealSlotPicker = true,
             onDismiss = viewModel::dismissQuantityDialog,
@@ -126,11 +146,23 @@ fun AddFoodScreen(
             },
         )
     }
+
+    if (uiState.showQuickAdd) {
+        QuickAddDialog(
+            initialMealSlot = DateUtils.defaultMealSlotNow(dayPartBoundaries),
+            onDismiss = viewModel::dismissQuickAdd,
+            onConfirm = { name, kcal, slot ->
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.confirmQuickAdd(name, kcal, slot)
+            },
+        )
+    }
 }
 
 @Composable
 private fun PresetsTab(
     onLogged: () -> Unit,
+    logDate: String,
     presetViewModel: PresetViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val presets by presetViewModel.presets.collectAsStateWithLifecycle()
@@ -165,7 +197,7 @@ private fun PresetsTab(
                 presets = presets,
                 onLogPreset = { presetId ->
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    presetViewModel.logPreset(presetId)
+                    presetViewModel.logPreset(presetId, logDate)
                 },
             )
         }

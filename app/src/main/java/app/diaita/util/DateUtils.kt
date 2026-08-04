@@ -14,6 +14,21 @@ object DateUtils {
 
     fun today(): String = LocalDate.now().format(isoFormatter)
 
+    /**
+     * The wall-clock instant a log made right now should carry for [date] (ISO yyyy-MM-dd).
+     * Today that is simply "now"; when backfilling another day it is that day at the current
+     * time-of-day, so entry ordering and the snack time-of-day day-part fallback keep working.
+     */
+    fun loggedAtFor(date: String): Long {
+        if (date == today()) return System.currentTimeMillis()
+        return LocalDate
+            .parse(date, isoFormatter)
+            .atTime(LocalTime.now())
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    }
+
     fun formatTime(epochMillis: Long): String =
         Instant
             .ofEpochMilli(epochMillis)

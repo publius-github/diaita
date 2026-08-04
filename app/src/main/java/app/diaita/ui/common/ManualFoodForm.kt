@@ -23,12 +23,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.diaita.R
+import app.diaita.data.db.entities.FoodItem
 import app.diaita.util.normalizedDecimalOrNull
 
 /**
  * Manual food entry shared by the Add-food screen and the preset food picker. Only the
  * name and calories are required — macros left blank are stored as 0, so a quick "just
  * the calories from the label" entry needs no googling of protein/fat/carbs.
+ *
+ * With [initial] set, the form becomes an editor prefilled from that food — used to fix
+ * mistakes in catalog entries (seeded, manual or cached OpenFoodFacts) straight from search.
  */
 @Composable
 fun ManualFoodForm(
@@ -42,12 +46,13 @@ fun ManualFoodForm(
         carbsPer100g: Double,
     ) -> Unit,
     modifier: Modifier = Modifier,
+    initial: FoodItem? = null,
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var caloriesText by rememberSaveable { mutableStateOf("") }
-    var proteinText by rememberSaveable { mutableStateOf("") }
-    var fatText by rememberSaveable { mutableStateOf("") }
-    var carbsText by rememberSaveable { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
+    var caloriesText by rememberSaveable { mutableStateOf(initial?.caloriesPer100g?.toFieldText(showZero = true) ?: "") }
+    var proteinText by rememberSaveable { mutableStateOf(initial?.proteinPer100g?.toFieldText() ?: "") }
+    var fatText by rememberSaveable { mutableStateOf(initial?.fatPer100g?.toFieldText() ?: "") }
+    var carbsText by rememberSaveable { mutableStateOf(initial?.carbsPer100g?.toFieldText() ?: "") }
     var hasError by rememberSaveable { mutableStateOf(false) }
 
     fun submit() {
@@ -128,6 +133,18 @@ fun ManualFoodForm(
 
 /** Blank means "unknown, store as 0"; anything typed must parse as a number. */
 private fun String.optionalMacroOrNull(): Double? = if (isBlank()) 0.0 else normalizedDecimalOrNull()
+
+/**
+ * Prefill text for a numeric field: whole values lose the ".0" noise, and 0 collapses to
+ * blank for optional macros (mirroring [optionalMacroOrNull]) unless [showZero] forces it
+ * (calories are required, so an explicit 0 must stay visible).
+ */
+private fun Double.toFieldText(showZero: Boolean = false): String =
+    when {
+        this == 0.0 && !showZero -> ""
+        this % 1.0 == 0.0 -> toLong().toString()
+        else -> toString()
+    }
 
 @Composable
 private fun MacroField(

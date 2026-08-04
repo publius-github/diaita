@@ -5,6 +5,7 @@ import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.settings.DayPartShares
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -115,5 +116,69 @@ class DiaryRowGroupingTest {
         val byPart = buildDayPartCalories(entries)
         assertEquals(195.0, byPart.getValue(DayPart.MORNING), 1e-9)
         assertEquals(260.0, byPart.getValue(DayPart.EVENING), 1e-9)
+    }
+
+    // Default shares 30/40/30 of a 1000 kcal goal -> base targets 300/400/300.
+    // Default boundaries: morning ends 12:00 (720), day ends 17:00 (1020).
+
+    private fun budgets(
+        consumed: Map<DayPart, Double>,
+        nowMinutes: Int,
+    ) = buildDayPartBudgets(
+        goalCalories = 1000,
+        shares = DayPartShares(),
+        consumed = consumed,
+        nowMinutes = nowMinutes,
+    )
+
+    private fun Map<DayPart, DayPartBudget>.target(part: DayPart) = getValue(part).target
+
+    @Test
+    fun `targets stay at base shares while all parts are still open`() {
+        val budgets = budgets(consumed = mapOf(DayPart.MORNING to 100.0), nowMinutes = 9 * 60)
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(400, budgets.target(DayPart.DAY))
+        assertEquals(300, budgets.target(DayPart.EVENING))
+    }
+
+    @Test
+    fun `deficit of a finished morning raises the day target`() {
+        val budgets = budgets(consumed = mapOf(DayPart.MORNING to 200.0), nowMinutes = 13 * 60)
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(500, budgets.target(DayPart.DAY))
+        assertEquals(300, budgets.target(DayPart.EVENING))
+        assertEquals(100, budgets.getValue(DayPart.DAY).carriedIn)
+        assertEquals(0, budgets.getValue(DayPart.MORNING).carriedIn)
+    }
+
+    @Test
+    fun `deficit chains through consecutive finished parts`() {
+        val budgets =
+            budgets(
+                consumed = mapOf(DayPart.MORNING to 200.0, DayPart.DAY to 0.0),
+                nowMinutes = 18 * 60,
+            )
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(500, budgets.target(DayPart.DAY))
+        assertEquals(800, budgets.target(DayPart.EVENING))
+        assertEquals(500, budgets.getValue(DayPart.EVENING).carriedIn)
+    }
+
+    @Test
+    fun `overeating in a finished part never shrinks a later target`() {
+        val budgets = budgets(consumed = mapOf(DayPart.MORNING to 450.0), nowMinutes = 13 * 60)
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(400, budgets.target(DayPart.DAY))
+        assertEquals(300, budgets.target(DayPart.EVENING))
+        assertEquals(0, budgets.getValue(DayPart.DAY).carriedIn)
+    }
+
+    @Test
+    fun `current day part follows the boundaries`() {
+        assertEquals(DayPart.MORNING, currentDayPart(nowMinutes = 9 * 60))
+        assertEquals(DayPart.DAY, currentDayPart(nowMinutes = 12 * 60))
+        assertEquals(DayPart.DAY, currentDayPart(nowMinutes = 14 * 60))
+        assertEquals(DayPart.EVENING, currentDayPart(nowMinutes = 17 * 60))
+        assertEquals(DayPart.EVENING, currentDayPart(nowMinutes = 23 * 60))
     }
 }

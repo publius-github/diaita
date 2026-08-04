@@ -89,4 +89,25 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
+        helper.createDatabase(testDbName, 7).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO food_items
+                    (name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g, source, createdAt)
+                VALUES
+                    ('White rice, cooked', 130.0, 2.7, 0.3, 28.0, 'SEED', 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 8, true, Migrations.MIGRATION_7_8).use { db ->
+            db.query("SELECT editedByUser FROM food_items WHERE name = 'White rice, cooked'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
 }

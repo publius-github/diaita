@@ -4,7 +4,8 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-enum class FoodSource { SEED, MANUAL, OPENFOODFACTS }
+/** QUICK marks one-off calorie-only logs ("Quick entry"); they are hidden from search and recents. */
+enum class FoodSource { SEED, MANUAL, OPENFOODFACTS, QUICK }
 
 @Entity(
     tableName = "food_items",
@@ -29,4 +30,6 @@ data class FoodItem(
     val source: FoodSource,
     val offId: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** Set once the user corrects this entry; seed-catalog syncs then leave it alone. */
+    val editedByUser: Boolean = false,
 )

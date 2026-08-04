@@ -92,6 +92,56 @@ fun dayPartOf(
         }
     }
 
+/**
+ * A day part's calorie budget for the balance bar: the sub-target to eat against, and how
+ * much of it was carried in from earlier finished parts (0 for most parts, most of the time).
+ */
+data class DayPartBudget(
+    val target: Int,
+    val carriedIn: Int,
+)
+
+/** The part of the day the wall clock currently falls into, per the configured [boundaries]. */
+fun currentDayPart(
+    nowMinutes: Int,
+    boundaries: DayPartBoundaries = DayPartBoundaries(),
+): DayPart =
+    when {
+        nowMinutes < boundaries.morningEndMinutes -> DayPart.MORNING
+        nowMinutes < boundaries.dayEndMinutes -> DayPart.DAY
+        else -> DayPart.EVENING
+    }
+
+/**
+ * Per-part calorie budgets for the balance bar. Each part starts from its [DayPartShares]
+ * slice of the daily goal; once a part's time window is over (its [DayPartBoundaries] end
+ * vs [nowMinutes]), the unspent remainder of its target carries forward into the next part.
+ * The carry is deliberately asymmetric: only a deficit rolls forward — overeating in a
+ * finished part never shrinks a later target (the day total already reports that), because
+ * a shrunken target would paint a part red before anything was even eaten in it.
+ */
+fun buildDayPartBudgets(
+    goalCalories: Int,
+    shares: DayPartShares,
+    consumed: Map<DayPart, Double>,
+    nowMinutes: Int,
+    boundaries: DayPartBoundaries = DayPartBoundaries(),
+): Map<DayPart, DayPartBudget> {
+    var carry = 0.0
+    return DayPart.entries.associateWith { part ->
+        val carriedIn = carry
+        val target = goalCalories * shares.shareOf(part) + carriedIn
+        val partOver =
+            when (part) {
+                DayPart.MORNING -> nowMinutes >= boundaries.morningEndMinutes
+                DayPart.DAY -> nowMinutes >= boundaries.dayEndMinutes
+                DayPart.EVENING -> false
+            }
+        carry = if (partOver) (target - (consumed[part] ?: 0.0)).coerceAtLeast(0.0) else 0.0
+        DayPartBudget(target = target.toInt(), carriedIn = carriedIn.toInt())
+    }
+}
+
 /** Total consumed calories per third of the day, for the balance bar. */
 fun buildDayPartCalories(
     entries: List<DiaryEntryWithFood>,

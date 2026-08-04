@@ -7,7 +7,11 @@ import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+
+private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
 class DiaryRepository(
     private val diaryEntryDao: DiaryEntryDao,
@@ -23,6 +27,8 @@ class DiaryRepository(
 
     fun recentFoods(limit: Int): Flow<List<FoodItem>> = diaryEntryDao.recentFoods(limit)
 
+    suspend fun lastLoggedQuantity(foodItemId: Long): Double? = diaryEntryDao.lastLoggedQuantity(foodItemId)
+
     suspend fun logFood(
         foodItemId: Long,
         quantityGrams: Double,
@@ -34,7 +40,7 @@ class DiaryRepository(
                 foodItemId = foodItemId,
                 quantityGrams = quantityGrams,
                 logDate = date,
-                loggedAt = System.currentTimeMillis(),
+                loggedAt = DateUtils.loggedAtFor(date),
                 mealSlot = mealSlot,
             ),
         )
@@ -49,16 +55,19 @@ class DiaryRepository(
 
     /**
      * Copies every entry of [fromDate] onto [toDate], preserving meal slots and preset
-     * grouping snapshots. Returns how many entries were copied (0 = source day empty).
+     * grouping snapshots. Each copy keeps its original time-of-day (shifted whole days),
+     * so meal ordering and snack day-part classification survive the copy.
+     * Returns how many entries were copied (0 = source day empty).
      */
     suspend fun copyDay(
         fromDate: String,
         toDate: String,
     ): Int {
         val entries = diaryEntryDao.entriesForDateOnce(fromDate)
-        val now = System.currentTimeMillis()
+        val dayShiftMillis =
+            (LocalDate.parse(toDate).toEpochDay() - LocalDate.parse(fromDate).toEpochDay()) * MILLIS_PER_DAY
         diaryEntryDao.insertAll(
-            entries.map { it.copy(id = 0, logDate = toDate, loggedAt = now) },
+            entries.map { it.copy(id = 0, logDate = toDate, loggedAt = it.loggedAt + dayShiftMillis) },
         )
         return entries.size
     }

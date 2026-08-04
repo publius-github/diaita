@@ -3,6 +3,7 @@
     <string name="app_name">Diaita</string>
 
     <!-- Common -->
+    <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="save">Save</string>
@@ -44,6 +45,16 @@
     <string name="day_part_day">Day</string>
     <string name="day_part_evening">Evening</string>
     <string name="day_part_kcal">%1$d / %2$d</string>
+    <string name="day_part_left">%1$d left</string>
+    <string name="day_part_carry_note">Unspent %1$d kcal carried over to %2$s</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="previous_day">Previous day</string>
+    <string name="next_day">Next day</string>
+    <string name="quick_add">Quick add</string>
+    <string name="quick_add_title">Quick calorie entry</string>
+    <string name="quick_add_kcal_label">Calories (kcal)</string>
+    <string name="quick_add_name_label">Name (optional)</string>
+    <string name="quick_entry_default_name">Quick entry</string>
 
     <!-- Pace message (random pick within each mood) -->
     <string name="pace_empty_1">Clean slate. Log your first meal and let\'s make it a good day.</string>
@@ -129,6 +140,8 @@
     <string name="carbs_per_100">Carbs g / 100g (optional)</string>
     <string name="save_and_log">Save &amp; log</string>
     <string name="save_and_add">Save &amp; add</string>
+    <string name="edit_food">Edit food</string>
+    <string name="save_changes">Save changes</string>
     <string name="manual_error">Enter a name and valid calories — protein, fat and carbs are optional</string>
     <string name="no_presets_addfood">No presets yet — create one from the Presets tab.</string>
     <string name="preset_items_kcal_tap_to_log">%1$d items · %2$d kcal — tap to log</string>
@@ -324,7 +337,7 @@
     <string name="unit_lb">lb</string>
     <string name="weight_empty">No weight entries yet — log your first weigh-in.</string>
     <string name="latest_weight">Latest: %1$s %2$s</string>
-    <string name="weight_today">Weight today: %1$s %2$s</string>
+    <string name="weight_today">Weight: %1$s %2$s</string>
     <string name="weight_target_line">Target: %1$s %2$s</string>
     <string name="weight_error">Enter a valid weight</string>
     <string name="monthly_averages">Monthly averages</string>
