@@ -126,11 +126,13 @@ fun HistoryScreen(
             // The row is always composed at a fixed minimum height so selecting/deselecting a day
             // doesn't shift the weight chart below; the text takes weight(1f) so a long line
             // (with the logged weight appended) wraps instead of pushing the button away.
+            // 48dp matches the TextButton's enforced minimum touch target — anything smaller
+            // makes the row grow when the button appears, nudging the weighted charts.
             Row(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 40.dp),
+                        .heightIn(min = 48.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 uiState.selectedDay?.let { day ->
