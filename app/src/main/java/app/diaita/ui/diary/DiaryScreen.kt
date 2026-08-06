@@ -18,9 +18,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,16 +32,19 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +55,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,21 +66,30 @@ import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartShares
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
 import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.QuantitySheet
+import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
 import app.diaita.util.DateUtils
+import kotlinx.coroutines.delay
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.Locale
 
 @Composable
 fun DiaryScreen(
-    onAddFoodClick: () -> Unit,
+    onAddFoodClick: (date: String) -> Unit,
     onOpenGoals: () -> Unit,
     onOpenWizard: () -> Unit,
     modifier: Modifier = Modifier,
+    jumpToToday: Boolean = false,
+    onJumpToTodayHandled: () -> Unit = {},
     viewModel: DiaryViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -81,7 +99,16 @@ fun DiaryScreen(
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
     var showWeightDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     val undoLabel = stringResource(R.string.undo)
+
+    // The Home tab doubles as "back to today": AppNavHost raises this flag on every tap.
+    LaunchedEffect(jumpToToday) {
+        if (jumpToToday) {
+            viewModel.selectToday()
+            onJumpToTodayHandled()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.undoEvent.collect { event ->
@@ -109,7 +136,7 @@ fun DiaryScreen(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddFoodClick) {
+            FloatingActionButton(onClick = { onAddFoodClick(uiState.date) }) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_food))
             }
         },
@@ -121,6 +148,14 @@ fun DiaryScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp),
         ) {
+            DateNavigationRow(
+                date = uiState.date,
+                isToday = uiState.isToday,
+                onPreviousDay = viewModel::selectPreviousDay,
+                onNextDay = viewModel::selectNextDay,
+                onDateClick = { showDatePicker = true },
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             DailyTotalsCard(uiState)
             if (uiState.loaded && uiState.goalCalories == null) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -207,6 +242,17 @@ fun DiaryScreen(
         }
     }
 
+    if (showDatePicker) {
+        DiaryDatePickerDialog(
+            date = uiState.date,
+            onDismiss = { showDatePicker = false },
+            onConfirm = { picked ->
+                showDatePicker = false
+                viewModel.selectDate(picked)
+            },
+        )
+    }
+
     if (showWeightDialog) {
         LogWeightDialog(
             weightUnit = uiState.weightUnit,
@@ -288,6 +334,91 @@ private fun SetGoalBanner(
     }
 }
 
+/**
+ * The `< Today >` stepper above the totals card; the right chevron stops at today and the
+ * date label itself opens the calendar picker for a direct jump.
+ */
+@Composable
+private fun DateNavigationRow(
+    date: String,
+    isToday: Boolean,
+    onPreviousDay: () -> Unit,
+    onNextDay: () -> Unit,
+    onDateClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onPreviousDay) {
+            Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.previous_day))
+        }
+        Text(
+            friendlyDateLabel(date),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .clickable(onClick = onDateClick)
+                    .padding(vertical = 8.dp),
+        )
+        IconButton(onClick = onNextDay, enabled = !isToday) {
+            Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.next_day))
+        }
+    }
+}
+
+/** Calendar dialog for jumping straight to a day; future days can't be picked. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DiaryDatePickerDialog(
+    date: String,
+    onDismiss: () -> Unit,
+    onConfirm: (LocalDate) -> Unit,
+) {
+    // DatePickerState speaks UTC-midnight millis regardless of the device time zone,
+    // so both conversions below deliberately go through ZoneOffset.UTC.
+    val state =
+        rememberDatePickerState(
+            initialSelectedDateMillis =
+                LocalDate
+                    .parse(date)
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant()
+                    .toEpochMilli(),
+            selectableDates =
+                object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                        !Instant
+                            .ofEpochMilli(utcTimeMillis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                            .isAfter(LocalDate.now())
+
+                    override fun isSelectableYear(year: Int): Boolean = year <= LocalDate.now().year
+                },
+        )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    state.selectedDateMillis?.let { millis ->
+                        onConfirm(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                    }
+                },
+                enabled = state.selectedDateMillis != null,
+            ) { Text(stringResource(R.string.ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    ) {
+        DatePicker(state = state)
+    }
+}
+
 @Composable
 private fun DailyTotalsCard(uiState: DiaryUiState) {
     val isOverGoal =
@@ -302,7 +433,6 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
-                    Text(stringResource(R.string.today_title), style = MaterialTheme.typography.titleMedium)
                     Text(
                         stringResource(R.string.kcal_amount, uiState.totalCalories.toInt()),
                         style = MaterialTheme.typography.headlineSmall,
@@ -327,14 +457,50 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
             }
             if (uiState.goalCalories != null && uiState.goalCalories > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
+                // Ticks once a minute so the budgets shift on their own when a day-part
+                // boundary passes while the screen sits open — recomposition otherwise
+                // only happens on a data change.
+                val nowMinutes by produceState(initialValue = minuteOfDay()) {
+                    while (true) {
+                        delay(60_000)
+                        value = minuteOfDay()
+                    }
+                }
+                // A past day is fully over: every part's window has closed, and there is no
+                // "current" part to emphasize or coach about.
+                val dayPartBudgets =
+                    buildDayPartBudgets(
+                        goalCalories = uiState.goalCalories,
+                        shares = uiState.dayPartShares,
+                        consumed = uiState.dayPartCalories,
+                        nowMinutes = if (uiState.isToday) nowMinutes else 24 * 60,
+                        boundaries = uiState.dayPartBoundaries,
+                    )
+                val currentPart =
+                    if (uiState.isToday) currentDayPart(nowMinutes, uiState.dayPartBoundaries) else null
                 DayPartBalanceBar(
                     dayPartCalories = uiState.dayPartCalories,
-                    goalCalories = uiState.goalCalories,
+                    dayPartBudgets = dayPartBudgets,
                     shares = uiState.dayPartShares,
+                    currentPart = currentPart,
+                    dayRemaining = uiState.goalCalories - uiState.totalCalories.toInt(),
                 )
-                if (uiState.coachTone != CoachTone.OFF) {
+                val carriedIn = currentPart?.let { dayPartBudgets[it]?.carriedIn } ?: 0
+                if (currentPart != null && carriedIn > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.day_part_carry_note, carriedIn, currentPart.label()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (uiState.isToday && uiState.coachTone != CoachTone.OFF) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    PaceMessage(uiState = uiState, goalCalories = uiState.goalCalories)
+                    PaceMessage(
+                        uiState = uiState,
+                        goalCalories = uiState.goalCalories,
+                        dayPartBudgets = dayPartBudgets,
+                    )
                 }
             }
             val hasMacroGoals =
@@ -481,13 +647,13 @@ private fun paceMessagePool(
 private fun PaceMessage(
     uiState: DiaryUiState,
     goalCalories: Int,
+    dayPartBudgets: Map<DayPart, DayPartBudget>,
 ) {
     val mood =
         when {
             uiState.totalCalories > goalCalories -> PaceMood.OVER
             DayPart.entries.any { part ->
-                (uiState.dayPartCalories[part] ?: 0.0) >
-                    goalCalories * uiState.dayPartShares.shareOf(part)
+                (uiState.dayPartCalories[part] ?: 0.0) > (dayPartBudgets[part]?.target ?: 0)
             } -> PaceMood.AHEAD
             uiState.isEmpty -> PaceMood.EMPTY
             else -> PaceMood.ON_TRACK
@@ -512,24 +678,30 @@ private fun PaceMessage(
 /**
  * The daily calorie bar split into three segments — morning / day / evening — sized by the
  * user-configurable [DayPartShares] (default 30/40/30). Each segment fills with that part's
- * consumed calories against its own sub-target, turning red when exceeded, so after logging
+ * consumed calories against its sub-target, turning red when exceeded, so after logging
  * e.g. breakfast you immediately see whether you ate more than the guideline suggests for
- * that part of the day.
+ * that part of the day. Sub-targets come from [buildDayPartBudgets], so a deficit left in an
+ * already-finished part raises the next part's target instead of counting later food as an
+ * overshoot the day as a whole doesn't have. The part the clock currently falls into is
+ * emphasized and answers the immediate question directly: how much is left to eat now.
  */
 @Composable
 private fun DayPartBalanceBar(
     dayPartCalories: Map<DayPart, Double>,
-    goalCalories: Int,
+    dayPartBudgets: Map<DayPart, DayPartBudget>,
     shares: DayPartShares,
+    currentPart: DayPart?,
+    dayRemaining: Int,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         DayPart.entries.forEach { part ->
-            val share = shares.shareOf(part)
             DayPartSegment(
                 part = part,
                 consumed = dayPartCalories[part] ?: 0.0,
-                target = (goalCalories * share).toInt(),
-                modifier = Modifier.weight(share),
+                target = dayPartBudgets[part]?.target ?: 0,
+                isCurrent = part == currentPart,
+                dayRemaining = dayRemaining,
+                modifier = Modifier.weight(shares.shareOf(part)),
             )
         }
     }
@@ -540,6 +712,8 @@ private fun DayPartSegment(
     part: DayPart,
     consumed: Double,
     target: Int,
+    isCurrent: Boolean,
+    dayRemaining: Int,
     modifier: Modifier = Modifier,
 ) {
     val isOver = target > 0 && consumed > target
@@ -560,12 +734,27 @@ private fun DayPartSegment(
         Text(
             part.label(),
             style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (isCurrent) FontWeight.SemiBold else null,
+            color = if (isCurrent) MaterialTheme.colorScheme.primary else Color.Unspecified,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        // The current part answers "how much can I still eat now?" directly; finished and
+        // upcoming parts (and an exceeded current one) keep the factual consumed/target pair.
+        // The promise is capped by what's left of the DAY: a part's local quota survives an
+        // earlier part's overshoot by design (see buildDayPartBudgets), but "N left" must
+        // never claim there is room to eat when the day total is already blown.
+        val effectiveLeft = minOf(target - consumed.toInt(), dayRemaining)
+        val figures =
+            if (isCurrent && !isOver && effectiveLeft > 0) {
+                stringResource(R.string.day_part_left, effectiveLeft)
+            } else {
+                stringResource(R.string.day_part_kcal, consumed.toInt(), target)
+            }
         Text(
-            stringResource(R.string.day_part_kcal, consumed.toInt(), target),
+            figures,
             style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (isCurrent) FontWeight.SemiBold else null,
             maxLines = 1,
             softWrap = false,
             color =
@@ -577,6 +766,9 @@ private fun DayPartSegment(
         )
     }
 }
+
+/** Minutes since midnight of the local wall clock, the input [buildDayPartBudgets] keys on. */
+private fun minuteOfDay(): Int = LocalTime.now().let { it.hour * 60 + it.minute }
 
 @Composable
 private fun DayPart.label(): String =
@@ -668,31 +860,10 @@ private fun DiaryRowCard(
                     row.calories.toInt(),
                 )
         }
-    val cardModifier =
-        if (onClick != null) {
-            Modifier.fillMaxWidth().clickable(onClick = onClick)
-        } else {
-            Modifier.fillMaxWidth()
-        }
-
-    // Compact row: the default 48dp IconButton touch target plus uniform 12dp padding used
-    // to inflate every entry to ~72dp; trimming both fits noticeably more rows per screen.
-    Card(modifier = cardModifier) {
-        Row(
-            modifier =
-                Modifier
-                    .padding(horizontal = 12.dp, vertical = 9.dp)
-                    .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall)
-            }
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
-            }
-        }
-    }
+    FoodRowCard(
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick,
+        onDelete = onDelete,
+    )
 }

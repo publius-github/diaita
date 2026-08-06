@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -112,7 +113,10 @@ class GoalsViewModel(
             return
         }
         viewModelScope.launch {
-            goalRepository.setGoal(calories, protein, fat, carbs, weight)
+            // Maintenance comes from the wizard's body stats, not from the targets edited
+            // here, so a manual save carries the last known estimate over unchanged.
+            val existingMaintenance = goalRepository.getGoal().first()?.maintenanceCalories
+            goalRepository.setGoal(calories, protein, fat, carbs, weight, existingMaintenance)
             _savedEvent.emit(Unit)
         }
     }

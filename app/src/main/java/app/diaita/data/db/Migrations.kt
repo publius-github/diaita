@@ -45,5 +45,28 @@ object Migrations {
             }
         }
 
-    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6)
+    /**
+     * Adds the wizard-estimated maintenance (TDEE) column to the goal row. Existing goals
+     * stay NULL — maintenance only becomes known the next time the wizard is completed.
+     */
+    val MIGRATION_6_7 =
+        object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE daily_goals ADD COLUMN maintenanceCalories INTEGER")
+            }
+        }
+
+    /**
+     * Adds the user-correction flag to foods. Existing rows default to not-edited; the flag
+     * flips when the user fixes an entry from search, and seed syncs skip flagged rows so
+     * catalog updates never clobber a deliberate correction.
+     */
+    val MIGRATION_7_8 =
+        object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE food_items ADD COLUMN editedByUser INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
 }

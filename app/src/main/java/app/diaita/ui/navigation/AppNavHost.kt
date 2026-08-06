@@ -1,5 +1,8 @@
 package app.diaita.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -56,6 +60,12 @@ private val bottomNavItems =
         BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
     )
 
+/** SavedStateHandle flag the Home tab raises so the Diary snaps back to today. */
+private const val DIARY_JUMP_TO_TODAY_KEY = "diaryJumpToToday"
+
+/** Screen-switch cross-fade duration; NavHost's 700ms default reads as lag. */
+private const val NAV_FADE_MILLIS = 200
+
 @Composable
 fun AppNavHost(navController: NavHostController = rememberNavController()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -75,6 +85,13 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                                     launchSingleTop = true
                                     restoreState = true
                                 }
+                                // Home doubles as "back to today": every tap on it, whether a
+                                // tab switch or a reselect, resets the diary's shown date.
+                                if (item.screen == Screen.Diary) {
+                                    navController
+                                        .getBackStackEntry(Screen.Diary.route)
+                                        .savedStateHandle[DIARY_JUMP_TO_TODAY_KEY] = true
+                                }
                             },
                             icon = { Icon(item.icon, contentDescription = label) },
                             label = { Text(label) },
@@ -87,6 +104,12 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         NavHost(
             navController = navController,
             startDestination = Screen.Diary.route,
+            // NavHost's default screen transition is a 700ms cross-fade, which reads as lag
+            // on every tab switch; a 200ms fade keeps the continuity cue but feels instant.
+            enterTransition = { fadeIn(animationSpec = tween(NAV_FADE_MILLIS)) },
+            exitTransition = { fadeOut(animationSpec = tween(NAV_FADE_MILLIS)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(NAV_FADE_MILLIS)) },
+            popExitTransition = { fadeOut(animationSpec = tween(NAV_FADE_MILLIS)) },
             // consumeWindowInsets stops nested Scaffolds (Diary, Goals, ...) from applying
             // the status-bar inset a second time on top of this Scaffold's padding.
             modifier =
@@ -94,14 +117,28 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding),
         ) {
-            composable(Screen.Diary.route) {
+            composable(Screen.Diary.route) { entry ->
+                val jumpToToday by entry.savedStateHandle
+                    .getStateFlow(DIARY_JUMP_TO_TODAY_KEY, false)
+                    .collectAsStateWithLifecycle()
                 DiaryScreen(
-                    onAddFoodClick = { navController.navigate(Screen.AddFood.route) },
+                    onAddFoodClick = { date -> navController.navigate(Screen.AddFood.create(date)) },
                     onOpenGoals = { navController.navigate(Screen.Goals.route) },
                     onOpenWizard = { navController.navigate(Screen.GoalWizard.route) },
+                    jumpToToday = jumpToToday,
+                    onJumpToTodayHandled = { entry.savedStateHandle[DIARY_JUMP_TO_TODAY_KEY] = false },
                 )
             }
-            composable(Screen.AddFood.route) {
+            composable(
+                route = Screen.AddFood.route,
+                arguments =
+                    listOf(
+                        navArgument("date") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
+            ) {
                 AddFoodScreen(onDone = { navController.popBackStack() })
             }
             composable(Screen.PresetList.route) {

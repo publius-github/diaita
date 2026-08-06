@@ -20,8 +20,26 @@ interface FoodItemDao {
     @Update
     suspend fun update(food: FoodItem)
 
-    @Query("SELECT * FROM food_items WHERE name LIKE '%' || :query || '%' ORDER BY name LIMIT 50")
-    fun search(query: String): Flow<List<FoodItem>>
+    /**
+     * Name search ranked by how often (and, as a tiebreak, how recently) the food was actually
+     * logged since [since] — the staples someone eats every week surface above the alphabet.
+     * Never-logged foods sort alphabetically below them. QUICK rows are one-off calorie logs,
+     * not catalog entries, so they never appear.
+     */
+    @Query(
+        """
+        SELECT f.* FROM food_items f
+        LEFT JOIN diary_entries d ON d.foodItemId = f.id AND d.loggedAt >= :since
+        WHERE f.name LIKE '%' || :query || '%' AND f.source != 'QUICK'
+        GROUP BY f.id
+        ORDER BY COUNT(d.id) DESC, MAX(d.loggedAt) DESC, f.name ASC
+        LIMIT 50
+        """,
+    )
+    fun search(
+        query: String,
+        since: Long,
+    ): Flow<List<FoodItem>>
 
     @Query("SELECT * FROM food_items")
     suspend fun getAll(): List<FoodItem>

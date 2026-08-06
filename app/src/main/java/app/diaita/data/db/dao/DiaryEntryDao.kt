@@ -100,11 +100,16 @@ interface DiaryEntryDao {
         SELECT f.* FROM food_items f
         JOIN (SELECT foodItemId, MAX(loggedAt) AS lastLogged FROM diary_entries GROUP BY foodItemId) recent
             ON f.id = recent.foodItemId
+        WHERE f.source != 'QUICK'
         ORDER BY recent.lastLogged DESC
         LIMIT :limit
         """,
     )
     fun recentFoods(limit: Int): Flow<List<FoodItem>>
+
+    /** The grams this food was logged with most recently — the best guess for the next portion. */
+    @Query("SELECT quantityGrams FROM diary_entries WHERE foodItemId = :foodItemId ORDER BY loggedAt DESC LIMIT 1")
+    suspend fun lastLoggedQuantity(foodItemId: Long): Double?
 
     /** Per-day macro totals for all days strictly before [beforeDate] — used by the retention job. */
     @Query(

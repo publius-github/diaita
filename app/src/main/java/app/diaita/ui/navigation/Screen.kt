@@ -5,7 +5,9 @@ sealed class Screen(
 ) {
     data object Diary : Screen("diary")
 
-    data object AddFood : Screen("add_food")
+    data object AddFood : Screen("add_food?date={date}") {
+        fun create(date: String): String = "add_food?date=$date"
+    }
 
     data object PresetList : Screen("presets")
 

@@ -15,6 +15,7 @@ class GoalRepository(
         fatTargetG: Int,
         carbsTargetG: Int,
         weightTargetKg: Double?,
+        maintenanceCalories: Int?,
     ) {
         dailyGoalDao.setGoal(
             DailyGoal(
@@ -23,6 +24,7 @@ class GoalRepository(
                 fatTargetG = fatTargetG,
                 carbsTargetG = carbsTargetG,
                 weightTargetKg = weightTargetKg,
+                maintenanceCalories = maintenanceCalories,
             ),
         )
     }

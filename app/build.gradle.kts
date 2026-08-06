@@ -30,10 +30,15 @@ android {
         applicationId = "app.diaita"
         minSdk = 26
         targetSdk = 36
-        // Bump versionCode on every APK shared outside this machine — Android refuses
-        // to update an app whose versionCode did not increase.
-        versionCode = 4
-        versionName = "1.3"
+        // versionName restarted at 0.x — 1.0.0 is reserved for the production release;
+        // until then this is alpha/beta.
+        // versionCode is derived from the semver so the two can never diverge:
+        // MAJOR*10000 + MINOR*100 + PATCH (0.10.0 -> 1000). Android only requires it to
+        // increase on every shipped APK, which a version bump now guarantees.
+        val semVer = "0.10.0"
+        val (major, minor, patch) = semVer.split('.').map { it.toInt() }
+        versionCode = major * 10000 + minor * 100 + patch
+        versionName = semVer
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -35,9 +35,17 @@ class FoodRepository(
     private val connectivityObserver: ConnectivityObserver,
 ) {
     /** Local Room search — reactive, and automatically re-emits once [refreshFromOpenFoodFacts] caches new rows. */
-    fun search(query: String): Flow<List<FoodItem>> = foodItemDao.search(query)
+    fun search(query: String): Flow<List<FoodItem>> =
+        foodItemDao.search(query, since = System.currentTimeMillis() - FRECENCY_WINDOW_MILLIS)
 
     suspend fun getById(id: Long): FoodItem? = foodItemDao.getById(id)
+
+    /**
+     * Persists a user correction to a catalog entry (any source). Diary entries reference the row
+     * by id and store only grams, so past logs recalculate against the fixed values — which is the
+     * point: the old numbers were wrong.
+     */
+    suspend fun updateFood(food: FoodItem) = foodItemDao.update(food)
 
     suspend fun isOnline(): Boolean = connectivityObserver.isOnline.first()
 
@@ -145,4 +153,28 @@ class FoodRepository(
                 source = FoodSource.MANUAL,
             ),
         )
+
+    /**
+     * Backing row for a calorie-only quick log. Stored at [kcal] per 100 g so a 100 g diary
+     * entry yields exactly [kcal]; the QUICK source keeps it out of search and recents.
+     */
+    suspend fun addQuickFood(
+        name: String,
+        kcal: Double,
+    ): Long =
+        foodItemDao.insert(
+            FoodItem(
+                name = name,
+                caloriesPer100g = kcal,
+                proteinPer100g = 0.0,
+                fatPer100g = 0.0,
+                carbsPer100g = 0.0,
+                source = FoodSource.QUICK,
+            ),
+        )
+
+    companion object {
+        /** Logging within the last 90 days counts toward the search ranking. */
+        private const val FRECENCY_WINDOW_MILLIS = 90L * 24 * 60 * 60 * 1000
+    }
 }

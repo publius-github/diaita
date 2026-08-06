@@ -37,6 +37,8 @@ data class PresetEditUiState(
     val mealSlot: MealSlot = MealSlot.BREAKFAST,
     val foodPendingQuantity: FoodItem? = null,
     val draftItems: List<DraftPresetItem> = emptyList(),
+    /** Index into [draftItems] of the row being edited via the quantity sheet, if any. */
+    val editingDraftIndex: Int? = null,
     val hasError: Boolean = false,
     val saved: Boolean = false,
 )
@@ -86,12 +88,15 @@ class PresetViewModel(
             onFoodReady = { food -> _editState.update { it.copy(foodPendingQuantity = food) } },
         )
 
-    fun logPreset(presetId: Long) {
+    fun logPreset(
+        presetId: Long,
+        date: String = DateUtils.today(),
+    ) {
         viewModelScope.launch {
             val boundaries = settingsRepository.dayPartBoundaries.first()
             presetRepository.logPreset(
                 presetId,
-                DateUtils.today(),
+                date,
                 fallbackSlot = DateUtils.defaultMealSlotNow(boundaries),
             )
             _justLogged.value = true
@@ -158,8 +163,24 @@ class PresetViewModel(
         foodSearch.clearSearch()
     }
 
-    fun removeDraftItem(item: DraftPresetItem) {
-        _editState.update { it.copy(draftItems = it.draftItems - item) }
+    fun removeDraftItem(index: Int) {
+        _editState.update { it.copy(draftItems = it.draftItems.filterIndexed { i, _ -> i != index }) }
+    }
+
+    // Edits go by index, not by value: two identical lines of the same food would otherwise
+    // be indistinguishable and always hit the first one.
+
+    fun requestEditDraftItem(index: Int) = _editState.update { it.copy(editingDraftIndex = index) }
+
+    fun cancelDraftItemEdit() = _editState.update { it.copy(editingDraftIndex = null) }
+
+    fun confirmDraftItemEdit(quantityGrams: Double) {
+        _editState.update { state ->
+            val index = state.editingDraftIndex ?: return@update state
+            val items = state.draftItems.toMutableList()
+            items.getOrNull(index)?.let { items[index] = it.copy(quantityGrams = quantityGrams) }
+            state.copy(draftItems = items, editingDraftIndex = null)
+        }
     }
 
     fun savePreset() {

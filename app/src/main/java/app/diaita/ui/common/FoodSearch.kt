@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -68,6 +71,8 @@ data class FoodSearchUiState(
     val searchHadNetworkError: Boolean = false,
     val offSearching: Boolean = false,
     val scanError: ScanError? = null,
+    /** Search result being corrected in the edit form; null means no edit in progress. */
+    val foodBeingEdited: FoodItem? = null,
 )
 
 /**
@@ -179,6 +184,38 @@ class FoodSearchController(
         }
     }
 
+    fun onEditFood(food: FoodItem) = _state.update { it.copy(foodBeingEdited = food) }
+
+    fun dismissEdit() = _state.update { it.copy(foodBeingEdited = null) }
+
+    /**
+     * Applies a correction to the food currently in the edit form. Only the user-visible
+     * nutrition fields change — id, source, seedKey, barcode etc. are preserved, so diary
+     * entries and future seed-catalog syncs keep working against the same row.
+     */
+    fun saveEditedFood(
+        name: String,
+        caloriesPer100g: Double,
+        proteinPer100g: Double,
+        fatPer100g: Double,
+        carbsPer100g: Double,
+    ) {
+        val food = _state.value.foodBeingEdited ?: return
+        scope.launch {
+            foodRepository.updateFood(
+                food.copy(
+                    name = name,
+                    caloriesPer100g = caloriesPer100g,
+                    proteinPer100g = proteinPer100g,
+                    fatPer100g = fatPer100g,
+                    carbsPer100g = carbsPer100g,
+                    editedByUser = true,
+                ),
+            )
+            _state.update { it.copy(foodBeingEdited = null) }
+        }
+    }
+
     fun clearSearch() = onSearchQueryChanged("")
 }
 
@@ -215,9 +252,26 @@ fun FoodSearchContent(
     onSearchQueryChanged: (String) -> Unit,
     onFoodSelected: (FoodItem) -> Unit,
     onManualSave: (String, Double, Double, Double, Double) -> Unit,
+    onEditFood: (FoodItem) -> Unit,
+    onEditSave: (String, Double, Double, Double, Double) -> Unit,
+    onEditDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Calorie-only quick logging; only the Add-food screen offers it (null hides the button). */
+    onQuickAdd: (() -> Unit)? = null,
 ) {
     var showManualEntry by rememberSaveable { mutableStateOf(false) }
+
+    // Editing takes over the whole pane, same as manual entry — it's the same form, prefilled.
+    state.foodBeingEdited?.let { food ->
+        ManualFoodForm(
+            saveLabel = stringResource(R.string.save_changes),
+            onBack = onEditDismiss,
+            onSave = onEditSave,
+            modifier = modifier,
+            initial = food,
+        )
+        return
+    }
 
     if (showManualEntry) {
         ManualFoodForm(
@@ -318,15 +372,35 @@ fun FoodSearchContent(
                     supportingContent = {
                         Text(stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()))
                     },
+                    trailingContent = {
+                        // Catalog corrections (wrong seeded/OFF numbers) happen right where the
+                        // mistake is spotted — in the search results.
+                        IconButton(onClick = { onEditFood(food) }) {
+                            Icon(
+                                Icons.Filled.Edit,
+                                contentDescription = stringResource(R.string.edit_food),
+                            )
+                        }
+                    },
                     modifier = Modifier.clickable { onFoodSelected(food) },
                 )
             }
         }
-        TextButton(
-            onClick = { showManualEntry = true },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.add_manually))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+                onClick = { showManualEntry = true },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.add_manually))
+            }
+            onQuickAdd?.let { quickAdd ->
+                TextButton(
+                    onClick = quickAdd,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.quick_add))
+                }
+            }
         }
     }
 }

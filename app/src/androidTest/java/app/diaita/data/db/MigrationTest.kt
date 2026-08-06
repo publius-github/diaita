@@ -67,4 +67,47 @@ class MigrationTest {
             }
         }
     }
+
+    @Test
+    fun migrate6To7_existingGoalHasNullMaintenance() {
+        helper.createDatabase(testDbName, 6).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO daily_goals
+                    (id, calorieTarget, proteinTargetG, fatTargetG, carbsTargetG, weightTargetKg, updatedAt)
+                VALUES
+                    (1, 2000, 150, 55, 225, NULL, 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 7, true, Migrations.MIGRATION_6_7).use { db ->
+            db.query("SELECT calorieTarget, maintenanceCalories FROM daily_goals WHERE id = 1").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(2000, cursor.getInt(0))
+                assertEquals(true, cursor.isNull(1))
+            }
+        }
+    }
+
+    @Test
+    fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
+        helper.createDatabase(testDbName, 7).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO food_items
+                    (name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g, source, createdAt)
+                VALUES
+                    ('White rice, cooked', 130.0, 2.7, 0.3, 28.0, 'SEED', 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 8, true, Migrations.MIGRATION_7_8).use { db ->
+            db.query("SELECT editedByUser FROM food_items WHERE name = 'White rice, cooked'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
 }

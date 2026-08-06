@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -56,6 +57,9 @@ sealed class DiaryRow {
 data class DiaryUiState(
     /** False until the first combine emission — keeps the "no goal" banner from flashing on load. */
     val loaded: Boolean = false,
+    /** The ISO date the diary currently shows; the date navigation moves it, today by default. */
+    val date: String = DateUtils.today(),
+    val isToday: Boolean = true,
     val sections: List<DiarySection> = emptyList(),
     val dayPartCalories: Map<DayPart, Double> = emptyMap(),
     val totalCalories: Double = 0.0,
@@ -70,6 +74,7 @@ data class DiaryUiState(
     /** Mirrors the "track macros" setting — hides the P/F/C progress UI when false. */
     val trackMacros: Boolean = true,
     val dayPartShares: DayPartShares = DayPartShares(),
+    val dayPartBoundaries: DayPartBoundaries = DayPartBoundaries(),
     val coachTone: CoachTone = CoachTone.SNARKY,
     val weightUnit: WeightUnit = WeightUnit.KG,
 ) {
@@ -97,49 +102,82 @@ class DiaryViewModel(
     private val weightRepository: WeightRepository,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
-    private val today = DateUtils.today()
+    /** The date the diary shows and every action (log, weight, copy) targets. */
+    private val selectedDate = MutableStateFlow(DateUtils.today())
 
     val uiState: StateFlow<DiaryUiState> =
-        combine(
-            diaryRepository.entriesForDate(today),
-            diaryRepository.dailyTotals(today),
-            goalRepository.getGoal(),
-            weightRepository.range(today, today),
-            combine(
-                settingsRepository.trackMacros,
-                settingsRepository.dayPartBoundaries,
-                settingsRepository.dayPartShares,
-                settingsRepository.coachTone,
-                settingsRepository.weightUnit,
-                ::HomeSettings,
-            ),
-        ) { entries, totals, goal, todayWeights, settings ->
-            DiaryUiState(
-                loaded = true,
-                sections = buildDiarySections(entries),
-                dayPartCalories = buildDayPartCalories(entries, settings.boundaries),
-                totalCalories = totals.totalCalories,
-                totalProtein = totals.totalProtein,
-                totalFat = totals.totalFat,
-                totalCarbs = totals.totalCarbs,
-                goalCalories = goal?.calorieTarget,
-                goalProteinG = goal?.proteinTargetG,
-                goalFatG = goal?.fatTargetG,
-                goalCarbsG = goal?.carbsTargetG,
-                todayWeightKg = todayWeights.firstOrNull()?.weightKg,
-                trackMacros = settings.trackMacros,
-                dayPartShares = settings.shares,
-                coachTone = settings.coachTone,
-                weightUnit = settings.weightUnit,
+        selectedDate
+            .flatMapLatest { date ->
+                combine(
+                    diaryRepository.entriesForDate(date),
+                    diaryRepository.dailyTotals(date),
+                    goalRepository.getGoal(),
+                    weightRepository.range(date, date),
+                    combine(
+                        settingsRepository.trackMacros,
+                        settingsRepository.dayPartBoundaries,
+                        settingsRepository.dayPartShares,
+                        settingsRepository.coachTone,
+                        settingsRepository.weightUnit,
+                        ::HomeSettings,
+                    ),
+                ) { entries, totals, goal, dayWeights, settings ->
+                    DiaryUiState(
+                        loaded = true,
+                        date = date,
+                        isToday = date == DateUtils.today(),
+                        sections = buildDiarySections(entries),
+                        dayPartCalories = buildDayPartCalories(entries, settings.boundaries),
+                        totalCalories = totals.totalCalories,
+                        totalProtein = totals.totalProtein,
+                        totalFat = totals.totalFat,
+                        totalCarbs = totals.totalCarbs,
+                        goalCalories = goal?.calorieTarget,
+                        goalProteinG = goal?.proteinTargetG,
+                        goalFatG = goal?.fatTargetG,
+                        goalCarbsG = goal?.carbsTargetG,
+                        todayWeightKg = dayWeights.firstOrNull()?.weightKg,
+                        trackMacros = settings.trackMacros,
+                        dayPartShares = settings.shares,
+                        dayPartBoundaries = settings.boundaries,
+                        coachTone = settings.coachTone,
+                        weightUnit = settings.weightUnit,
+                    )
+                }
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = DiaryUiState(),
             )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = DiaryUiState(),
-        )
+
+    fun selectPreviousDay() {
+        selectedDate.value =
+            LocalDate
+                .parse(selectedDate.value)
+                .minusDays(1)
+                .format(DateTimeFormatter.ISO_LOCAL_DATE)
+    }
+
+    /** Steps forward one day, never past today — the diary has no future days to plan. */
+    fun selectNextDay() {
+        val next = LocalDate.parse(selectedDate.value).plusDays(1)
+        if (next > LocalDate.now()) return
+        selectedDate.value = next.format(DateTimeFormatter.ISO_LOCAL_DATE)
+    }
+
+    /** Jumps straight to [date] (calendar picker); future days are refused like in [selectNextDay]. */
+    fun selectDate(date: LocalDate) {
+        if (date > LocalDate.now()) return
+        selectedDate.value = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+    }
+
+    /** Snaps back to today — the Home tab button doubles as "back to today". */
+    fun selectToday() {
+        selectedDate.value = DateUtils.today()
+    }
 
     fun logWeight(weightKg: Double) {
-        viewModelScope.launch { weightRepository.logWeight(today, weightKg) }
+        viewModelScope.launch { weightRepository.logWeight(selectedDate.value, weightKg) }
     }
 
     private val _copyResultEvent = MutableSharedFlow<Int>(extraBufferCapacity = 1)
@@ -147,14 +185,16 @@ class DiaryViewModel(
     /** Emits how many entries "repeat yesterday" copied; 0 means yesterday was empty. */
     val copyResultEvent: SharedFlow<Int> = _copyResultEvent.asSharedFlow()
 
+    /** Copies the day before the shown date onto it — "repeat yesterday" relative to the selection. */
     fun copyYesterday() {
         viewModelScope.launch {
-            val yesterday =
+            val target = selectedDate.value
+            val dayBefore =
                 LocalDate
-                    .parse(today)
+                    .parse(target)
                     .minusDays(1)
                     .format(DateTimeFormatter.ISO_LOCAL_DATE)
-            _copyResultEvent.emit(diaryRepository.copyDay(yesterday, today))
+            _copyResultEvent.emit(diaryRepository.copyDay(dayBefore, target))
         }
     }
 
