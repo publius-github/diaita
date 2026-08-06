@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -66,11 +64,12 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showWeightDialog by remember { mutableStateOf(false) }
 
+    // Static screen: no scrolling. The two charts are weighted so the content always fills
+    // the viewport exactly instead of overflowing into a scroll.
     Column(
         modifier =
             modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
     ) {
         Text(
@@ -119,7 +118,10 @@ fun HistoryScreen(
                 maintenanceCalories = uiState.maintenanceCalories,
                 selectedIndex = uiState.selectedIndex,
                 onBarTap = viewModel::onBarSelected,
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1.5f),
             )
             // The row is always composed at a fixed minimum height so selecting/deselecting a day
             // doesn't shift the weight chart below; the text takes weight(1f) so a long line
@@ -128,7 +130,7 @@ fun HistoryScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 48.dp),
+                        .heightIn(min = 40.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 uiState.selectedDay?.let { day ->
@@ -165,9 +167,9 @@ fun HistoryScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(stringResource(R.string.weight_title), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
@@ -188,7 +190,10 @@ fun HistoryScreen(
                 totalDays = uiState.days.size.coerceAtLeast(1),
                 selectedIndex = uiState.selectedIndex,
                 onDayTap = viewModel::onBarSelected,
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -217,9 +222,9 @@ fun HistoryScreen(
         }
 
         if (uiState.monthlyAverages.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(stringResource(R.string.monthly_averages), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             uiState.monthlyAverages.forEach { aggregate ->
@@ -298,10 +303,10 @@ private fun CalorieBarChart(
             days.map { it.calories }.average().toInt(),
         )
 
+    // Height comes from the caller (a weighted slot in the History column), not a fixed value.
     Canvas(
         modifier =
             modifier
-                .height(220.dp)
                 .semantics { contentDescription = chartDescription }
                 .pointerInput(days) {
                     detectTapGestures { offset ->
@@ -463,10 +468,10 @@ private fun WeightLineChart(
             weightUnit.label(),
         )
 
+    // Height comes from the caller (a weighted slot in the History column), not a fixed value.
     Canvas(
         modifier =
             modifier
-                .height(150.dp)
                 .semantics { contentDescription = chartDescription }
                 .pointerInput(totalDays) {
                     detectTapGestures { offset ->
