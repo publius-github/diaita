@@ -97,6 +97,11 @@ fun HistoryScreen(
                 label = { Text(stringResource(R.string.range_7_days)) },
             )
             FilterChip(
+                selected = uiState.rangeDays == 14,
+                onClick = { viewModel.setRangeDays(14) },
+                label = { Text(stringResource(R.string.range_14_days)) },
+            )
+            FilterChip(
                 selected = uiState.rangeDays == 30,
                 onClick = { viewModel.setRangeDays(30) },
                 label = { Text(stringResource(R.string.range_30_days)) },
@@ -117,12 +122,23 @@ fun HistoryScreen(
             uiState.selectedDay?.let { day ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Row {
+                    val selectedWeightKg = uiState.selectedDayWeightKg
                     Text(
-                        stringResource(
-                            R.string.selected_day_info,
-                            formatDate(day.date),
-                            day.calories.toInt(),
-                        ),
+                        if (selectedWeightKg != null) {
+                            stringResource(
+                                R.string.selected_day_info_with_weight,
+                                formatDate(day.date),
+                                day.calories.toInt(),
+                                String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(selectedWeightKg)),
+                                uiState.weightUnit.label(),
+                            )
+                        } else {
+                            stringResource(
+                                R.string.selected_day_info,
+                                formatDate(day.date),
+                                day.calories.toInt(),
+                            )
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color =
                             when (day.zone) {
@@ -159,6 +175,8 @@ fun HistoryScreen(
                 weightUnit = uiState.weightUnit,
                 windowStart = windowStart,
                 totalDays = uiState.days.size.coerceAtLeast(1),
+                selectedIndex = uiState.selectedIndex,
+                onDayTap = viewModel::onBarSelected,
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -223,8 +241,16 @@ fun HistoryScreen(
 private val AXIS_LEFT_PAD = 42.dp
 private val AXIS_BOTTOM_PAD = 18.dp
 
-/** In the 7-day view every day is labeled; in the 30-day view every 5th. */
-private fun labelEvery(totalDays: Int): Int = if (totalDays <= 7) 1 else 5
+/** In the 7-day view every day is labeled; in the 14-day view every 2nd; in the 30-day view every 5th. */
+private fun labelEvery(totalDays: Int): Int =
+    when {
+        totalDays <= 7 -> 1
+        totalDays <= 14 -> 2
+        else -> 5
+    }
+
+/** Weight point value labels overlap beyond ~2 weeks, so the 30-day view keeps only the first and last. */
+private fun showAllPointLabels(totalDays: Int): Boolean = totalDays <= 14
 
 @Composable
 private fun CalorieBarChart(
@@ -409,11 +435,14 @@ private fun WeightLineChart(
     weightUnit: WeightUnit,
     windowStart: LocalDate,
     totalDays: Int,
+    selectedIndex: Int?,
+    onDayTap: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lineColor = MaterialTheme.colorScheme.primary
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val selectionColor = MaterialTheme.colorScheme.tertiary
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
     val labelStep = labelEvery(totalDays)
     val chartDescription =
@@ -427,7 +456,16 @@ private fun WeightLineChart(
         modifier =
             modifier
                 .height(150.dp)
-                .semantics { contentDescription = chartDescription },
+                .semantics { contentDescription = chartDescription }
+                .pointerInput(totalDays) {
+                    detectTapGestures { offset ->
+                        val leftPad = AXIS_LEFT_PAD.toPx()
+                        if (offset.x < leftPad) return@detectTapGestures
+                        val slot = (size.width - leftPad) / totalDays
+                        val index = ((offset.x - leftPad) / slot).toInt().coerceIn(0, totalDays - 1)
+                        onDayTap(index)
+                    }
+                },
     ) {
         val leftPad = AXIS_LEFT_PAD.toPx()
         val bottomPad = AXIS_BOTTOM_PAD.toPx()
@@ -489,6 +527,16 @@ private fun WeightLineChart(
             gridValue += gridStep
         }
 
+        // Selection highlight — same day slot as the calorie chart above, so the two stay in sync.
+        selectedIndex?.let { index ->
+            drawRoundRect(
+                color = selectionColor.copy(alpha = 0.25f),
+                topLeft = Offset(leftPad + index * slot, 0f),
+                size = Size(slot, chartHeight),
+                cornerRadius = CornerRadius(3f, 3f),
+            )
+        }
+
         // Dashed target line, labeled at the right end just above the line.
         if (displayTarget != null) {
             val y = yFor(displayTarget)
@@ -507,7 +555,9 @@ private fun WeightLineChart(
             )
         }
 
-        // Points, connecting lines, and a value label above each point.
+        // Points, connecting lines, and value labels. In the 30-day view intermediate labels
+        // overlap into an unreadable strip, so only the first and last points keep theirs.
+        val allPointLabels = showAllPointLabels(totalDays)
         weights.forEachIndexed { index, entry ->
             val point = Offset(xFor(entry), yFor(displayValues[index]))
             drawCircle(color = lineColor, radius = 4.dp.toPx(), center = point)
@@ -519,12 +569,14 @@ private fun WeightLineChart(
                     strokeWidth = 2.dp.toPx(),
                 )
             }
-            drawContext.canvas.nativeCanvas.drawText(
-                String.format(Locale.US, "%.1f", displayValues[index]),
-                point.x,
-                point.y - 6.dp.toPx(),
-                centerPaint,
-            )
+            if (allPointLabels || index == 0 || index == weights.lastIndex) {
+                drawContext.canvas.nativeCanvas.drawText(
+                    String.format(Locale.US, "%.1f", displayValues[index]),
+                    point.x,
+                    point.y - 6.dp.toPx(),
+                    centerPaint,
+                )
+            }
         }
 
         // Static baseline (X axis).

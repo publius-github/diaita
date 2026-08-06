@@ -42,6 +42,7 @@ data class HistoryUiState(
     val weightUnit: WeightUnit = WeightUnit.KG,
 ) {
     val selectedDay: HistoryDayUi? get() = selectedIndex?.let { days.getOrNull(it) }
+    val selectedDayWeightKg: Double? get() = selectedDay?.let { day -> weights.firstOrNull { it.date == day.date }?.weightKg }
     val hasAnyCalories: Boolean get() = days.any { it.calories > 0 }
 }
 
@@ -127,6 +128,6 @@ class HistoryViewModel(
 
     companion object {
         const val DEFAULT_RANGE_DAYS = 7
-        val RANGE_OPTIONS = listOf(7, 30)
+        val RANGE_OPTIONS = listOf(7, 14, 30)
     }
 }
