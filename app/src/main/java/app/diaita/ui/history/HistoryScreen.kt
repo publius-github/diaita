@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -119,9 +121,17 @@ fun HistoryScreen(
                 onBarTap = viewModel::onBarSelected,
                 modifier = Modifier.fillMaxWidth(),
             )
-            uiState.selectedDay?.let { day ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Row {
+            // The row is always composed at a fixed minimum height so selecting/deselecting a day
+            // doesn't shift the weight chart below; the text takes weight(1f) so a long line
+            // (with the logged weight appended) wraps instead of pushing the button away.
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                uiState.selectedDay?.let { day ->
                     val selectedWeightKg = uiState.selectedDayWeightKg
                     Text(
                         if (selectedWeightKg != null) {
@@ -146,6 +156,7 @@ fun HistoryScreen(
                                 CalorieZone.BETWEEN -> MaterialTheme.colorScheme.tertiary
                                 CalorieZone.ON_TRACK -> Color.Unspecified
                             },
+                        modifier = Modifier.weight(1f),
                     )
                     TextButton(onClick = { onViewDay(day.date) }) {
                         Text(stringResource(R.string.view_day))
