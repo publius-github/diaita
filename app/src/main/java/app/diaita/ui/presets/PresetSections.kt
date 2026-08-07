@@ -1,13 +1,11 @@
 package app.diaita.ui.presets
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.PresetSummary
+import app.diaita.ui.common.CompactRowCard
 import app.diaita.ui.common.label
 
 /** A meal group in the preset list, mirroring the Diary screen's section layout. */
@@ -71,7 +70,7 @@ fun PresetSectionHeader(section: PresetSection) {
 
 /**
  * Tap-to-log preset list used by the Add-food screen's Presets tab: grouped by meal slot with
- * the same section headers as the management screen, each preset a tappable [ListItem].
+ * the same section headers as the management screen, each preset a tappable [CompactRowCard].
  */
 fun LazyListScope.presetLogList(
     presets: List<PresetSummary>,
@@ -80,18 +79,15 @@ fun LazyListScope.presetLogList(
     groupPresetsBySlot(presets).forEach { section ->
         item(key = "header_${section.slot}") { PresetSectionHeader(section) }
         items(section.presets, key = { it.preset.id }) { presetWithItems ->
-            ListItem(
-                headlineContent = { Text(presetWithItems.preset.name) },
-                supportingContent = {
-                    Text(
-                        stringResource(
-                            R.string.preset_items_kcal_tap_to_log,
-                            presetWithItems.items.size,
-                            presetWithItems.totalCalories.toInt(),
-                        ),
-                    )
-                },
-                modifier = Modifier.clickable { onLogPreset(presetWithItems.preset.id) },
+            CompactRowCard(
+                title = presetWithItems.preset.name,
+                subtitle =
+                    stringResource(
+                        R.string.preset_items_kcal_tap_to_log,
+                        presetWithItems.items.size,
+                        presetWithItems.totalCalories.toInt(),
+                    ),
+                onClick = { onLogPreset(presetWithItems.preset.id) },
             )
         }
     }

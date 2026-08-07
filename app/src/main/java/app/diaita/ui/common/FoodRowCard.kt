@@ -1,9 +1,9 @@
 package app.diaita.ui.common
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,18 +22,18 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 
 /**
- * The shared card for one food line. Both the Diary list and the preset editor render their
- * rows through this composable, so the two stay visually identical and any change lands in
- * both places: title over subtitle, a delete icon on the right, and the whole card tappable
- * to edit when [onClick] is provided.
+ * The single compact list-row card used by every content list in the app — diary rows, the
+ * preset editor, the preset lists and the food search results — so they all stay visually
+ * identical and any styling change lands everywhere at once: title over subtitle, optional
+ * trailing actions on the right, the whole card tappable when [onClick] is provided.
  */
 @Composable
-fun FoodRowCard(
+fun CompactRowCard(
     title: String,
     subtitle: String,
     onClick: (() -> Unit)?,
-    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val cardModifier =
         if (onClick != null) {
@@ -50,16 +50,34 @@ fun FoodRowCard(
                 Modifier
                     .padding(horizontal = 12.dp, vertical = 9.dp)
                     .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall)
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
-            }
+            trailing?.invoke(this)
+        }
+    }
+}
+
+/** [CompactRowCard] preconfigured with the delete action used by the diary and preset editor. */
+@Composable
+fun FoodRowCard(
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)?,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    CompactRowCard(
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick,
+        modifier = modifier,
+    ) {
+        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
         }
     }
 }

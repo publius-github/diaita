@@ -1,7 +1,6 @@
 package app.diaita.ui.common
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +21,6 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -364,26 +362,23 @@ fun FoodSearchContent(
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.searchResults, key = { it.id }) { food ->
-                ListItem(
-                    headlineContent = { Text(food.name) },
-                    supportingContent = {
-                        Text(stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()))
-                    },
-                    trailingContent = {
-                        // Catalog corrections (wrong seeded/OFF numbers) happen right where the
-                        // mistake is spotted — in the search results.
-                        IconButton(onClick = { onEditFood(food) }) {
-                            Icon(
-                                Icons.Filled.Edit,
-                                contentDescription = stringResource(R.string.edit_food),
-                            )
-                        }
-                    },
-                    modifier = Modifier.clickable { onFoodSelected(food) },
-                )
+                CompactRowCard(
+                    title = food.name,
+                    subtitle = stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()),
+                    onClick = { onFoodSelected(food) },
+                ) {
+                    // Catalog corrections (wrong seeded/OFF numbers) happen right where the
+                    // mistake is spotted — in the search results.
+                    IconButton(onClick = { onEditFood(food) }, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.edit_food),
+                        )
+                    }
+                }
             }
         }
         Row(modifier = Modifier.fillMaxWidth()) {

@@ -1,13 +1,9 @@
 package app.diaita.ui.presets
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,11 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -43,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactRowCard
 
 @Composable
 fun PresetListScreen(
@@ -144,44 +139,24 @@ private fun PresetCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick),
+    CompactRowCard(
+        title = name,
+        subtitle = stringResource(R.string.items_count_kcal, itemCount, totalCalories),
+        onClick = onClick,
+        modifier = modifier,
     ) {
-        // Same compact-row treatment as the diary list: trimmed vertical
-        // padding and 36dp icon buttons instead of the default 48dp.
-        Row(
-            modifier =
-                Modifier
-                    .padding(horizontal = 12.dp, vertical = 9.dp)
-                    .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column {
-                Text(name, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    stringResource(R.string.items_count_kcal, itemCount, totalCalories),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onLog, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = stringResource(R.string.log_preset),
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete_preset),
-                    )
-                }
-            }
+        IconButton(onClick = onLog, modifier = Modifier.size(36.dp)) {
+            Icon(
+                Icons.Filled.PlayArrow,
+                contentDescription = stringResource(R.string.log_preset),
+            )
+        }
+        Spacer(modifier = Modifier.width(4.dp))
+        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+            Icon(
+                Icons.Filled.Delete,
+                contentDescription = stringResource(R.string.delete_preset),
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package app.diaita.ui.addfood
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -192,6 +193,7 @@ private fun PresetsTab(
                 Modifier
                     .padding(16.dp)
                     .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             presetLogList(
                 presets = presets,
