@@ -22,19 +22,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -284,7 +280,6 @@ fun FoodSearchContent(
         return
     }
 
-    val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -304,12 +299,10 @@ fun FoodSearchContent(
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
+            // No autofocus on purpose: most logs come from the recent-food chips below, so the
+            // keyboard must not pop up until the user actually taps the search field.
+            modifier = Modifier.fillMaxWidth(),
         )
-        LaunchedEffect(Unit) { focusRequester.requestFocus() }
         if (state.searchQuery.isBlank() && state.recentFoods.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(stringResource(R.string.recent_foods), style = MaterialTheme.typography.bodySmall)
@@ -381,15 +374,19 @@ fun FoodSearchContent(
                 }
             }
         }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            TextButton(
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(
                 onClick = { showManualEntry = true },
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.add_manually))
             }
             onQuickAdd?.let { quickAdd ->
-                TextButton(
+                OutlinedButton(
                     onClick = quickAdd,
                     modifier = Modifier.weight(1f),
                 ) {

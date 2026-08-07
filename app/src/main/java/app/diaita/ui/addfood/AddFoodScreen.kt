@@ -33,6 +33,7 @@ import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.QuantitySheet
+import app.diaita.ui.common.QuickAddDialog
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.rememberFoodBarcodeScanner
 import app.diaita.ui.presets.PresetViewModel

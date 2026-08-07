@@ -36,6 +36,7 @@ data class PresetEditUiState(
     val name: String = "",
     val mealSlot: MealSlot = MealSlot.BREAKFAST,
     val foodPendingQuantity: FoodItem? = null,
+    val showQuickAdd: Boolean = false,
     val draftItems: List<DraftPresetItem> = emptyList(),
     /** Index into [draftItems] of the row being edited via the quantity sheet, if any. */
     val editingDraftIndex: Int? = null,
@@ -161,6 +162,31 @@ class PresetViewModel(
             )
         }
         foodSearch.clearSearch()
+    }
+
+    fun showQuickAdd() = _editState.update { it.copy(showQuickAdd = true) }
+
+    fun dismissQuickAdd() = _editState.update { it.copy(showQuickAdd = false) }
+
+    /**
+     * Calorie-only draft item, mirroring the Add-food screen's quick add: a hidden QUICK food at
+     * [kcal]/100g taken as 100 g lands exactly [kcal] in the preset.
+     */
+    fun confirmQuickAdd(
+        name: String,
+        kcal: Double,
+    ) {
+        viewModelScope.launch {
+            val foodId = foodRepository.addQuickFood(name, kcal)
+            val food = foodRepository.getById(foodId) ?: return@launch
+            _editState.update {
+                it.copy(
+                    draftItems = it.draftItems + DraftPresetItem(food, 100.0),
+                    showQuickAdd = false,
+                )
+            }
+            foodSearch.clearSearch()
+        }
     }
 
     fun removeDraftItem(index: Int) {

@@ -1,4 +1,4 @@
-package app.diaita.ui.addfood
+package app.diaita.ui.common
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,19 +24,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
-import app.diaita.ui.common.MealSlotPicker
 import app.diaita.util.normalizedDecimalOrNull
 
 /**
- * Calorie-only logging for food you can't weigh or look up — a restaurant plate, a slice of
+ * Calorie-only entry for food you can't weigh or look up — a restaurant plate, a slice of
  * someone's birthday cake. Just the kcal estimate (required), an optional label, and the meal
- * slot; no catalog entry to pick or create.
+ * slot; no catalog entry to pick or create. Shared by the Add-food screen (logs to the diary)
+ * and the preset editor's food picker (adds a draft item, where the preset owns the meal slot,
+ * so [showMealSlotPicker] is off there).
  */
 @Composable
 fun QuickAddDialog(
     initialMealSlot: MealSlot,
     onDismiss: () -> Unit,
     onConfirm: (name: String, kcal: Double, mealSlot: MealSlot) -> Unit,
+    confirmLabel: String = stringResource(R.string.log),
+    showMealSlotPicker: Boolean = true,
 ) {
     var kcalText by remember { mutableStateOf("") }
     var nameText by remember { mutableStateOf("") }
@@ -76,8 +79,10 @@ fun QuickAddDialog(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
+                if (showMealSlotPicker) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
+                }
             }
         },
         confirmButton = {
@@ -85,7 +90,7 @@ fun QuickAddDialog(
                 enabled = kcal != null,
                 onClick = { kcal?.let { onConfirm(nameText.trim().ifBlank { defaultName }, it, selectedSlot) } },
             ) {
-                Text(stringResource(R.string.log))
+                Text(confirmLabel)
             }
         },
         dismissButton = {

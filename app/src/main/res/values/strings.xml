@@ -8,6 +8,7 @@
     <string name="delete">Delete</string>
     <string name="save">Save</string>
     <string name="log">Log</string>
+    <string name="add">Add</string>
     <string name="undo">Undo</string>
     <string name="back">Back</string>
     <string name="close">Close</string>
@@ -130,7 +131,7 @@
     <string name="search_error_off">Couldn\'t reach OpenFoodFacts — check your connection</string>
     <string name="no_matches">No matches found</string>
     <string name="kcal_per_100g">%1$d kcal/100g</string>
-    <string name="add_manually">Can\'t find it? Add manually</string>
+    <string name="add_manually">Add manually</string>
     <string name="back_to_search">← Back to search</string>
     <string name="recent_foods">Recent:</string>
     <string name="name_label">Name</string>

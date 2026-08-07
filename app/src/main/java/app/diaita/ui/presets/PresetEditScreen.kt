@@ -43,6 +43,7 @@ import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.QuantitySheet
+import app.diaita.ui.common.QuickAddDialog
 import app.diaita.ui.common.rememberFoodBarcodeScanner
 import app.diaita.util.NutrientMath
 
@@ -185,6 +186,21 @@ fun PresetEditScreen(
         )
     }
 
+    if (state.showQuickAdd) {
+        QuickAddDialog(
+            // The preset itself owns the meal slot, so the dialog's picker is hidden and the
+            // slot handed back is ignored.
+            initialMealSlot = state.mealSlot,
+            showMealSlotPicker = false,
+            confirmLabel = stringResource(R.string.add),
+            onDismiss = viewModel::dismissQuickAdd,
+            onConfirm = { name, kcal, _ ->
+                viewModel.confirmQuickAdd(name, kcal)
+                showFoodPicker = false
+            },
+        )
+    }
+
     // Tapping an existing item reopens the same quantity sheet the diary edit uses.
     state.editingDraftIndex?.let { index ->
         state.draftItems.getOrNull(index)?.let { draftItem ->
@@ -251,6 +267,7 @@ private fun FoodPicker(
                     .padding(innerPadding)
                     .fillMaxSize()
                     .padding(16.dp),
+            onQuickAdd = viewModel::showQuickAdd,
         )
     }
 }
