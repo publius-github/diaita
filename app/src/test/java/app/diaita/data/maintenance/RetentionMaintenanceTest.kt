@@ -49,11 +49,6 @@ private class FakeDiaryEntryDao(
         toDate: String,
     ): Flow<List<DayTotal>> = flowOf(emptyList())
 
-    override fun historyMacroTotals(
-        fromDate: String,
-        toDate: String,
-    ): Flow<List<DailyMacroTotals>> = flowOf(emptyList())
-
     override fun recentFoods(limit: Int): Flow<List<FoodItem>> = flowOf(emptyList())
 
     override suspend fun lastLoggedQuantity(foodItemId: Long): Double? = null

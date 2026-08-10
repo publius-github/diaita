@@ -116,26 +116,6 @@ interface DiaryEntryDao {
     @Query("SELECT quantityGrams FROM diary_entries WHERE foodItemId = :foodItemId ORDER BY loggedAt DESC LIMIT 1")
     suspend fun lastLoggedQuantity(foodItemId: Long): Double?
 
-    /** Per-day macro totals over a date range — drives the History macro-trend section. */
-    @Query(
-        """
-        SELECT d.logDate AS logDate,
-               COALESCE(SUM(f.caloriesPer100g * d.quantityGrams / 100.0), 0) AS totalCalories,
-               COALESCE(SUM(f.proteinPer100g * d.quantityGrams / 100.0), 0) AS totalProtein,
-               COALESCE(SUM(f.fatPer100g * d.quantityGrams / 100.0), 0) AS totalFat,
-               COALESCE(SUM(f.carbsPer100g * d.quantityGrams / 100.0), 0) AS totalCarbs
-        FROM diary_entries d
-        JOIN food_items f ON f.id = d.foodItemId
-        WHERE d.logDate BETWEEN :fromDate AND :toDate
-        GROUP BY d.logDate
-        ORDER BY d.logDate ASC
-        """,
-    )
-    fun historyMacroTotals(
-        fromDate: String,
-        toDate: String,
-    ): Flow<List<DailyMacroTotals>>
-
     /** Per-day macro totals for all days strictly before [beforeDate] — used by the retention job. */
     @Query(
         """

@@ -2,7 +2,6 @@ package app.diaita.data.repository
 
 import androidx.room.withTransaction
 import app.diaita.data.db.AppDatabase
-import app.diaita.data.db.dao.DailyMacroTotals
 import app.diaita.data.db.dao.DailyTotals
 import app.diaita.data.db.dao.DayTotal
 import app.diaita.data.db.dao.DiaryEntryDao
@@ -32,11 +31,6 @@ class DiaryRepository(
         fromDate: String,
         toDate: String,
     ): Flow<List<DayTotal>> = diaryEntryDao.historyTotals(fromDate, toDate)
-
-    fun historyMacroTotals(
-        fromDate: String,
-        toDate: String,
-    ): Flow<List<DailyMacroTotals>> = diaryEntryDao.historyMacroTotals(fromDate, toDate)
 
     fun monthlyAverages(): Flow<List<MonthlyAggregate>> = database.monthlyAggregateDao().getAll()
 

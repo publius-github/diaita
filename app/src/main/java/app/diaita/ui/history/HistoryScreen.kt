@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +41,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -96,42 +96,28 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.tertiary,
             )
         }
-        if (uiState.loggedOfLast7 > 0) {
-            Text(
-                stringResource(R.string.streak_line, uiState.onTrackOfLast7, uiState.loggedOfLast7),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        uiState.adaptiveTdee?.let { tdee ->
-            Text(
-                stringResource(R.string.adaptive_tdee_line, tdee),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (uiState.avgProteinG != null && uiState.avgFatG != null && uiState.avgCarbsG != null) {
-            Text(
-                stringResource(
-                    R.string.avg_macros_line,
-                    uiState.avgProteinG ?: 0,
-                    uiState.avgFatG ?: 0,
-                    uiState.avgCarbsG ?: 0,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         Spacer(modifier = Modifier.height(4.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(HistoryViewModel.RANGE_OPTIONS) { rangeDays ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            HistoryViewModel.RANGE_OPTIONS.forEach { rangeDays ->
                 FilterChip(
                     selected = uiState.rangeDays == rangeDays,
                     onClick = { viewModel.setRangeDays(rangeDays) },
-                    label = { Text(stringResource(R.string.range_days_chip, rangeDays)) },
+                    label = {
+                        Text(
+                            stringResource(R.string.range_days_chip, rangeDays),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(stringResource(R.string.calories_title), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
         if (!uiState.hasAnyCalories) {
             Text(stringResource(R.string.history_empty))
@@ -344,7 +330,6 @@ private fun CalorieBarChart(
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val selectionColor = MaterialTheme.colorScheme.tertiary
-    val rollingColor = MaterialTheme.colorScheme.secondary
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
 
     val maxCalories = days.maxOf { it.calories }
@@ -457,22 +442,6 @@ private fun CalorieBarChart(
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(3f, 3f),
             )
-        }
-
-        // 7-day rolling average polyline — the trend the individual bars hide.
-        var previous: Offset? = null
-        days.forEachIndexed { index, day ->
-            val avg = day.rollingAvg ?: return@forEachIndexed
-            val point = Offset(leftPad + index * slot + slot / 2f, yFor(avg))
-            previous?.let { prev ->
-                drawLine(
-                    color = rollingColor,
-                    start = prev,
-                    end = point,
-                    strokeWidth = 2.dp.toPx(),
-                )
-            }
-            previous = point
         }
 
         // Dashed goal line.
@@ -668,7 +637,7 @@ private fun WeightLineChart(
         val allPointLabels = showAllPointLabels(totalDays)
         weights.forEachIndexed { index, entry ->
             val point = Offset(xFor(entry), yFor(displayValues[index]))
-            drawCircle(color = lineColor, radius = 4.dp.toPx(), center = point)
+            drawCircle(color = lineColor, radius = 2.dp.toPx(), center = point)
             if (index > 0) {
                 drawLine(
                     color = lineColor,

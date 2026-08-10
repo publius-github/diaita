@@ -330,7 +330,7 @@
 
     <!-- History -->
     <string name="history_title_days">Last %1$d days</string>
-    <string name="range_days_chip">%1$d d</string>
+    <string name="range_days_chip">%1$d days</string>
     <string name="history_empty">No history yet — log some food to see it here.</string>
     <string name="goal_line_label">Goal: %1$d kcal</string>
     <string name="maintenance_line_label">Maintenance: %1$d kcal</string>
@@ -407,9 +407,7 @@
     <string name="notifications_permission_missing">Notifications are blocked by the system — reminders are on but cannot appear. Allow notifications for Diaita in system settings.</string>
 
     <!-- History analytics -->
-    <string name="streak_line">On track %1$d of the last %2$d logged days</string>
-    <string name="adaptive_tdee_line">Observed maintenance (last 4 weeks): ≈ %1$d kcal/day</string>
-    <string name="avg_macros_line">Average per logged day: P %1$dg · F %2$dg · C %3$dg</string>
+    <string name="calories_title">Calories</string>
     <string name="zone_off_track">above goal</string>
     <string name="zone_between">between goal and maintenance</string>
     <string name="weight_rate_loss">Losing %1$s %2$s per week</string>

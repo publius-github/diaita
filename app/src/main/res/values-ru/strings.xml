@@ -330,7 +330,7 @@
 
     <!-- History -->
     <string name="history_title_days">Последние %1$d дн.</string>
-    <string name="range_days_chip">%1$d дн.</string>
+    <string name="range_days_chip">%1$d дней</string>
     <string name="history_empty">Истории пока нет — запишите еду, и она появится здесь.</string>
     <string name="goal_line_label">Цель: %1$d ккал</string>
     <string name="maintenance_line_label">Поддержание: %1$d ккал</string>
@@ -409,9 +409,7 @@
     <string name="notifications_permission_missing">Уведомления запрещены системой — напоминания включены, но не смогут появиться. Разрешите уведомления для Diaita в настройках системы.</string>
 
     <!-- History analytics -->
-    <string name="streak_line">В цели %1$d из последних %2$d дней с записями</string>
-    <string name="adaptive_tdee_line">Наблюдаемое поддержание (последние 4 недели): ≈ %1$d ккал/день</string>
-    <string name="avg_macros_line">В среднем за день с записями: Б %1$dг · Ж %2$dг · У %3$dг</string>
+    <string name="calories_title">Калории</string>
     <string name="zone_off_track">выше цели</string>
     <string name="zone_between">между целью и поддержанием</string>
     <string name="weight_rate_loss">Снижение %1$s %2$s в неделю</string>
