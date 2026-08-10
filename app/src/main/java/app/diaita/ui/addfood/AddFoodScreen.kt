@@ -127,6 +127,10 @@ fun AddFoodScreen(
                         onEditFood = viewModel.foodSearch::onEditFood,
                         onEditSave = viewModel.foodSearch::saveEditedFood,
                         onEditDismiss = viewModel.foodSearch::dismissEdit,
+                        onToggleFavorite = viewModel.foodSearch::onToggleFavorite,
+                        onSourceFilterChanged = viewModel.foodSearch::onSourceFilterChanged,
+                        onLoadMore = viewModel.foodSearch::loadMoreFromOff,
+                        onDeleteFood = viewModel.foodSearch::deleteEditedFood,
                         modifier = Modifier.padding(16.dp),
                         onQuickAdd = viewModel::showQuickAdd,
                     )

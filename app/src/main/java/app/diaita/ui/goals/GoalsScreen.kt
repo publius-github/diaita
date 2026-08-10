@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.label
+import app.diaita.util.formatWeightForDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +84,25 @@ fun GoalsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
         ) {
+            if (state.suggestRecalc) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(
+                            stringResource(
+                                R.string.recalc_suggestion,
+                                formatWeightForDisplay(state.weightUnit.fromKg(state.recalcFromKg ?: 0.0)),
+                                formatWeightForDisplay(state.weightUnit.fromKg(state.recalcToKg ?: 0.0)),
+                                state.weightUnit.label(),
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        TextButton(onClick = onOpenWizard) {
+                            Text(stringResource(R.string.recalc_action))
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             OutlinedTextField(
                 value = state.calorieTarget,
                 onValueChange = viewModel::onCalorieTargetChanged,

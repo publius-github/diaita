@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
@@ -42,6 +43,10 @@ data class DailyMacroTotals(
 interface DiaryEntryDao {
     @Insert
     suspend fun insert(entry: DiaryEntry): Long
+
+    /** Undo-restore path: re-inserting the same primary key twice must be a no-op, not a crash. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOrIgnore(entry: DiaryEntry): Long
 
     @Transaction
     suspend fun insertAll(entries: List<DiaryEntry>) {
@@ -110,6 +115,26 @@ interface DiaryEntryDao {
     /** The grams this food was logged with most recently — the best guess for the next portion. */
     @Query("SELECT quantityGrams FROM diary_entries WHERE foodItemId = :foodItemId ORDER BY loggedAt DESC LIMIT 1")
     suspend fun lastLoggedQuantity(foodItemId: Long): Double?
+
+    /** Per-day macro totals over a date range — drives the History macro-trend section. */
+    @Query(
+        """
+        SELECT d.logDate AS logDate,
+               COALESCE(SUM(f.caloriesPer100g * d.quantityGrams / 100.0), 0) AS totalCalories,
+               COALESCE(SUM(f.proteinPer100g * d.quantityGrams / 100.0), 0) AS totalProtein,
+               COALESCE(SUM(f.fatPer100g * d.quantityGrams / 100.0), 0) AS totalFat,
+               COALESCE(SUM(f.carbsPer100g * d.quantityGrams / 100.0), 0) AS totalCarbs
+        FROM diary_entries d
+        JOIN food_items f ON f.id = d.foodItemId
+        WHERE d.logDate BETWEEN :fromDate AND :toDate
+        GROUP BY d.logDate
+        ORDER BY d.logDate ASC
+        """,
+    )
+    fun historyMacroTotals(
+        fromDate: String,
+        toDate: String,
+    ): Flow<List<DailyMacroTotals>>
 
     /** Per-day macro totals for all days strictly before [beforeDate] — used by the retention job. */
     @Query(

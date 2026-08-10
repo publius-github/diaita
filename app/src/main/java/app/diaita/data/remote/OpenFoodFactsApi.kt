@@ -14,16 +14,23 @@ interface OpenFoodFactsApi {
     @GET("cgi/search.pl")
     suspend fun searchByName(
         @Query("search_terms") query: String,
+        @Query("page") page: Int = 1,
         @Query("page_size") pageSize: Int = 20,
+        /** Interface/product-name language, e.g. "ru" — OFF prefers matching translations. */
+        @Query("lc") languageCode: String? = null,
         @Query("search_simple") searchSimple: Int = 1,
         @Query("action") action: String = "process",
         @Query("json") json: Int = 1,
-        @Query("fields") fields: String = "code,product_name,brands,nutriments",
+        @Query("fields") fields: String = FIELDS,
     ): OffSearchResponse
 
     @GET("api/v2/product/{barcode}.json")
     suspend fun productByBarcode(
         @Path("barcode") barcode: String,
-        @Query("fields") fields: String = "code,product_name,brands,nutriments",
+        @Query("fields") fields: String = FIELDS,
     ): OffProductResponse
+
+    companion object {
+        const val FIELDS = "code,product_name,brands,nutriments,serving_quantity"
+    }
 }

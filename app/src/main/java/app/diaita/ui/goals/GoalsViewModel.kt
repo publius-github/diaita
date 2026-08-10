@@ -3,6 +3,7 @@ package app.diaita.ui.goals
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.diaita.data.repository.GoalRepository
+import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WeightUnit
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,11 +27,20 @@ data class GoalsUiState(
     val weightTarget: String = "",
     val weightUnit: WeightUnit = WeightUnit.KG,
     val hasError: Boolean = false,
-)
+    /**
+     * Set when the latest weigh-in drifted from the weight the goal wizard was last run
+     * with — the "your weight changed, recalculate?" nudge. Values are kg.
+     */
+    val recalcFromKg: Double? = null,
+    val recalcToKg: Double? = null,
+) {
+    val suggestRecalc: Boolean get() = recalcFromKg != null && recalcToKg != null
+}
 
 class GoalsViewModel(
     private val goalRepository: GoalRepository,
     settingsRepository: SettingsRepository,
+    weightRepository: WeightRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GoalsUiState())
     val uiState: StateFlow<GoalsUiState> = _uiState.asStateFlow()
@@ -44,6 +54,21 @@ class GoalsViewModel(
     val savedEvent: SharedFlow<Unit> = _savedEvent.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            combine(settingsRepository.wizardInputs, weightRepository.latest(), ::Pair)
+                .collect { (wizard, latest) ->
+                    val from = wizard?.weightKg
+                    val to = latest?.weightKg
+                    val drifted =
+                        from != null && to != null && kotlin.math.abs(to - from) >= RECALC_THRESHOLD_KG
+                    _uiState.update {
+                        it.copy(
+                            recalcFromKg = if (drifted) from else null,
+                            recalcToKg = if (drifted) to else null,
+                        )
+                    }
+                }
+        }
         viewModelScope.launch {
             combine(goalRepository.getGoal(), settingsRepository.weightUnit, ::Pair)
                 .collect { (goal, unit) ->
@@ -119,5 +144,10 @@ class GoalsViewModel(
             goalRepository.setGoal(calories, protein, fat, carbs, weight, existingMaintenance)
             _savedEvent.emit(Unit)
         }
+    }
+
+    companion object {
+        /** Weigh-in drift below this is normal fluctuation, not a reason to redo the wizard. */
+        const val RECALC_THRESHOLD_KG = 2.0
     }
 }

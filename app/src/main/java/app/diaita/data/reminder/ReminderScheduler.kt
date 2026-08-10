@@ -6,6 +6,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.SettingsRepository
+import kotlinx.coroutines.flow.first
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -20,6 +22,51 @@ object ReminderScheduler {
     private const val WEIGHT_WORK_NAME = "daily_weight_reminder"
     private const val DAY_PART_MORNING_WORK_NAME = "day_part_reminder_morning"
     private const val DAY_PART_DAY_WORK_NAME = "day_part_reminder_day"
+    private const val EVENING_WORK_NAME = "day_part_reminder_evening"
+
+    /**
+     * The evening part only "closes" at midnight, when a nudge is useless — so the evening
+     * check fires at a fixed late-evening time while there is still a chance to log.
+     */
+    const val EVENING_CHECK_MINUTES = 21 * 60
+
+    /**
+     * Re-anchors every enabled reminder to the current clock and settings. Called on app
+     * start and from [TimeChangedReceiver] after TIME_SET/TIMEZONE_CHANGED, because the
+     * initial delays are computed from "now" and silently drift across such changes.
+     */
+    suspend fun rescheduleAll(
+        context: Context,
+        settings: SettingsRepository,
+    ) {
+        if (settings.reminderEnabled.first()) {
+            scheduleFoodReminder(context, settings.reminderTimeMinutes.first())
+        } else {
+            cancelFoodReminder(context)
+        }
+        if (settings.weightReminderEnabled.first()) {
+            scheduleWeightReminder(context, settings.weightReminderTimeMinutes.first())
+        } else {
+            cancelWeightReminder(context)
+        }
+        if (settings.dayPartRemindersEnabled.first()) {
+            scheduleDayPartReminders(context, settings.dayPartBoundaries.first())
+        } else {
+            cancelDayPartReminders(context)
+        }
+        if (settings.eveningReminderEnabled.first()) {
+            scheduleEveningReminder(context)
+        } else {
+            cancelEveningReminder(context)
+        }
+    }
+
+    fun scheduleEveningReminder(context: Context) =
+        schedule(context, EVENING_WORK_NAME, EVENING_CHECK_MINUTES, ReminderWorker.TYPE_DAY_PART_EVENING)
+
+    fun cancelEveningReminder(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(EVENING_WORK_NAME)
+    }
 
     fun scheduleFoodReminder(
         context: Context,

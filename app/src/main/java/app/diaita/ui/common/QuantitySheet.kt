@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -41,10 +42,32 @@ import app.diaita.util.NutrientMath
 import app.diaita.util.formatGramsForInput
 import app.diaita.util.normalizedDecimalOrNull
 
+/** Input units the quantity sheet offers; availability depends on the food's conversions. */
+enum class QuantityUnit {
+    GRAMS,
+    MILLILITERS,
+    PIECES,
+    SERVINGS,
+    ;
+
+    /** Grams one unit of this measure weighs for [food]; null when the food lacks the conversion. */
+    fun gramsPerUnit(food: FoodItem): Double? =
+        when (this) {
+            GRAMS -> 1.0
+            MILLILITERS -> food.gramsPerMilliliter
+            PIECES -> food.gramsPerPiece
+            SERVINGS -> food.defaultServingGrams
+        }
+
+    companion object {
+        fun availableFor(food: FoodItem): List<QuantityUnit> = entries.filter { it.gramsPerUnit(food) != null }
+    }
+}
+
 /**
  * Bottom sheet for choosing how much of [food] to log (or how much an entry should
- * become when editing). Offers quick serving chips, live kcal preview and an optional
- * meal-slot picker.
+ * become when editing). Offers quick serving chips, unit selection (g / ml / pieces /
+ * servings, per the food's conversions), live kcal preview and an optional meal-slot picker.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,9 +85,12 @@ fun QuantitySheet(
         mutableStateOf(formatGramsForInput(initialQuantityGrams ?: food.defaultServingGrams ?: 100.0))
     }
     var selectedSlot by remember(food.id) { mutableStateOf(initialMealSlot) }
+    var unit by remember(food.id) { mutableStateOf(QuantityUnit.GRAMS) }
+    val availableUnits = remember(food.id) { QuantityUnit.availableFor(food) }
     val focusRequester = remember { FocusRequester() }
 
-    val grams = quantityText.normalizedDecimalOrNull()?.takeIf { it > 0 }
+    val amount = quantityText.normalizedDecimalOrNull()?.takeIf { it > 0 }
+    val grams = amount?.let { it * (unit.gramsPerUnit(food) ?: 1.0) }
     val confirm = { grams?.let { onConfirm(it, selectedSlot) } }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
@@ -83,32 +109,64 @@ fun QuantitySheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(
-                    onClick = { quantityText = "100" },
-                    label = { Text(stringResource(R.string.hundred_grams_chip)) },
-                )
-                food.defaultServingGrams?.let { serving ->
-                    AssistChip(
-                        onClick = { quantityText = formatGramsForInput(serving) },
-                        label = { Text(stringResource(R.string.serving_chip, serving.toInt())) },
-                    )
+            if (availableUnits.size > 1) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    availableUnits.forEach { candidate ->
+                        FilterChip(
+                            selected = unit == candidate,
+                            onClick = {
+                                if (unit != candidate) {
+                                    // Convert the typed amount so the grams stay the same.
+                                    val currentGrams = grams
+                                    unit = candidate
+                                    currentGrams?.let { g ->
+                                        candidate.gramsPerUnit(food)?.let { perUnit ->
+                                            quantityText = formatGramsForInput(g / perUnit)
+                                        }
+                                    }
+                                }
+                            },
+                            label = { Text(unitLabel(candidate)) },
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            if (unit == QuantityUnit.GRAMS) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AssistChip(
+                        onClick = { quantityText = "100" },
+                        label = { Text(stringResource(R.string.hundred_grams_chip)) },
+                    )
+                    food.defaultServingGrams?.let { serving ->
+                        AssistChip(
+                            onClick = { quantityText = formatGramsForInput(serving) },
+                            label = { Text(stringResource(R.string.serving_chip, serving.toInt())) },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             OutlinedTextField(
                 value = quantityText,
                 onValueChange = { quantityText = it },
-                label = { Text(stringResource(R.string.quantity_grams)) },
+                label = { Text(quantityFieldLabel(unit)) },
                 singleLine = true,
                 isError = grams == null,
                 supportingText = {
                     grams?.let {
                         Text(
-                            stringResource(
-                                R.string.kcal_estimate,
-                                NutrientMath.caloriesFor(food, it).toInt(),
-                            ),
+                            listOfNotNull(
+                                stringResource(
+                                    R.string.kcal_estimate,
+                                    NutrientMath.caloriesFor(food, it).toInt(),
+                                ),
+                                if (unit != QuantityUnit.GRAMS) {
+                                    stringResource(R.string.grams_equivalent, formatGramsForInput(it))
+                                } else {
+                                    null
+                                },
+                            ).joinToString(" · "),
                         )
                     }
                 },
@@ -139,3 +197,25 @@ fun QuantitySheet(
     }
     LaunchedEffect(food.id) { focusRequester.requestFocus() }
 }
+
+@Composable
+private fun unitLabel(unit: QuantityUnit): String =
+    stringResource(
+        when (unit) {
+            QuantityUnit.GRAMS -> R.string.unit_grams
+            QuantityUnit.MILLILITERS -> R.string.unit_milliliters
+            QuantityUnit.PIECES -> R.string.unit_pieces
+            QuantityUnit.SERVINGS -> R.string.unit_servings
+        },
+    )
+
+@Composable
+private fun quantityFieldLabel(unit: QuantityUnit): String =
+    stringResource(
+        when (unit) {
+            QuantityUnit.GRAMS -> R.string.quantity_grams
+            QuantityUnit.MILLILITERS -> R.string.quantity_milliliters
+            QuantityUnit.PIECES -> R.string.quantity_pieces
+            QuantityUnit.SERVINGS -> R.string.quantity_servings
+        },
+    )

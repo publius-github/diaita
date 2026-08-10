@@ -32,7 +32,7 @@ import kotlinx.coroutines.CoroutineScope
         WeightEntry::class,
         MonthlyAggregate::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -57,6 +57,7 @@ abstract class AppDatabase : RoomDatabase() {
         fun getInstance(
             context: Context,
             appScope: CoroutineScope,
+            settingsRepository: SettingsRepository,
         ): AppDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room
@@ -65,10 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         DATABASE_NAME,
                     ).addCallback(
-                        SeedDatabaseCallback(
-                            appScope,
-                            SettingsRepository(context.applicationContext),
-                        ) { instance!! },
+                        SeedDatabaseCallback(appScope, settingsRepository) { instance!! },
                     ).addMigrations(*Migrations.all)
                     .build()
                     .also { instance = it }

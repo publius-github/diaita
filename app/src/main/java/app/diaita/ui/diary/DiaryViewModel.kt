@@ -44,7 +44,8 @@ sealed class DiaryRow {
     }
 
     data class Preset(
-        val presetName: String,
+        /** Name snapshot from log time; null (legacy rows) maps to a localized fallback in the UI. */
+        val presetName: String?,
         val entries: List<DiaryEntryWithFood>,
     ) : DiaryRow() {
         override val calories: Double
@@ -84,7 +85,8 @@ data class DiaryUiState(
 /** Emitted right after a delete so the UI can offer a Snackbar "Undo". */
 data class UndoDeleteEvent(
     val entries: List<DiaryEntry>,
-    val title: String,
+    /** Null when a legacy preset row had no name snapshot; the UI substitutes a resource. */
+    val title: String?,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -182,19 +184,37 @@ class DiaryViewModel(
 
     private val _copyResultEvent = MutableSharedFlow<Int>(extraBufferCapacity = 1)
 
-    /** Emits how many entries "repeat yesterday" copied; 0 means yesterday was empty. */
+    /** Emits how many entries a copy inserted; 0 means the source day/meal was empty. */
     val copyResultEvent: SharedFlow<Int> = _copyResultEvent.asSharedFlow()
 
     /** Copies the day before the shown date onto it — "repeat yesterday" relative to the selection. */
     fun copyYesterday() {
+        val target = selectedDate.value
+        val dayBefore =
+            LocalDate
+                .parse(target)
+                .minusDays(1)
+                .format(DateTimeFormatter.ISO_LOCAL_DATE)
+        copyFrom(dayBefore, slot = null)
+    }
+
+    /**
+     * Copies [fromDate] (whole day, or just [slot]) onto the shown date. Works on non-empty
+     * days too — copying tops the day up, it never replaces anything.
+     */
+    fun copyFrom(
+        fromDate: String,
+        slot: MealSlot?,
+    ) {
         viewModelScope.launch {
             val target = selectedDate.value
-            val dayBefore =
-                LocalDate
-                    .parse(target)
-                    .minusDays(1)
-                    .format(DateTimeFormatter.ISO_LOCAL_DATE)
-            _copyResultEvent.emit(diaryRepository.copyDay(dayBefore, target))
+            val copied =
+                if (slot == null) {
+                    diaryRepository.copyDay(fromDate, target)
+                } else {
+                    diaryRepository.copyMeal(fromDate, target, slot)
+                }
+            _copyResultEvent.emit(copied)
         }
     }
 

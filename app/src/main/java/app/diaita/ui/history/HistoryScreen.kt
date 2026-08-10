@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +38,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,11 +52,12 @@ import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.label
+import app.diaita.util.formatWeightForDisplay
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -64,8 +70,8 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showWeightDialog by remember { mutableStateOf(false) }
 
-    // Static screen: no scrolling. The two charts are weighted so the content always fills
-    // the viewport exactly instead of overflowing into a scroll.
+    // Static screen: no outer scrolling. The two charts are weighted so the content always
+    // fills the viewport exactly; the growing monthly list scrolls inside its own slot.
     Column(
         modifier =
             modifier
@@ -90,23 +96,41 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.tertiary,
             )
         }
+        if (uiState.loggedOfLast7 > 0) {
+            Text(
+                stringResource(R.string.streak_line, uiState.onTrackOfLast7, uiState.loggedOfLast7),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        uiState.adaptiveTdee?.let { tdee ->
+            Text(
+                stringResource(R.string.adaptive_tdee_line, tdee),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (uiState.avgProteinG != null && uiState.avgFatG != null && uiState.avgCarbsG != null) {
+            Text(
+                stringResource(
+                    R.string.avg_macros_line,
+                    uiState.avgProteinG ?: 0,
+                    uiState.avgFatG ?: 0,
+                    uiState.avgCarbsG ?: 0,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = uiState.rangeDays == 7,
-                onClick = { viewModel.setRangeDays(7) },
-                label = { Text(stringResource(R.string.range_7_days)) },
-            )
-            FilterChip(
-                selected = uiState.rangeDays == 14,
-                onClick = { viewModel.setRangeDays(14) },
-                label = { Text(stringResource(R.string.range_14_days)) },
-            )
-            FilterChip(
-                selected = uiState.rangeDays == 30,
-                onClick = { viewModel.setRangeDays(30) },
-                label = { Text(stringResource(R.string.range_30_days)) },
-            )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(HistoryViewModel.RANGE_OPTIONS) { rangeDays ->
+                FilterChip(
+                    selected = uiState.rangeDays == rangeDays,
+                    onClick = { viewModel.setRangeDays(rangeDays) },
+                    label = { Text(stringResource(R.string.range_days_chip, rangeDays)) },
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         if (!uiState.hasAnyCalories) {
@@ -137,13 +161,13 @@ fun HistoryScreen(
             ) {
                 uiState.selectedDay?.let { day ->
                     val selectedWeightKg = uiState.selectedDayWeightKg
-                    Text(
+                    val baseInfo =
                         if (selectedWeightKg != null) {
                             stringResource(
                                 R.string.selected_day_info_with_weight,
                                 formatDate(day.date),
                                 day.calories.toInt(),
-                                String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(selectedWeightKg)),
+                                formatWeightForDisplay(uiState.weightUnit.fromKg(selectedWeightKg)),
                                 uiState.weightUnit.label(),
                             )
                         } else {
@@ -152,7 +176,17 @@ fun HistoryScreen(
                                 formatDate(day.date),
                                 day.calories.toInt(),
                             )
-                        },
+                        }
+                    // The zone is also spelled out in words — color alone must never be the
+                    // only carrier of "over goal" (a11y and color-blind users).
+                    val zoneSuffix =
+                        when (day.zone) {
+                            CalorieZone.OFF_TRACK -> stringResource(R.string.zone_off_track)
+                            CalorieZone.BETWEEN -> stringResource(R.string.zone_between)
+                            CalorieZone.ON_TRACK -> null
+                        }
+                    Text(
+                        listOfNotNull(baseInfo, zoneSuffix).joinToString(" · "),
                         style = MaterialTheme.typography.bodyMedium,
                         color =
                             when (day.zone) {
@@ -201,18 +235,34 @@ fun HistoryScreen(
             Text(
                 stringResource(
                     R.string.latest_weight,
-                    String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(uiState.weights.last().weightKg)),
+                    formatWeightForDisplay(uiState.weightUnit.fromKg(uiState.weights.last().weightKg)),
                     uiState.weightUnit.label(),
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
-            uiState.weightTargetKg?.let { target ->
+            uiState.weightRatePerWeek?.let { rate ->
                 Text(
                     stringResource(
-                        R.string.weight_target_line,
-                        String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(target)),
+                        if (rate <= 0) R.string.weight_rate_loss else R.string.weight_rate_gain,
+                        formatWeightForDisplay(abs(uiState.weightUnit.fromKg(rate))),
                         uiState.weightUnit.label(),
                     ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            uiState.weightTargetKg?.let { target ->
+                Text(
+                    listOfNotNull(
+                        stringResource(
+                            R.string.weight_target_line,
+                            formatWeightForDisplay(uiState.weightUnit.fromKg(target)),
+                            uiState.weightUnit.label(),
+                        ),
+                        uiState.projectedTargetDate?.let { date ->
+                            stringResource(R.string.weight_projection, formatDate(date))
+                        },
+                    ).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -229,16 +279,20 @@ fun HistoryScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(stringResource(R.string.monthly_averages), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            uiState.monthlyAverages.forEach { aggregate ->
-                Text(
-                    stringResource(
-                        R.string.monthly_avg_row,
-                        formatYearMonth(aggregate.yearMonth),
-                        aggregate.avgCalories.toInt(),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                )
+            // Scrolls inside its own capped slot: one row lands per month, and the charts above
+            // must not shrink as the list grows over the years.
+            LazyColumn(modifier = Modifier.heightIn(max = 120.dp)) {
+                items(uiState.monthlyAverages, key = { it.yearMonth }) { aggregate ->
+                    Text(
+                        stringResource(
+                            R.string.monthly_avg_row,
+                            formatYearMonth(aggregate.yearMonth),
+                            aggregate.avgCalories.toInt(),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
+                }
             }
         }
     }
@@ -259,16 +313,21 @@ fun HistoryScreen(
 private val AXIS_LEFT_PAD = 42.dp
 private val AXIS_BOTTOM_PAD = 18.dp
 
-/** In the 7-day view every day is labeled; in the 14-day view every 2nd; in the 30-day view every 5th. */
+/** Label cadence per range so the date strip never overlaps itself. */
 private fun labelEvery(totalDays: Int): Int =
     when {
         totalDays <= 7 -> 1
         totalDays <= 14 -> 2
-        else -> 5
+        totalDays <= 31 -> 5
+        totalDays <= 92 -> 15
+        else -> 60
     }
 
-/** Weight point value labels overlap beyond ~2 weeks, so the 30-day view keeps only the first and last. */
+/** Weight point value labels overlap beyond ~2 weeks, so longer views keep only the first and last. */
 private fun showAllPointLabels(totalDays: Int): Boolean = totalDays <= 14
+
+/** TalkBack can't tap a canvas bar, so day selection is exposed as custom actions (short ranges). */
+private const val MAX_A11Y_DAY_ACTIONS = 31
 
 @Composable
 private fun CalorieBarChart(
@@ -285,6 +344,7 @@ private fun CalorieBarChart(
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val selectionColor = MaterialTheme.colorScheme.tertiary
+    val rollingColor = MaterialTheme.colorScheme.secondary
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
 
     val maxCalories = days.maxOf { it.calories }
@@ -304,13 +364,27 @@ private fun CalorieBarChart(
             days.size,
             days.map { it.calories }.average().toInt(),
         )
+    val selectDayLabel = stringResource(R.string.a11y_select_day)
+    val dayActions =
+        if (days.size <= MAX_A11Y_DAY_ACTIONS) {
+            days.mapIndexed { index, day ->
+                CustomAccessibilityAction("$selectDayLabel ${day.label}") {
+                    onBarTap(index)
+                    true
+                }
+            }
+        } else {
+            emptyList()
+        }
 
     // Height comes from the caller (a weighted slot in the History column), not a fixed value.
     Canvas(
         modifier =
             modifier
-                .semantics { contentDescription = chartDescription }
-                .pointerInput(days) {
+                .semantics {
+                    contentDescription = chartDescription
+                    if (dayActions.isNotEmpty()) customActions = dayActions
+                }.pointerInput(days) {
                     detectTapGestures { offset ->
                         val leftPad = AXIS_LEFT_PAD.toPx()
                         if (offset.x < leftPad) return@detectTapGestures
@@ -383,6 +457,22 @@ private fun CalorieBarChart(
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(3f, 3f),
             )
+        }
+
+        // 7-day rolling average polyline — the trend the individual bars hide.
+        var previous: Offset? = null
+        days.forEachIndexed { index, day ->
+            val avg = day.rollingAvg ?: return@forEachIndexed
+            val point = Offset(leftPad + index * slot + slot / 2f, yFor(avg))
+            previous?.let { prev ->
+                drawLine(
+                    color = rollingColor,
+                    start = prev,
+                    end = point,
+                    strokeWidth = 2.dp.toPx(),
+                )
+            }
+            previous = point
         }
 
         // Dashed goal line.
@@ -466,7 +556,7 @@ private fun WeightLineChart(
     val chartDescription =
         stringResource(
             R.string.chart_weight_a11y,
-            String.format(Locale.US, "%.1f", weightUnit.fromKg(weights.last().weightKg)),
+            formatWeightForDisplay(weightUnit.fromKg(weights.last().weightKg)),
             weightUnit.label(),
         )
 
@@ -517,7 +607,7 @@ private fun WeightLineChart(
 
         fun xFor(entry: WeightEntry): Float {
             val dayIndex =
-                ChronoUnit.DAYS
+                java.time.temporal.ChronoUnit.DAYS
                     .between(windowStart, LocalDate.parse(entry.date))
                     .toInt()
                     .coerceIn(0, totalDays - 1)
@@ -566,14 +656,14 @@ private fun WeightLineChart(
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f)),
             )
             drawContext.canvas.nativeCanvas.drawText(
-                String.format(Locale.US, "%.1f", displayTarget),
+                formatWeightForDisplay(displayTarget),
                 size.width - 2.dp.toPx(),
                 y - 4.dp.toPx(),
                 axisPaint,
             )
         }
 
-        // Points, connecting lines, and value labels. In the 30-day view intermediate labels
+        // Points, connecting lines, and value labels. In longer views intermediate labels
         // overlap into an unreadable strip, so only the first and last points keep theirs.
         val allPointLabels = showAllPointLabels(totalDays)
         weights.forEachIndexed { index, entry ->
@@ -589,7 +679,7 @@ private fun WeightLineChart(
             }
             if (allPointLabels || index == 0 || index == weights.lastIndex) {
                 drawContext.canvas.nativeCanvas.drawText(
-                    String.format(Locale.US, "%.1f", displayValues[index]),
+                    formatWeightForDisplay(displayValues[index]),
                     point.x,
                     point.y - 6.dp.toPx(),
                     centerPaint,
@@ -619,7 +709,8 @@ private fun WeightLineChart(
 
 private val DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
 
-private fun formatDate(isoDate: String): String = LocalDate.parse(isoDate).format(DateTimeFormatter.ofPattern("d MMM"))
+private fun formatDate(isoDate: String): String =
+    LocalDate.parse(isoDate).format(DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()))
 
 private fun formatYearMonth(yearMonth: String): String =
-    YearMonth.parse(yearMonth).format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+    YearMonth.parse(yearMonth).format(DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault()))

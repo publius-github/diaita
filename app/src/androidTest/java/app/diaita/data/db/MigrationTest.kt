@@ -91,6 +91,45 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate8To9_dedupesOffRowsAndRemapsReferences() {
+        helper.createDatabase(testDbName, 8).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO food_items
+                    (id, name, caloriesPer100g, proteinPer100g, fatPer100g, carbsPer100g,
+                     source, offId, createdAt, editedByUser)
+                VALUES
+                    (1, 'Nutella', 539.0, 6.3, 30.9, 57.5, 'OPENFOODFACTS', '3017620422003', 0, 0),
+                    (2, 'Nutella', 539.0, 6.3, 30.9, 57.5, 'OPENFOODFACTS', '3017620422003', 0, 0),
+                    (3, 'Oats', 379.0, 13.2, 6.5, 67.7, 'SEED', NULL, 0, 0)
+                """.trimIndent(),
+            )
+            db.execSQL(
+                """
+                INSERT INTO diary_entries (foodItemId, quantityGrams, logDate, loggedAt, mealSlot)
+                VALUES (2, 30.0, '2026-08-01', 0, 'UNSPECIFIED')
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 9, true, Migrations.MIGRATION_8_9).use { db ->
+            db.query("SELECT COUNT(*) FROM food_items WHERE offId = '3017620422003'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+            }
+            db.query("SELECT foodItemId FROM diary_entries").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+            }
+            db.query("SELECT isFavorite, fiberPer100g FROM food_items WHERE id = 3").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+                assertEquals(true, cursor.isNull(1))
+            }
+        }
+    }
+
+    @Test
     fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
         helper.createDatabase(testDbName, 7).use { db ->
             db.execSQL(

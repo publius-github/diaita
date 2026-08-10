@@ -21,4 +21,13 @@ interface WeightEntryDao {
     /** One-shot lookup used by the weight-reminder worker. */
     @Query("SELECT * FROM weight_entries WHERE date = :date")
     suspend fun forDateOnce(date: String): List<WeightEntry>
+
+    @Query("SELECT * FROM weight_entries ORDER BY date DESC LIMIT 1")
+    fun latest(): Flow<WeightEntry?>
+
+    @Query("SELECT * FROM weight_entries ORDER BY date ASC")
+    suspend fun getAll(): List<WeightEntry>
+
+    @Query("DELETE FROM weight_entries WHERE date = :date")
+    suspend fun deleteForDate(date: String)
 }

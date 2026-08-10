@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
@@ -76,7 +75,8 @@ fun FoodRowCard(
         onClick = onClick,
         modifier = modifier,
     ) {
-        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+        // Default IconButton size keeps the Material-minimum 48dp touch target (a11y).
+        IconButton(onClick = onDelete) {
             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
         }
     }

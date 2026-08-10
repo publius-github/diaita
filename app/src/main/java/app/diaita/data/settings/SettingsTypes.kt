@@ -21,6 +21,48 @@ enum class WeightUnit {
     }
 }
 
+/** Body stats the goal wizard was last completed with; see [SettingsRepository.wizardInputs]. */
+data class WizardInputs(
+    val male: Boolean,
+    val age: Int,
+    val heightCm: Double,
+    val weightKg: Double,
+    /** Stored [app.diaita.util.WorkActivity]/[app.diaita.util.ExerciseLevel] names; null = never set. */
+    val work: String? = null,
+    val exercise: String? = null,
+)
+
+/**
+ * Macro calorie split used when the wizard applies a goal. Carbs are derived so the three
+ * always sum to 100. The default matches the historical hardcoded 30/25/45.
+ */
+data class MacroSplit(
+    val proteinPercent: Int = DEFAULT_PROTEIN_PERCENT,
+    val fatPercent: Int = DEFAULT_FAT_PERCENT,
+) {
+    val carbsPercent: Int get() = 100 - proteinPercent - fatPercent
+
+    fun proteinGrams(calories: Int): Int = (calories * proteinPercent / 100.0 / 4).toInt()
+
+    fun fatGrams(calories: Int): Int = (calories * fatPercent / 100.0 / 9).toInt()
+
+    fun carbsGrams(calories: Int): Int = (calories * carbsPercent / 100.0 / 4).toInt()
+
+    companion object {
+        const val DEFAULT_PROTEIN_PERCENT = 30
+        const val DEFAULT_FAT_PERCENT = 25
+
+        /** The picker's preset choices: default, higher-protein, keto-leaning, balanced. */
+        val PRESETS =
+            listOf(
+                MacroSplit(30, 25),
+                MacroSplit(40, 30),
+                MacroSplit(25, 50),
+                MacroSplit(20, 30),
+            )
+    }
+}
+
 /**
  * Reference shares of the daily calorie budget per day part. Evening is derived so the
  * three always sum to 100. Defaults follow the 30/40/30 dietitian guideline.

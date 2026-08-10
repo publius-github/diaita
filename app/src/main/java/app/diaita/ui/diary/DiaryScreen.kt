@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
@@ -75,12 +76,12 @@ import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
 import app.diaita.util.DateUtils
+import app.diaita.util.formatWeightForDisplay
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
-import java.util.Locale
 
 @Composable
 fun DiaryScreen(
@@ -100,6 +101,8 @@ fun DiaryScreen(
     val context = LocalContext.current
     var showWeightDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showCopySourcePicker by remember { mutableStateOf(false) }
+    var copySourceDate by remember { mutableStateOf<String?>(null) }
     val undoLabel = stringResource(R.string.undo)
 
     // The Home tab doubles as "back to today": AppNavHost raises this flag on every tap.
@@ -114,7 +117,11 @@ fun DiaryScreen(
         viewModel.undoEvent.collect { event ->
             val result =
                 snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.deleted_named, event.title),
+                    message =
+                        context.getString(
+                            R.string.deleted_named,
+                            event.title ?: context.getString(R.string.preset_fallback),
+                        ),
                     actionLabel = undoLabel,
                     duration = SnackbarDuration.Short,
                 )
@@ -128,6 +135,10 @@ fun DiaryScreen(
         viewModel.copyResultEvent.collect { copied ->
             if (copied == 0) {
                 snackbarHostState.showSnackbar(context.getString(R.string.nothing_to_copy))
+            } else {
+                snackbarHostState.showSnackbar(
+                    context.resources.getQuantityString(R.plurals.copied_entries, copied, copied),
+                )
             }
         }
     }
@@ -154,6 +165,7 @@ fun DiaryScreen(
                 onPreviousDay = viewModel::selectPreviousDay,
                 onNextDay = viewModel::selectNextDay,
                 onDateClick = { showDatePicker = true },
+                onCopyFromClick = { showCopySourcePicker = true },
             )
             Spacer(modifier = Modifier.height(4.dp))
             DailyTotalsCard(uiState)
@@ -170,7 +182,7 @@ fun DiaryScreen(
                     Text(
                         stringResource(
                             R.string.weight_today,
-                            String.format(Locale.US, "%.1f", uiState.weightUnit.fromKg(weight)),
+                            formatWeightForDisplay(uiState.weightUnit.fromKg(weight)),
                             uiState.weightUnit.label(),
                         ),
                         style = MaterialTheme.typography.bodySmall,
@@ -185,8 +197,13 @@ fun DiaryScreen(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedButton(onClick = viewModel::copyYesterday) {
-                    Text(stringResource(R.string.repeat_yesterday))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = viewModel::copyYesterday) {
+                        Text(stringResource(R.string.repeat_yesterday))
+                    }
+                    OutlinedButton(onClick = { showCopySourcePicker = true }) {
+                        Text(stringResource(R.string.copy_from_day))
+                    }
                 }
             } else {
                 val showHeaders =
@@ -253,6 +270,28 @@ fun DiaryScreen(
         )
     }
 
+    if (showCopySourcePicker) {
+        DiaryDatePickerDialog(
+            date = uiState.date,
+            onDismiss = { showCopySourcePicker = false },
+            onConfirm = { picked ->
+                showCopySourcePicker = false
+                copySourceDate = picked.toString()
+            },
+        )
+    }
+
+    copySourceDate?.let { source ->
+        CopyMealChoiceDialog(
+            sourceDate = source,
+            onDismiss = { copySourceDate = null },
+            onConfirm = { slot ->
+                copySourceDate = null
+                viewModel.copyFrom(source, slot)
+            },
+        )
+    }
+
     if (showWeightDialog) {
         LogWeightDialog(
             weightUnit = uiState.weightUnit,
@@ -286,7 +325,7 @@ fun DiaryScreen(
         }
         AlertDialog(
             onDismissRequest = viewModel::cancelEdit,
-            title = { Text(presetRow.presetName) },
+            title = { Text(presetRow.presetName ?: stringResource(R.string.preset_fallback)) },
             text = {
                 MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
             },
@@ -345,6 +384,7 @@ private fun DateNavigationRow(
     onPreviousDay: () -> Unit,
     onNextDay: () -> Unit,
     onDateClick: () -> Unit,
+    onCopyFromClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -363,10 +403,61 @@ private fun DateNavigationRow(
                     .clickable(onClick = onDateClick)
                     .padding(vertical = 8.dp),
         )
+        IconButton(onClick = onCopyFromClick) {
+            Icon(Icons.Filled.ContentCopy, contentDescription = stringResource(R.string.copy_from_day))
+        }
         IconButton(onClick = onNextDay, enabled = !isToday) {
             Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.next_day))
         }
     }
+}
+
+/**
+ * Second step of "copy from a day": whole day, or just one meal of it. Copying always tops
+ * the shown day up — nothing gets replaced.
+ */
+@Composable
+private fun CopyMealChoiceDialog(
+    sourceDate: String,
+    onDismiss: () -> Unit,
+    onConfirm: (MealSlot?) -> Unit,
+) {
+    var selectedSlot by remember { mutableStateOf<MealSlot?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.copy_from_named_day, friendlyDateLabel(sourceDate))) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.copy_choose_scope),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                MealSlotPicker(
+                    selected = selectedSlot ?: MealSlot.UNSPECIFIED,
+                    onSelected = { slot ->
+                        selectedSlot = if (slot == selectedSlot) null else slot
+                    },
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    stringResource(
+                        if (selectedSlot == null) R.string.copy_scope_whole_day else R.string.copy_scope_one_meal,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selectedSlot) }) {
+                Text(stringResource(R.string.copy_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
 }
 
 /** Calendar dialog for jumping straight to a day; future days can't be picked. */
@@ -839,7 +930,7 @@ private fun DiaryRowCard(
     val title =
         when (row) {
             is DiaryRow.Food -> row.entryWithFood.food.name
-            is DiaryRow.Preset -> row.presetName
+            is DiaryRow.Preset -> row.presetName ?: stringResource(R.string.preset_fallback)
         }
     val time = DateUtils.formatTime(row.loggedAt)
     val subtitle =

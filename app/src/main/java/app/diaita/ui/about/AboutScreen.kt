@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -119,5 +120,44 @@ private fun AboutContent(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+        // Attribution formally required by the Open Database License OFF data ships under.
+        Text(
+            stringResource(R.string.about_data_sources),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.about_off_attribution),
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            stringResource(R.string.about_oss_title),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OSS_LIBRARIES.forEach { library ->
+            Text(
+                library,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
+
+/** Bundled third-party libraries and their licenses. */
+private val OSS_LIBRARIES =
+    listOf(
+        "AndroidX / Jetpack Compose — Apache License 2.0",
+        "Kotlin & kotlinx libraries — Apache License 2.0",
+        "Room — Apache License 2.0",
+        "Retrofit, OkHttp — Apache License 2.0",
+        "ZXing Android Embedded — Apache License 2.0",
+        "WorkManager, DataStore — Apache License 2.0",
+    )

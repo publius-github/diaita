@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import app.diaita.data.db.AppDatabase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -55,19 +56,59 @@ class DatabaseBackupManager(
                 val currentVersion = database.openHelper.readableDatabase.version
                 if (readUserVersion(staging) > currentVersion) return@withContext RestoreOutcome.NewerSchema
                 if (!passesIntegrityCheck(staging)) return@withContext RestoreOutcome.Corrupt
+                if (!hasExpectedTables(staging)) return@withContext RestoreOutcome.NotADatabase
 
-                val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
-                database.close()
-                File(dbFile.path + "-wal").delete()
-                File(dbFile.path + "-shm").delete()
-                staging.copyTo(dbFile, overwrite = true)
-                RestoreOutcome.Success
+                swapInto(staging)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 RestoreOutcome.Failed
             } finally {
                 staging.delete()
             }
         }
+
+    /**
+     * Replaces the live database with [staging]. The original is moved aside first and only
+     * deleted after the new file passes a post-copy integrity check, so a failed copy
+     * (disk full, I/O error) rolls back to the pre-restore state instead of losing data.
+     */
+    private fun swapInto(staging: File): RestoreOutcome {
+        val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
+        database.close()
+        File(dbFile.path + "-wal").delete()
+        File(dbFile.path + "-shm").delete()
+
+        val original = File(dbFile.path + ".pre-restore")
+        original.delete()
+        val hadOriginal = dbFile.exists()
+        if (hadOriginal && !dbFile.renameTo(original)) return RestoreOutcome.Failed
+
+        return try {
+            staging.copyTo(dbFile, overwrite = true)
+            check(passesIntegrityCheck(dbFile)) { "restored file failed integrity check" }
+            original.delete()
+            RestoreOutcome.Success
+        } catch (e: Exception) {
+            dbFile.delete()
+            if (hadOriginal) original.renameTo(dbFile)
+            RestoreOutcome.Failed
+        }
+    }
+
+    /** A valid backup must contain the core tables every schema version has had. */
+    private fun hasExpectedTables(file: File): Boolean =
+        runCatching {
+            SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+                val expected = listOf("food_items", "diary_entries", "meal_presets", "daily_goals")
+                db
+                    .rawQuery(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN " +
+                            "(${expected.joinToString(",") { "?" }})",
+                        expected.toTypedArray(),
+                    ).use { cursor -> cursor.moveToFirst() && cursor.getInt(0) == expected.size }
+            }
+        }.getOrDefault(false)
 
     private fun hasSqliteHeader(file: File): Boolean {
         if (file.length() < SQLITE_HEADER_SIZE) return false

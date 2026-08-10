@@ -1,5 +1,8 @@
 package app.diaita.data.repository
 
+import androidx.room.withTransaction
+import app.diaita.data.db.AppDatabase
+import app.diaita.data.db.dao.DailyMacroTotals
 import app.diaita.data.db.dao.DailyTotals
 import app.diaita.data.db.dao.DayTotal
 import app.diaita.data.db.dao.DiaryEntryDao
@@ -7,16 +10,21 @@ import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.db.entities.MonthlyAggregate
 import app.diaita.util.DateUtils
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 private const val MILLIS_PER_DAY = 24L * 60 * 60 * 1000
 
 class DiaryRepository(
+    private val database: AppDatabase,
     private val diaryEntryDao: DiaryEntryDao,
 ) {
     fun entriesForDate(date: String): Flow<List<DiaryEntryWithFood>> = diaryEntryDao.entriesForDate(date)
+
+    suspend fun entriesForDateOnce(date: String): List<DiaryEntry> = diaryEntryDao.entriesForDateOnce(date)
 
     fun dailyTotals(date: String): Flow<DailyTotals> = diaryEntryDao.dailyTotals(date)
 
@@ -24,6 +32,13 @@ class DiaryRepository(
         fromDate: String,
         toDate: String,
     ): Flow<List<DayTotal>> = diaryEntryDao.historyTotals(fromDate, toDate)
+
+    fun historyMacroTotals(
+        fromDate: String,
+        toDate: String,
+    ): Flow<List<DailyMacroTotals>> = diaryEntryDao.historyMacroTotals(fromDate, toDate)
+
+    fun monthlyAverages(): Flow<List<MonthlyAggregate>> = database.monthlyAggregateDao().getAll()
 
     fun recentFoods(limit: Int): Flow<List<FoodItem>> = diaryEntryDao.recentFoods(limit)
 
@@ -50,27 +65,68 @@ class DiaryRepository(
 
     suspend fun updateEntry(entry: DiaryEntry) = diaryEntryDao.update(entry)
 
-    /** Re-inserts a previously deleted entry as-is (same id) — used to support delete-undo. */
-    suspend fun restoreEntry(entry: DiaryEntry) = diaryEntryDao.insert(entry)
+    /**
+     * Re-inserts a previously deleted entry as-is (same id) — used to support delete-undo.
+     * Insert-or-ignore keeps a double "Undo" tap from throwing on the reused primary key.
+     */
+    suspend fun restoreEntry(entry: DiaryEntry) = diaryEntryDao.insertOrIgnore(entry)
 
     /**
      * Copies every entry of [fromDate] onto [toDate], preserving meal slots and preset
      * grouping snapshots. Each copy keeps its original time-of-day (shifted whole days),
      * so meal ordering and snack day-part classification survive the copy.
-     * Returns how many entries were copied (0 = source day empty).
+     *
+     * Runs read + insert in one transaction and skips entries that already exist
+     * identically on the target day, so a double-tap cannot silently duplicate the day.
+     * Returns how many entries were copied (0 = source empty, same-day copy, or bad date).
      */
     suspend fun copyDay(
         fromDate: String,
         toDate: String,
+    ): Int = copyEntries(fromDate, toDate, slot = null)
+
+    /** Same as [copyDay] but restricted to one meal [slot] of the source day. */
+    suspend fun copyMeal(
+        fromDate: String,
+        toDate: String,
+        slot: MealSlot,
+    ): Int = copyEntries(fromDate, toDate, slot)
+
+    private suspend fun copyEntries(
+        fromDate: String,
+        toDate: String,
+        slot: MealSlot?,
     ): Int {
-        val entries = diaryEntryDao.entriesForDateOnce(fromDate)
+        if (fromDate == toDate) return 0
         val dayShiftMillis =
-            (LocalDate.parse(toDate).toEpochDay() - LocalDate.parse(fromDate).toEpochDay()) * MILLIS_PER_DAY
-        diaryEntryDao.insertAll(
-            entries.map { it.copy(id = 0, logDate = toDate, loggedAt = it.loggedAt + dayShiftMillis) },
-        )
-        return entries.size
+            try {
+                (LocalDate.parse(toDate).toEpochDay() - LocalDate.parse(fromDate).toEpochDay()) * MILLIS_PER_DAY
+            } catch (e: DateTimeParseException) {
+                return 0
+            }
+        return database.withTransaction {
+            val source =
+                diaryEntryDao
+                    .entriesForDateOnce(fromDate)
+                    .filter { slot == null || it.mealSlot == slot }
+            val existing = diaryEntryDao.entriesForDateOnce(toDate)
+            val copies =
+                source
+                    .map { it.copy(id = 0, logDate = toDate, loggedAt = it.loggedAt + dayShiftMillis) }
+                    .filterNot { copy ->
+                        existing.any { it.matchesCopy(copy) }
+                    }
+            diaryEntryDao.insertAll(copies)
+            copies.size
+        }
     }
+
+    private fun DiaryEntry.matchesCopy(copy: DiaryEntry): Boolean =
+        foodItemId == copy.foodItemId &&
+            quantityGrams == copy.quantityGrams &&
+            loggedAt == copy.loggedAt &&
+            mealSlot == copy.mealSlot &&
+            sourcePresetId == copy.sourcePresetId
 
     suspend fun getAllEntries(): List<DiaryEntry> = diaryEntryDao.getAllEntries()
 }

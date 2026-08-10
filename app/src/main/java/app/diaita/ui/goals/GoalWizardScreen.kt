@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.settings.MacroSplit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.label
 import app.diaita.util.ExerciseLevel
@@ -162,18 +163,48 @@ private fun AboutYouStep(
         modifier = Modifier.fillMaxWidth(),
     )
     Spacer(modifier = Modifier.height(8.dp))
-    OutlinedTextField(
-        value = state.heightText,
-        onValueChange = viewModel::onHeightChanged,
-        label = { Text(stringResource(R.string.calc_height)) },
-        singleLine = true,
-        keyboardOptions =
-            KeyboardOptions(
-                keyboardType = KeyboardType.Decimal,
-                imeAction = ImeAction.Next,
-            ),
-        modifier = Modifier.fillMaxWidth(),
-    )
+    if (state.useImperialHeight) {
+        // Pound users think in feet and inches; the math still runs on centimeters.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = state.heightFeetText,
+                onValueChange = viewModel::onHeightFeetChanged,
+                label = { Text(stringResource(R.string.calc_height_feet)) },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+            OutlinedTextField(
+                value = state.heightInchesText,
+                onValueChange = viewModel::onHeightInchesChanged,
+                label = { Text(stringResource(R.string.calc_height_inches)) },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Next,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+        }
+    } else {
+        OutlinedTextField(
+            value = state.heightText,
+            onValueChange = viewModel::onHeightChanged,
+            label = { Text(stringResource(R.string.calc_height)) },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Next,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedTextField(
         value = state.weightText,
@@ -303,6 +334,13 @@ private fun ResultStep(
             )
         }
     }
+    Spacer(modifier = Modifier.height(12.dp))
+    Text(
+        stringResource(R.string.wizard_macro_split_title),
+        style = MaterialTheme.typography.labelMedium,
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    MacroSplitPicker(selected = state.macroSplit, onSelected = viewModel::onMacroSplitSelected)
     Spacer(modifier = Modifier.height(16.dp))
     Button(onClick = viewModel::applyAsGoal, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.wizard_apply))
@@ -313,6 +351,34 @@ private fun ResultStep(
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/** Chips of common protein/fat/carbs calorie splits applied to the suggested goal. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MacroSplitPicker(
+    selected: MacroSplit,
+    onSelected: (MacroSplit) -> Unit,
+) {
+    FlowRow {
+        MacroSplit.PRESETS.forEach { split ->
+            FilterChip(
+                selected = selected == split,
+                onClick = { onSelected(split) },
+                label = {
+                    Text(
+                        stringResource(
+                            R.string.wizard_macro_split_chip,
+                            split.proteinPercent,
+                            split.fatPercent,
+                            split.carbsPercent,
+                        ),
+                    )
+                },
+                modifier = Modifier.padding(end = 8.dp),
+            )
+        }
+    }
 }
 
 @Composable

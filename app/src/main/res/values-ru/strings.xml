@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Diaita</string>
+
+    <!-- Common -->
+    <string name="ok">ОК</string>
+    <string name="cancel">Отмена</string>
+    <string name="delete">Удалить</string>
+    <string name="save">Сохранить</string>
+    <string name="log">Записать</string>
+    <string name="add">Добавить</string>
+    <string name="undo">Отменить</string>
+    <string name="back">Назад</string>
+    <string name="close">Закрыть</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_presets">Шаблоны</string>
+    <string name="nav_history">История</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="nav_about">О приложении</string>
+    <string name="settings_about_desc">Версия и информация о приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_description">Diaita — простой дневник калорий, макронутриентов и веса на каждый день: записывайте еду за секунды, используйте шаблоны и следите за темпом в течение дня.</string>
+    <string name="about_privacy">Все данные остаются на этом устройстве. Без аккаунтов, облака и слежки.</string>
+
+    <!-- Diary -->
+    <string name="today_title">Сегодня</string>
+    <string name="kcal_amount">%1$d ккал</string>
+    <string name="macros_line">Б: %1$dг   Ж: %2$dг   У: %3$dг</string>
+    <string name="macro_protein_short">Б</string>
+    <string name="macro_fat_short">Ж</string>
+    <string name="macro_carbs_short">У</string>
+    <string name="macro_goal_reached">Цель достигнута</string>
+    <string name="diary_empty">Сегодня ещё ничего не записано — нажмите +, чтобы добавить первый продукт.</string>
+    <string name="first_run_goal_body">Задайте дневную цель по калориям, чтобы кольцо и полосы частей дня обрели смысл.</string>
+    <string name="first_run_goal_wizard">Рассчитать за меня</string>
+    <string name="first_run_goal_manual">Задать вручную</string>
+    <string name="add_food">Добавить еду</string>
+    <string name="diary_food_subtitle">%1$s · %2$d г — %3$d ккал</string>
+    <string name="diary_preset_subtitle">%1$s · %2$d поз. — %3$d ккал</string>
+    <string name="deleted_named">Удалено: «%1$s»</string>
+
+    <!-- Day-part balance bar -->
+    <string name="day_part_morning">Утро</string>
+    <string name="day_part_day">День</string>
+    <string name="day_part_evening">Вечер</string>
+    <string name="day_part_kcal">%1$d / %2$d</string>
+    <string name="day_part_left">осталось %1$d</string>
+    <string name="day_part_carry_note">Неистраченные %1$d ккал перенесены на «%2$s»</string>
+    <string name="date_yesterday">Вчера</string>
+    <string name="previous_day">Предыдущий день</string>
+    <string name="next_day">Следующий день</string>
+    <string name="quick_add">Быстрая запись</string>
+    <string name="quick_add_title">Быстрая запись калорий</string>
+    <string name="quick_add_kcal_label">Калории (ккал)</string>
+    <string name="quick_add_name_label">Название (необязательно)</string>
+    <string name="quick_entry_default_name">Быстрая запись</string>
+
+    <!-- Pace message (random pick within each mood) -->
+    <string name="pace_empty_1">Чистый лист. Запишите первый приём пищи — и сделаем день хорошим.</string>
+    <string name="pace_empty_2">Пока пусто. День полон возможностей — в основном съедобных.</string>
+    <string name="pace_empty_3">Пустой дневник, полный потенциал. Что на завтрак?</string>
+    <string name="pace_empty_4">Пока 0 ккал. Даже холодильник начинает что-то подозревать.</string>
+    <string name="pace_empty_5">Дневник пустее, чем холодильник в воскресенье вечером. Исправьте хоть одно.</string>
+    <string name="pace_ok_1">Точно по плану — так держать.</string>
+    <string name="pace_ok_2">Отличный темп. Будущий вы одобряет.</string>
+    <string name="pace_ok_3">Ровно и уверенно. Выглядит отлично.</string>
+    <string name="pace_ok_4">Образцовый день. Хоть в рамку.</string>
+    <string name="pace_ok_5">Баланс, как у греческого философа. Ничего лишнего.</string>
+    <string name="pace_warn_1">Полегче, чемпион — это больше, чем план разрешает в это время дня.</string>
+    <string name="pace_warn_2">Вы опережаете график. Может, следующий перекус пропустить?</string>
+    <string name="pace_warn_3">Притормозите — в таком темпе на ужин останется стакан воды.</string>
+    <string name="pace_warn_4">Бюджет этой части дня исчерпан. Остаток дня — по тонкому льду.</string>
+    <string name="pace_warn_5">Грузим калории с утра? Ваш вечерний я уже подал жалобу.</string>
+    <string name="pace_over_1">Цель уничтожена. Положите вилку и отойдите от холодильника.</string>
+    <string name="pace_over_2">Вы не перешли лимит — вы проехали по нему на грузовике. Кухня закрыта.</string>
+    <string name="pace_over_3">Достаточно. Сегодня ваши друзья — диван и стакан воды.</string>
+    <string name="pace_over_4">Впечатляет. У цели не было шансов. У перекусов тоже.</string>
+    <string name="pace_over_5">Просто заранее извинитесь перед весами и идите спать.</string>
+    <string name="pace_empty_gentle_1">Пока ничего не записано — хороший момент начать день.</string>
+    <string name="pace_empty_gentle_2">Свежий старт. Запишите первый приём пищи, когда будете готовы.</string>
+    <string name="pace_empty_gentle_3">Дневник пока пуст — не торопитесь, просто не забудьте.</string>
+    <string name="pace_ok_gentle_1">Вы идёте по плану — отлично.</string>
+    <string name="pace_ok_gentle_2">Хороший темп сегодня. Продолжайте.</string>
+    <string name="pace_ok_gentle_3">Пока всё в рамках плана.</string>
+    <string name="pace_warn_gentle_1">Немного впереди плана для этого времени дня — стоит иметь в виду.</string>
+    <string name="pace_warn_gentle_2">Эта часть дня слегка превысила свою долю. Более лёгкий следующий приём пищи поможет.</string>
+    <string name="pace_warn_gentle_3">Чуть впереди графика — оставьте запас на потом.</string>
+    <string name="pace_over_gentle_1">Сегодня вышло выше цели. Завтра — новый день.</string>
+    <string name="pace_over_gentle_2">Выше дневной цели — бывает. Будьте к себе добрее и начните заново завтра.</string>
+    <string name="pace_over_gentle_3">Сегодня выше цели. Один день не определяет неделю.</string>
+    <string name="pace_empty_brutal_1">До сих пор ничего не записано? Дневник сам себя не заполнит, боец.</string>
+    <string name="pace_empty_brutal_2">Ноль записей. Ноль усилий. Ноль оправданий. Запишите хоть что-то.</string>
+    <string name="pace_empty_brutal_3">Пустой дневник — это враньё с лишними шагами. За дело.</string>
+    <string name="pace_empty_brutal_4">Открыли приложение, чтобы просто смотреть? Записывайте еду. Сейчас же.</string>
+    <string name="pace_empty_brutal_5">Весы уже знают, что вы скрываете. Дневник хочет имена.</string>
+    <string name="pace_ok_brutal_1">По плану. Хорошо. Только попробуйте всё испортить до полуночи.</string>
+    <string name="pace_ok_brutal_2">Приемлемо. Едва. Шагайте дальше — и никто не пострадает.</string>
+    <string name="pace_ok_brutal_3">По плану — в кои-то веки. Сделайте скриншот, никто не поверит.</string>
+    <string name="pace_ok_brutal_4">Обнаружена дисциплина. Подозрительно, но допустимо.</string>
+    <string name="pace_ok_brutal_5">Вы в графике. Холодильник остаётся закрытым — и мы остаёмся друзьями.</string>
+    <string name="pace_warn_brutal_1">Бюджет этого времени дня: исчерпан. Проглочен. Надеюсь, оно того стоило.</string>
+    <string name="pace_warn_brutal_2">Вы едите так, будто в сутках 40 часов. Их 24. Стоп.</string>
+    <string name="pace_warn_brutal_3">Снова впереди графика. Ваш ужин теперь — просто слух.</string>
+    <string name="pace_warn_brutal_4">Это был не перекус, это был налёт. Сворачивайтесь.</string>
+    <string name="pace_warn_brutal_5">Перебор в такую рань? Смело. Глупо, но смело.</string>
+    <string name="pace_over_brutal_1">Цель разгромлена. Кухня — место преступления, и подозреваемый — вы.</string>
+    <string name="pace_over_brutal_2">Вы пролетели лимит так, будто он вам должен. Всё. Кухня закрыта.</string>
+    <string name="pace_over_brutal_3">Поздравляю, вы съели и завтрашние калории. Вода. Кровать. Тишина.</string>
+    <string name="pace_over_brutal_4">Цель мертва, и это ваших рук дело. Идите пройдитесь. Буквально — идите.</string>
+    <string name="pace_over_brutal_5">Даже холодильник вас осуждает. Сегодня в этот рот больше ничего не входит.</string>
+
+    <!-- Meal slots -->
+    <string name="meal_breakfast">Завтрак</string>
+    <string name="meal_lunch">Обед</string>
+    <string name="meal_dinner">Ужин</string>
+    <string name="meal_snack">Перекус</string>
+    <string name="meal_other">Другое</string>
+
+    <!-- Progress ring -->
+    <string name="ring_progress">%1$d\n/ %2$d ккал</string>
+    <string name="ring_no_goal">%1$d ккал\n(цель не задана)</string>
+
+    <!-- Add food -->
+    <string name="tab_foods">Продукты</string>
+    <string name="tab_presets">Шаблоны</string>
+    <string name="search_foods">Поиск продуктов</string>
+    <string name="search_off_checkbox">Искать в OpenFoodFacts онлайн</string>
+    <string name="offline_banner">Офлайн — только сохранённые продукты</string>
+    <string name="search_error_off">Не удалось связаться с OpenFoodFacts — проверьте соединение</string>
+    <string name="no_matches">Ничего не найдено</string>
+    <string name="kcal_per_100g">%1$d ккал/100 г</string>
+    <string name="add_manually">Добавить вручную</string>
+    <string name="back_to_search">← Назад к поиску</string>
+    <string name="recent_foods">Недавние:</string>
+    <string name="name_label">Название</string>
+    <string name="calories_per_100">Калории / 100 г</string>
+    <string name="protein_per_100">Белки, г / 100 г (необязательно)</string>
+    <string name="fat_per_100">Жиры, г / 100 г (необязательно)</string>
+    <string name="carbs_per_100">Углеводы, г / 100 г (необязательно)</string>
+    <string name="save_and_log">Сохранить и записать</string>
+    <string name="save_and_add">Сохранить и добавить</string>
+    <string name="edit_food">Изменить продукт</string>
+    <string name="save_changes">Сохранить изменения</string>
+    <string name="manual_error">Укажите название и калорийность — белки, жиры и углеводы необязательны</string>
+    <string name="no_presets_addfood">Шаблонов пока нет — создайте на вкладке «Шаблоны».</string>
+    <string name="preset_items_kcal_tap_to_log">%1$d поз. · %2$d ккал — нажмите, чтобы записать</string>
+
+    <!-- Barcode scanning -->
+    <string name="scan_barcode">Сканировать штрихкод</string>
+    <string name="scan_prompt">Наведите камеру на штрихкод продукта</string>
+    <string name="scan_not_found">Продукт не найден — поищите по названию или добавьте вручную</string>
+
+    <!-- Repeat yesterday -->
+    <string name="repeat_yesterday">Повторить вчера</string>
+    <string name="nothing_to_copy">Копировать нечего — источник пуст</string>
+
+    <!-- Quantity sheet -->
+    <string name="quantity_grams">Количество (граммы)</string>
+    <string name="hundred_grams_chip">100 г</string>
+    <string name="serving_chip">Порция (%1$d г)</string>
+    <string name="kcal_estimate">≈ %1$d ккал</string>
+
+    <!-- Presets -->
+    <string name="new_preset">Новый шаблон</string>
+    <string name="edit_preset">Изменить шаблон</string>
+    <string name="no_presets_yet">Шаблонов пока нет — нажмите +, чтобы создать (например, «Мой обычный завтрак»).</string>
+    <string name="items_count_kcal">%1$d поз. · %2$d ккал</string>
+    <string name="log_preset">Записать шаблон</string>
+    <string name="delete_preset">Удалить шаблон</string>
+    <string name="preset_name_label">Название шаблона (например, «Мой обычный завтрак»)</string>
+    <string name="preset_meal_label">Приём пищи</string>
+    <string name="items_in_preset">Состав шаблона</string>
+    <string name="no_items_yet">Пока пусто — нажмите «Добавить еду» ниже.</string>
+    <string name="item_grams_kcal">%1$d г — %2$d ккал</string>
+    <string name="remove">Убрать</string>
+    <string name="search_to_add">Найдите продукты для добавления</string>
+    <string name="save_preset">Сохранить шаблон</string>
+    <string name="preset_error">Назовите шаблон и добавьте хотя бы один продукт</string>
+
+    <!-- Goals -->
+    <string name="daily_goal">Дневная цель</string>
+    <string name="calories_label">Калории</string>
+    <string name="quick_split">Подсказка: здоровое соотношение — 30% белки / 25% жиры / 45% углеводы</string>
+    <string name="protein_g">Белки (г)</string>
+    <string name="fat_g">Жиры (г)</string>
+    <string name="carbs_g">Углеводы (г)</string>
+    <string name="weight_target_label">Целевой вес (%1$s) — необязательно</string>
+    <string name="goal_error">Введите корректные числа для всех целей</string>
+    <string name="save_goal">Сохранить цель</string>
+    <string name="goal_saved">Цель сохранена</string>
+    <string name="backup_title">Резервная копия</string>
+
+    <!-- Goal wizard -->
+    <string name="calc_open">Не уверены? Рассчитать за меня</string>
+    <string name="wizard_title">Мастер калорий</string>
+    <string name="wizard_step">Шаг %1$d из %2$d</string>
+    <string name="wizard_next">Далее</string>
+    <string name="wizard_about_you">О вас</string>
+    <string name="calc_sex_male">Мужчина</string>
+    <string name="calc_sex_female">Женщина</string>
+    <string name="calc_age">Возраст</string>
+    <string name="calc_height">Рост (см)</string>
+    <string name="calc_weight_label">Вес (%1$s)</string>
+    <string name="calc_height_feet">Рост (футы)</string>
+    <string name="calc_height_inches">Дюймы</string>
+    <string name="wizard_work_title">Какая у вас работа?</string>
+    <string name="work_sedentary">В основном сидячая</string>
+    <string name="work_sedentary_desc">Работа за столом или компьютером, вождение</string>
+    <string name="work_standing">Часть дня на ногах</string>
+    <string name="work_standing_desc">Преподавание, торговля, лаборатория, домашние дела</string>
+    <string name="work_physical">Физически активная</string>
+    <string name="work_physical_desc">Официант, медсестра, постоянная ходьба</string>
+    <string name="work_heavy">Тяжёлый труд</string>
+    <string name="work_heavy_desc">Стройка, сельское хозяйство, переноска тяжестей</string>
+    <string name="wizard_exercise_title">Как часто вы тренируетесь?</string>
+    <string name="exercise_none">Мало или совсем нет</string>
+    <string name="exercise_none_desc">Без запланированных тренировок</string>
+    <string name="exercise_light">1–2 раза в неделю</string>
+    <string name="exercise_light_desc">Изредка пробежки, зал или спорт</string>
+    <string name="exercise_moderate">3–4 раза в неделю</string>
+    <string name="exercise_moderate_desc">Регулярные тренировки, например бег три раза в неделю</string>
+    <string name="exercise_frequent">5–6 раз в неделю</string>
+    <string name="exercise_frequent_desc">Тренировки почти каждый день</string>
+    <string name="exercise_intense">Ежедневно или дважды в день</string>
+    <string name="exercise_intense_desc">Тяжёлые ежедневные тренировки или режим спортсмена</string>
+    <string name="wizard_plan_title">Какая у вас цель?</string>
+    <string name="plan_lose_steady">Похудеть — умеренно</string>
+    <string name="plan_lose_steady_desc">Около 0,5 кг в неделю, дефицит 500 ккал (рекомендуется для здорового похудения)</string>
+    <string name="plan_lose_fast">Похудеть — агрессивно</string>
+    <string name="plan_lose_fast_desc">До 1 кг в неделю, дефицит 1000 ккал. Труднее удерживать, выше риск потери мышц</string>
+    <string name="plan_maintain">Поддерживать</string>
+    <string name="plan_maintain_desc">Сохранить текущий вес</string>
+    <string name="plan_gain_lean">Набор — сухой</string>
+    <string name="plan_gain_lean_desc">Около 0,25 кг в неделю, профицит 300 ккал (рекомендуется для набора преимущественно мышц)</string>
+    <string name="plan_gain_fast">Набор — быстрый</string>
+    <string name="plan_gain_fast_desc">Около 0,5 кг в неделю, профицит 500 ккал. Быстрее, но больше жира</string>
+    <string name="wizard_result_title">Ваши дневные калории</string>
+    <string name="wizard_bmr_label">Базовый обмен (BMR)</string>
+    <string name="wizard_tdee_label">Поддержание (TDEE)</string>
+    <string name="wizard_target_label">Рекомендуемая дневная цель</string>
+    <string name="calc_result">≈ %1$d ккал/день</string>
+    <string name="wizard_min_raised">Поднято до безопасного минимума суточного рациона</string>
+    <string name="wizard_replaces_goal">Текущая цель %1$d ккал будет заменена на %2$d ккал.</string>
+    <string name="wizard_apply">Сделать моей целью</string>
+    <string name="wizard_note">Макронутриенты заполняются по выбранному выше соотношению — всё можно уточнить позже в Настройки → Дневная цель. Расчёт по формуле Миффлина-Сан Жеора и не является медицинской рекомендацией.</string>
+    <string name="wizard_macro_split_title">Соотношение Б/Ж/У, % калорий</string>
+    <string name="wizard_macro_split_chip">%1$d/%2$d/%3$d</string>
+    <string name="recalc_suggestion">Ваш вес изменился с последнего расчёта (%1$s → %2$s %3$s). Пересчитать цель?</string>
+    <string name="recalc_action">Пересчитать</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_goals">Дневная цель</string>
+    <string name="settings_goals_desc">Калории, макронутриенты и целевой вес</string>
+    <string name="settings_wizard">Мастер калорий</string>
+    <string name="settings_wizard_desc">Рассчитать, сколько калорий вам нужно в день</string>
+    <string name="settings_backup_desc">Резервная копия, восстановление и экспорт данных</string>
+    <string name="settings_off_desc">Искать продукты онлайн при поиске</string>
+    <string name="export_csv">Экспорт данных (CSV)</string>
+    <string name="diary_exported">Данные экспортированы</string>
+    <string name="backup_full_hint">Полная резервная копия содержит весь дневник, продукты, шаблоны, цели и историю веса в одном файле.</string>
+    <string name="backup_csv_hint">CSV-экспорт содержит дневник, продукты, вес и шаблоны — открывается в таблицах и импортируется обратно.</string>
+    <string name="backup_export_db">Экспортировать полную копию</string>
+    <string name="backup_exported">Резервная копия сохранена</string>
+    <string name="backup_export_failed">Не удалось сохранить резервную копию</string>
+    <string name="backup_restore">Восстановить из копии</string>
+    <string name="restore">Восстановить</string>
+    <string name="restore_confirm_title">Восстановить из копии?</string>
+    <string name="restore_confirm_body">Все текущие данные будут заменены данными из копии. После этого приложение перезапустится.</string>
+    <string name="restore_failed_invalid">Этот файл не является корректной копией Diaita</string>
+    <string name="restore_failed_newer">Эта копия сделана более новой версией приложения — сначала обновите приложение</string>
+    <string name="restore_failed_generic">Восстановление не удалось — ничего не изменено</string>
+    <string name="settings_reminder">Ежедневное напоминание</string>
+    <string name="settings_reminder_desc">Напомнить, если ещё ничего не записано</string>
+    <string name="settings_reminder_time">Время напоминания</string>
+    <string name="settings_weight_reminder">Напоминание о весе</string>
+    <string name="settings_weight_reminder_desc">Напомнить, если вес ещё не записан</string>
+    <string name="reminder_channel">Напоминания</string>
+    <string name="reminder_text">Вы сегодня ещё ничего не записали — это займёт 30 секунд.</string>
+    <string name="weight_reminder_text">Вы сегодня не записали вес — быстрый шаг на весы.</string>
+    <string name="settings_section_tracking">Учёт</string>
+    <string name="settings_section_notifications">Уведомления</string>
+    <string name="settings_section_data">Данные</string>
+    <string name="settings_track_macros">Учитывать Б/Ж/У</string>
+    <string name="settings_track_macros_desc">Показывать прогресс белков, жиров и углеводов на главном экране</string>
+    <string name="settings_morning_end">Утро заканчивается в</string>
+    <string name="settings_morning_end_desc">Приёмы пищи до этого времени считаются утренними</string>
+    <string name="settings_day_end">День заканчивается в</string>
+    <string name="settings_day_end_desc">Приёмы пищи до этого времени считаются дневными, позже — вечерними</string>
+    <string name="time_value">%1$02d:%2$02d</string>
+    <string name="settings_section_appearance">Оформление</string>
+    <string name="settings_appearance_desc">Тема и цвета</string>
+    <string name="settings_tracking_desc">Макронутриенты, части дня, единицы и коуч</string>
+    <string name="settings_notifications_desc">Напоминания о еде и весе</string>
+    <string name="settings_data_desc">Онлайн-поиск, хранение истории и резервные копии</string>
+    <string name="settings_theme">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="settings_dynamic_color">Динамические цвета</string>
+    <string name="settings_dynamic_color_desc">Цвета Material You из обоев (Android 12+)</string>
+    <string name="settings_weight_unit">Единица веса</string>
+    <string name="unit_kg_full">Килограммы (кг)</string>
+    <string name="unit_lb_full">Фунты (lb)</string>
+    <string name="settings_coach">Сообщения коуча</string>
+    <string name="settings_coach_desc">Однострочник под дневной полосой баланса</string>
+    <string name="coach_off">Выкл.</string>
+    <string name="coach_gentle">Мягкий</string>
+    <string name="coach_snarky">Язвительный</string>
+    <string name="coach_brutal">Жёсткий</string>
+    <string name="settings_day_part_shares">Доли калорий утро/день/вечер</string>
+    <string name="day_part_shares_value">%1$d%% / %2$d%% / %3$d%%</string>
+    <string name="share_morning">Утро: %1$d%%</string>
+    <string name="share_day">День: %1$d%%</string>
+    <string name="share_evening">Вечер: %1$d%%</string>
+    <string name="settings_day_part_reminder">Напоминания о приёмах пищи</string>
+    <string name="settings_day_part_reminder_desc">Напомнить, если часть дня закончилась без записей</string>
+    <string name="day_part_reminder_morning_text">Утро закончилось, а записей нет — был ли завтрак?</string>
+    <string name="day_part_reminder_day_text">Дневная часть закончилась без записей — не забудьте про обед.</string>
+    <string name="settings_recent_foods">Недавние продукты в поиске</string>
+    <string name="settings_recent_foods_desc">Сколько недавно записанных продуктов показывать быстрыми чипами</string>
+    <string name="settings_retention">Хранить подробную историю</string>
+    <string name="settings_retention_desc">Более старые записи сворачиваются в месячные средние</string>
+    <string name="retention_3_months">3 месяца</string>
+    <string name="retention_6_months">6 месяцев</string>
+    <string name="retention_1_year">1 год</string>
+    <string name="retention_2_years">2 года</string>
+
+    <!-- History -->
+    <string name="history_title_days">Последние %1$d дн.</string>
+    <string name="range_days_chip">%1$d дн.</string>
+    <string name="history_empty">Истории пока нет — запишите еду, и она появится здесь.</string>
+    <string name="goal_line_label">Цель: %1$d ккал</string>
+    <string name="maintenance_line_label">Поддержание: %1$d ккал</string>
+    <string name="selected_day_info">%1$s — %2$d ккал</string>
+    <string name="selected_day_info_with_weight">%1$s — %2$d ккал · вес %3$s %4$s</string>
+    <string name="view_day">Открыть день →</string>
+    <string name="weight_title">Вес</string>
+    <string name="log_weight">Записать вес</string>
+    <string name="weight_input_label">Вес (%1$s)</string>
+    <string name="unit_kg">кг</string>
+    <string name="unit_lb">lb</string>
+    <string name="weight_empty">Записей веса пока нет — сделайте первое взвешивание.</string>
+    <string name="latest_weight">Последний: %1$s %2$s</string>
+    <string name="weight_today">Вес: %1$s %2$s</string>
+    <string name="weight_target_line">Цель: %1$s %2$s</string>
+    <string name="weight_error">Введите корректный вес</string>
+    <string name="monthly_averages">Средние по месяцам</string>
+    <string name="chart_calories_a11y">Столбчатая диаграмма калорий за последние %1$d дней, в среднем %2$d ккал в день</string>
+    <string name="chart_weight_a11y">График веса, последнее значение %1$s %2$s</string>
+    <string name="monthly_avg_row">%1$s — в среднем %2$d ккал/день</string>
+
+    <!-- Day detail -->
+    <string name="day_detail_empty">В этот день ничего не записано.</string>
+    <string name="copy_day_to_today">Скопировать день в сегодня</string>
+    <string name="copy_meal_to_today">→ сегодня</string>
+
+    <!-- Copy from another day -->
+    <string name="preset_fallback">Шаблон</string>
+    <string name="copy_from_day">Скопировать из дня</string>
+    <string name="copy_from_named_day">Копирование: %1$s</string>
+    <string name="copy_choose_scope">Скопировать весь день или выбрать один приём пищи:</string>
+    <string name="copy_scope_whole_day">Будет скопирован весь день.</string>
+    <string name="copy_scope_one_meal">Будет скопирован только выбранный приём пищи.</string>
+    <string name="copy_action">Скопировать</string>
+    <plurals name="copied_entries">
+        <item quantity="one">Скопирована %d запись</item>
+        <item quantity="few">Скопировано %d записи</item>
+        <item quantity="many">Скопировано %d записей</item>
+        <item quantity="other">Скопировано %d записи</item>
+    </plurals>
+
+    <!-- Catalog: favorites, filters, deletion -->
+    <string name="favorite_foods">Избранное:</string>
+    <string name="favorite_food">В избранное</string>
+    <string name="unfavorite_food">Убрать из избранного</string>
+    <string name="filter_all">Все</string>
+    <string name="filter_catalog">Каталог</string>
+    <string name="filter_mine">Мои</string>
+    <string name="filter_off">OpenFoodFacts</string>
+    <string name="search_rate_limited">OpenFoodFacts ограничивает запросы — подождите немного и попробуйте снова</string>
+    <string name="load_more_results">Загрузить ещё из OpenFoodFacts</string>
+    <string name="delete_food_from_catalog">Удалить из каталога</string>
+    <string name="delete_food_blocked">Нельзя удалить: продукт используется в дневнике или шаблонах</string>
+
+    <!-- Extended nutrients and units -->
+    <string name="fiber_per_100">Клетчатка, г</string>
+    <string name="sugar_per_100">Сахар, г</string>
+    <string name="salt_per_100">Соль, г</string>
+    <string name="unit_conversions_hint">Необязательно: вес порции, миллилитра и штуки позволяют записывать в мл, штуках и порциях.</string>
+    <string name="serving_grams_label">Порция, г</string>
+    <string name="grams_per_ml_label">г в 1 мл</string>
+    <string name="grams_per_piece_label">г в 1 шт.</string>
+    <string name="unit_grams">г</string>
+    <string name="unit_milliliters">мл</string>
+    <string name="unit_pieces">шт.</string>
+    <string name="unit_servings">порция</string>
+    <string name="quantity_milliliters">Количество (мл)</string>
+    <string name="quantity_pieces">Количество (штук)</string>
+    <string name="quantity_servings">Количество (порций)</string>
+    <string name="grams_equivalent">= %1$s г</string>
+
+    <!-- Reminders (new) -->
+    <string name="day_part_reminder_evening_text">Вечер почти закончился без записей — был ли ужин?</string>
+    <string name="settings_evening_reminder">Вечернее напоминание</string>
+    <string name="settings_evening_reminder_desc">Напомнить в 21:00, если за вечер ничего не записано</string>
+    <string name="notifications_permission_missing">Уведомления запрещены системой — напоминания включены, но не смогут появиться. Разрешите уведомления для Diaita в настройках системы.</string>
+
+    <!-- History analytics -->
+    <string name="streak_line">В цели %1$d из последних %2$d дней с записями</string>
+    <string name="adaptive_tdee_line">Наблюдаемое поддержание (последние 4 недели): ≈ %1$d ккал/день</string>
+    <string name="avg_macros_line">В среднем за день с записями: Б %1$dг · Ж %2$dг · У %3$dг</string>
+    <string name="zone_off_track">выше цели</string>
+    <string name="zone_between">между целью и поддержанием</string>
+    <string name="weight_rate_loss">Снижение %1$s %2$s в неделю</string>
+    <string name="weight_rate_gain">Набор %1$s %2$s в неделю</string>
+    <string name="weight_projection">цель примерно %1$s</string>
+    <string name="a11y_select_day">Выбрать день</string>
+
+    <!-- CSV import / backup nag -->
+    <string name="import_csv">Импорт из CSV</string>
+    <string name="import_summary">Импортировано: записей дневника — %1$d, продуктов — %2$d, взвешиваний — %3$d, шаблонов — %4$d</string>
+    <string name="import_not_diaita">Этот файл не является CSV-экспортом Diaita</string>
+    <string name="import_malformed">Импорт не удался — файл повреждён около строки %1$d</string>
+    <string name="import_read_failed">Не удалось прочитать файл</string>
+    <string name="last_backup_at">Последняя копия: %1$s</string>
+    <string name="last_backup_never">Резервная копия ещё не создавалась</string>
+    <string name="auto_backup_hint">Автоматический бэкап раз в неделю записывает датированный файл копии в выбранную вами папку.</string>
+    <string name="auto_backup_on">Еженедельный автоматический бэкап включён.</string>
+    <string name="auto_backup_enable">Включить еженедельный автобэкап…</string>
+    <string name="auto_backup_disable">Отключить автобэкап</string>
+
+    <!-- About: attribution and licenses -->
+    <string name="about_data_sources">Источники данных</string>
+    <string name="about_off_attribution">Данные о продуктах © участники Open Food Facts, доступны по лицензии Open Database License (ODbL) — openfoodfacts.org</string>
+    <string name="about_oss_title">Лицензии открытого ПО</string>
+</resources>

@@ -30,6 +30,8 @@ private class FakeDiaryEntryDao(
 
     override suspend fun insert(entry: DiaryEntry): Long = 0
 
+    override suspend fun insertOrIgnore(entry: DiaryEntry): Long = 0
+
     override suspend fun delete(entry: DiaryEntry) = Unit
 
     override suspend fun update(entry: DiaryEntry) = Unit
@@ -46,6 +48,11 @@ private class FakeDiaryEntryDao(
         fromDate: String,
         toDate: String,
     ): Flow<List<DayTotal>> = flowOf(emptyList())
+
+    override fun historyMacroTotals(
+        fromDate: String,
+        toDate: String,
+    ): Flow<List<DailyMacroTotals>> = flowOf(emptyList())
 
     override fun recentFoods(limit: Int): Flow<List<FoodItem>> = flowOf(emptyList())
 
@@ -128,6 +135,28 @@ class RetentionMaintenanceTest {
             // (2000*2 + 1400) / 3 = 1800
             assertEquals(1800.0, merged.avgCalories, 1e-9)
             assertEquals(3, merged.daysCount)
+        }
+
+    @Test
+    fun `fold and raw delete run inside the provided transaction`() =
+        runTest {
+            val diaryDao = FakeDiaryEntryDao(listOf(day("2025-05-01", 2000.0)))
+            val aggregateDao = FakeMonthlyAggregateDao()
+            var transactions = 0
+
+            RetentionMaintenance(
+                diaryDao,
+                aggregateDao,
+                today,
+                transactionRunner = { block ->
+                    transactions++
+                    block()
+                },
+            ).run()
+
+            assertEquals(1, transactions)
+            assertEquals(1, aggregateDao.stored.size)
+            assertEquals(1, diaryDao.deleteBeforeCalls.size)
         }
 
     @Test

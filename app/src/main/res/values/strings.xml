@@ -242,7 +242,13 @@
     <string name="wizard_min_raised">Raised to a safe minimum daily intake</string>
     <string name="wizard_replaces_goal">Your current goal of %1$d kcal will be replaced with %2$d kcal.</string>
     <string name="wizard_apply">Set as my goal</string>
-    <string name="wizard_note">Macros are filled with the 30/25/45 split — you can fine-tune everything later in Settings → Daily goals. Estimates use the Mifflin-St Jeor equation and are not medical advice.</string>
+    <string name="wizard_note">Macros follow the split chosen above — you can fine-tune everything later in Settings → Daily goals. Estimates use the Mifflin-St Jeor equation and are not medical advice.</string>
+    <string name="wizard_macro_split_title">Macro split — protein/fat/carbs, % of calories</string>
+    <string name="wizard_macro_split_chip">%1$d/%2$d/%3$d</string>
+    <string name="calc_height_feet">Height (ft)</string>
+    <string name="calc_height_inches">Inches</string>
+    <string name="recalc_suggestion">Your weight changed since the last calculation (%1$s → %2$s %3$s). Recalculate the goal?</string>
+    <string name="recalc_action">Recalculate</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -252,10 +258,10 @@
     <string name="settings_wizard_desc">Calculate how many calories you need per day</string>
     <string name="settings_backup_desc">Back up, restore or export your data</string>
     <string name="settings_off_desc">Look up foods online while searching</string>
-    <string name="export_csv">Export diary (CSV)</string>
-    <string name="diary_exported">Diary exported</string>
+    <string name="export_csv">Export data (CSV)</string>
+    <string name="diary_exported">Data exported</string>
     <string name="backup_full_hint">A full backup contains your entire diary, foods, presets, goals and weight history in a single file.</string>
-    <string name="backup_csv_hint">CSV export is for viewing in a spreadsheet — it cannot be restored.</string>
+    <string name="backup_csv_hint">CSV export contains the diary, foods, weights and presets — it opens in a spreadsheet and can be imported back.</string>
     <string name="backup_export_db">Export full backup</string>
     <string name="backup_exported">Backup saved</string>
     <string name="backup_export_failed">Could not save the backup</string>
@@ -324,9 +330,7 @@
 
     <!-- History -->
     <string name="history_title_days">Last %1$d days</string>
-    <string name="range_7_days">7 days</string>
-    <string name="range_14_days">14 days</string>
-    <string name="range_30_days">30 days</string>
+    <string name="range_days_chip">%1$d d</string>
     <string name="history_empty">No history yet — log some food to see it here.</string>
     <string name="goal_line_label">Goal: %1$d kcal</string>
     <string name="maintenance_line_label">Maintenance: %1$d kcal</string>
@@ -350,4 +354,84 @@
 
     <!-- Day detail -->
     <string name="day_detail_empty">Nothing was logged on this day.</string>
+    <string name="copy_day_to_today">Copy day to today</string>
+    <string name="copy_meal_to_today">→ today</string>
+
+    <!-- Copy from another day -->
+    <string name="preset_fallback">Preset</string>
+    <string name="copy_from_day">Copy from a day</string>
+    <string name="copy_from_named_day">Copy from %1$s</string>
+    <string name="copy_choose_scope">Copy the whole day, or pick one meal:</string>
+    <string name="copy_scope_whole_day">The whole day will be copied.</string>
+    <string name="copy_scope_one_meal">Only the selected meal will be copied.</string>
+    <string name="copy_action">Copy</string>
+    <plurals name="copied_entries">
+        <item quantity="one">Copied %d entry</item>
+        <item quantity="other">Copied %d entries</item>
+    </plurals>
+
+    <!-- Catalog: favorites, filters, deletion -->
+    <string name="favorite_foods">Favorites:</string>
+    <string name="favorite_food">Add to favorites</string>
+    <string name="unfavorite_food">Remove from favorites</string>
+    <string name="filter_all">All</string>
+    <string name="filter_catalog">Catalog</string>
+    <string name="filter_mine">My foods</string>
+    <string name="filter_off">OpenFoodFacts</string>
+    <string name="search_rate_limited">OpenFoodFacts is rate-limiting requests — wait a moment and try again</string>
+    <string name="load_more_results">Load more from OpenFoodFacts</string>
+    <string name="delete_food_from_catalog">Delete from catalog</string>
+    <string name="delete_food_blocked">Can\'t delete: diary entries or presets still use this food</string>
+
+    <!-- Extended nutrients and units -->
+    <string name="fiber_per_100">Fiber g</string>
+    <string name="sugar_per_100">Sugar g</string>
+    <string name="salt_per_100">Salt g</string>
+    <string name="unit_conversions_hint">Optional: serving, volume and piece weights let you log in ml, pieces and servings.</string>
+    <string name="serving_grams_label">Serving, g</string>
+    <string name="grams_per_ml_label">g per ml</string>
+    <string name="grams_per_piece_label">g per piece</string>
+    <string name="unit_grams">g</string>
+    <string name="unit_milliliters">ml</string>
+    <string name="unit_pieces">pcs</string>
+    <string name="unit_servings">serving</string>
+    <string name="quantity_milliliters">Quantity (ml)</string>
+    <string name="quantity_pieces">Quantity (pieces)</string>
+    <string name="quantity_servings">Quantity (servings)</string>
+    <string name="grams_equivalent">= %1$s g</string>
+
+    <!-- Reminders (new) -->
+    <string name="day_part_reminder_evening_text">The evening is almost over with nothing logged — was there dinner?</string>
+    <string name="settings_evening_reminder">Evening reminder</string>
+    <string name="settings_evening_reminder_desc">Nudge at 21:00 when the evening logged nothing</string>
+    <string name="notifications_permission_missing">Notifications are blocked by the system — reminders are on but cannot appear. Allow notifications for Diaita in system settings.</string>
+
+    <!-- History analytics -->
+    <string name="streak_line">On track %1$d of the last %2$d logged days</string>
+    <string name="adaptive_tdee_line">Observed maintenance (last 4 weeks): ≈ %1$d kcal/day</string>
+    <string name="avg_macros_line">Average per logged day: P %1$dg · F %2$dg · C %3$dg</string>
+    <string name="zone_off_track">above goal</string>
+    <string name="zone_between">between goal and maintenance</string>
+    <string name="weight_rate_loss">Losing %1$s %2$s per week</string>
+    <string name="weight_rate_gain">Gaining %1$s %2$s per week</string>
+    <string name="weight_projection">target around %1$s</string>
+    <string name="a11y_select_day">Select day</string>
+
+    <!-- CSV import / backup nag -->
+    <string name="import_csv">Import from CSV</string>
+    <string name="import_summary">Imported: %1$d diary entries, %2$d foods, %3$d weigh-ins, %4$d presets</string>
+    <string name="import_not_diaita">That file is not a Diaita CSV export</string>
+    <string name="import_malformed">Import failed — the file is damaged near line %1$d</string>
+    <string name="import_read_failed">Could not read the file</string>
+    <string name="last_backup_at">Last backup: %1$s</string>
+    <string name="last_backup_never">No backup made yet</string>
+    <string name="auto_backup_hint">Automatic backup writes a dated backup file into a folder of your choice every week.</string>
+    <string name="auto_backup_on">Automatic weekly backup is on.</string>
+    <string name="auto_backup_enable">Enable weekly auto-backup…</string>
+    <string name="auto_backup_disable">Disable auto-backup</string>
+
+    <!-- About: attribution and licenses -->
+    <string name="about_data_sources">Data sources</string>
+    <string name="about_off_attribution">Product data © Open Food Facts contributors, available under the Open Database License (ODbL) — openfoodfacts.org</string>
+    <string name="about_oss_title">Open-source licenses</string>
 </resources>

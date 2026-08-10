@@ -29,6 +29,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.diaita.R
@@ -165,7 +166,9 @@ internal fun SettingsTimePickerDialog(
         rememberTimePickerState(
             initialHour = initialMinutes / 60,
             initialMinute = initialMinutes % 60,
-            is24Hour = true,
+            is24Hour =
+                android.text.format.DateFormat
+                    .is24HourFormat(LocalContext.current),
         )
     AlertDialog(
         onDismissRequest = onDismiss,

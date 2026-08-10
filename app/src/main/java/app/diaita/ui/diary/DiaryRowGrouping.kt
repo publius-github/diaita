@@ -52,7 +52,8 @@ fun groupEntriesIntoRows(entries: List<DiaryEntryWithFood>): List<DiaryRow> {
                     it.entry.sourcePresetId == presetId && it.entry.loggedAt == entry.loggedAt
                 }
             group.forEach { consumedIds.add(it.entry.id) }
-            rows.add(DiaryRow.Preset(entry.sourcePresetName ?: "Preset", group))
+            // Null name stays null here — the UI maps it to a localized fallback resource.
+            rows.add(DiaryRow.Preset(entry.sourcePresetName, group))
         } else {
             consumedIds.add(entry.id)
             rows.add(DiaryRow.Food(entryWithFood))

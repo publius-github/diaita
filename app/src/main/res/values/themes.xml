@@ -3,7 +3,7 @@
     <style name="Theme.Diaita" parent="android:Theme.Material.Light.NoActionBar" />
 
     <style name="Theme.Diaita.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#2E7D32</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.Diaita</item>
     </style>

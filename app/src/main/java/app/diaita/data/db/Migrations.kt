@@ -68,5 +68,52 @@ object Migrations {
             }
         }
 
-    val all: Array<Migration> = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+    /**
+     * Catalog upgrade batch: deduplicates the OpenFoodFacts cache and makes `offId` unique
+     * (fixes the concurrent-search double-insert race), then adds the extended-nutrient,
+     * unit-conversion, favorite and cache-freshness columns. Diary entries and preset items
+     * pointing at duplicate OFF rows are remapped onto the kept (earliest) row first, so no
+     * foreign key ever dangles.
+     */
+    val MIGRATION_8_9 =
+        object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TEMP TABLE off_remap AS
+                    SELECT id, (SELECT MIN(f2.id) FROM food_items f2 WHERE f2.offId = f.offId) AS keepId
+                    FROM food_items f WHERE f.offId IS NOT NULL
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    UPDATE diary_entries SET foodItemId =
+                        (SELECT keepId FROM off_remap WHERE off_remap.id = diary_entries.foodItemId)
+                    WHERE foodItemId IN (SELECT id FROM off_remap WHERE id != keepId)
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    UPDATE meal_preset_items SET foodItemId =
+                        (SELECT keepId FROM off_remap WHERE off_remap.id = meal_preset_items.foodItemId)
+                    WHERE foodItemId IN (SELECT id FROM off_remap WHERE id != keepId)
+                    """.trimIndent(),
+                )
+                db.execSQL("DELETE FROM food_items WHERE id IN (SELECT id FROM off_remap WHERE id != keepId)")
+                db.execSQL("DROP TABLE off_remap")
+                db.execSQL("DROP INDEX IF EXISTS `index_food_items_offId`")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_food_items_offId` ON `food_items` (`offId`)")
+
+                db.execSQL("ALTER TABLE food_items ADD COLUMN fiberPer100g REAL")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN sugarPer100g REAL")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN saltPer100g REAL")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN gramsPerMilliliter REAL")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN gramsPerPiece REAL")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN isFavorite INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE food_items ADD COLUMN lastRefreshedAt INTEGER")
+            }
+        }
+
+    val all: Array<Migration> =
+        arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
 }

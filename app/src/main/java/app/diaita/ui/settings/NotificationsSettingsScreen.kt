@@ -1,14 +1,18 @@
 package app.diaita.ui.settings
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +20,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -36,16 +45,36 @@ fun NotificationsSettingsScreen(
     val weightReminderEnabled by viewModel.weightReminderEnabled.collectAsStateWithLifecycle()
     val weightReminderTimeMinutes by viewModel.weightReminderTimeMinutes.collectAsStateWithLifecycle()
     val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
+    val eveningReminderEnabled by viewModel.eveningReminderEnabled.collectAsStateWithLifecycle()
     val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var timeTarget by remember { mutableStateOf<ReminderTimeTarget?>(null) }
 
-    // The permission result never disables the toggle — a denied permission just means the
-    // worker stays silent; the user can grant it later from system settings.
+    fun hasNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+
+    // Tracked so a denial is called out loudly on screen — a toggle that stays on while
+    // nothing can fire is a silent lie. Re-checked on every resume, since the user may
+    // grant/revoke the permission in system settings and come back.
+    var notificationsAllowed by remember { mutableStateOf(hasNotificationPermission()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) notificationsAllowed = hasNotificationPermission()
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission(),
-        ) { }
+        ) { granted -> notificationsAllowed = granted }
 
     fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -83,11 +112,23 @@ fun NotificationsSettingsScreen(
         }
     }
 
+    val anyReminderEnabled =
+        reminderEnabled || weightReminderEnabled || dayPartRemindersEnabled || eveningReminderEnabled
+
     SettingsSubScreen(
         titleRes = R.string.settings_section_notifications,
         onBack = onBack,
         modifier = modifier,
     ) {
+        if (anyReminderEnabled && !notificationsAllowed) {
+            Text(
+                stringResource(R.string.notifications_permission_missing),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            HorizontalDivider()
+        }
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_reminder)) },
             supportingContent = { Text(stringResource(R.string.settings_reminder_desc)) },
@@ -125,6 +166,25 @@ fun NotificationsSettingsScreen(
             supportingContent = { Text(stringResource(R.string.settings_day_part_reminder_desc)) },
             trailingContent = {
                 Switch(checked = dayPartRemindersEnabled, onCheckedChange = ::onDayPartRemindersToggled)
+            },
+        )
+        HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_evening_reminder)) },
+            supportingContent = { Text(stringResource(R.string.settings_evening_reminder_desc)) },
+            trailingContent = {
+                Switch(
+                    checked = eveningReminderEnabled,
+                    onCheckedChange = { enabled ->
+                        viewModel.setEveningReminderEnabled(enabled)
+                        if (enabled) {
+                            requestNotificationPermission()
+                            ReminderScheduler.scheduleEveningReminder(context)
+                        } else {
+                            ReminderScheduler.cancelEveningReminder(context)
+                        }
+                    },
+                )
             },
         )
         HorizontalDivider()

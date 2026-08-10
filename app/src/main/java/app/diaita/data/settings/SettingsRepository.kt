@@ -1,24 +1,39 @@
 package app.diaita.data.settings
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 class SettingsRepository(
     private val context: Context,
 ) {
+    /**
+     * All reads go through this flow: a failed prefs-file read (per DataStore guidance,
+     * an [IOException]) degrades to defaults instead of crashing every UI collector.
+     */
+    private val prefs: Flow<Preferences> =
+        context.settingsDataStore.data.catch { error ->
+            if (error is IOException) emit(emptyPreferences()) else throw error
+        }
+
     private val openFoodFactsKey = booleanPreferencesKey("open_food_facts_enabled")
     private val seedCatalogVersionKey = intPreferencesKey("seed_catalog_version")
 
     val openFoodFactsEnabled: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[openFoodFactsKey] ?: true }
+        prefs.map { prefs -> prefs[openFoodFactsKey] ?: true }
 
     suspend fun setOpenFoodFactsEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[openFoodFactsKey] = enabled }
@@ -30,7 +45,7 @@ class SettingsRepository(
 
     /** Whether the user cares about P/F/C at all; hides the macro progress UI when off. */
     val trackMacros: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[trackMacrosKey] ?: true }
+        prefs.map { prefs -> prefs[trackMacrosKey] ?: true }
 
     suspend fun setTrackMacros(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[trackMacrosKey] = enabled }
@@ -41,7 +56,7 @@ class SettingsRepository(
 
     /** Cut-off times splitting the day into morning/day/evening; see [DayPartBoundaries]. */
     val dayPartBoundaries: Flow<DayPartBoundaries> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             DayPartBoundaries(
                 morningEndMinutes =
                     prefs[morningEndMinutesKey] ?: DayPartBoundaries.DEFAULT_MORNING_END_MINUTES,
@@ -62,7 +77,7 @@ class SettingsRepository(
 
     /** Reference calorie shares per day part; see [DayPartShares]. */
     val dayPartShares: Flow<DayPartShares> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             DayPartShares(
                 morningPercent = prefs[morningSharePercentKey] ?: DayPartShares.DEFAULT_MORNING_PERCENT,
                 dayPercent = prefs[daySharePercentKey] ?: DayPartShares.DEFAULT_DAY_PERCENT,
@@ -80,7 +95,7 @@ class SettingsRepository(
 
     /** Voice of the Home-card pace message; the original strings are the SNARKY set. */
     val coachTone: Flow<CoachTone> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             prefs[coachToneKey]?.let { stored -> CoachTone.entries.find { it.name == stored } }
                 ?: CoachTone.SNARKY
         }
@@ -93,13 +108,72 @@ class SettingsRepository(
 
     /** Display unit for body weight — storage stays in kg. */
     val weightUnit: Flow<WeightUnit> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             prefs[weightUnitKey]?.let { stored -> WeightUnit.entries.find { it.name == stored } }
                 ?: WeightUnit.KG
         }
 
     suspend fun setWeightUnit(unit: WeightUnit) {
         context.settingsDataStore.edit { prefs -> prefs[weightUnitKey] = unit.name }
+    }
+
+    // --- Goal wizard ---
+
+    private val wizardMaleKey = booleanPreferencesKey("wizard_male")
+    private val wizardAgeKey = intPreferencesKey("wizard_age")
+    private val wizardHeightCmKey = doublePreferencesKey("wizard_height_cm")
+    private val wizardWeightKgKey = doublePreferencesKey("wizard_weight_kg")
+    private val wizardWorkKey = stringPreferencesKey("wizard_work")
+    private val wizardExerciseKey = stringPreferencesKey("wizard_exercise")
+
+    /**
+     * Body stats the goal wizard was last completed with. Null until the wizard has been
+     * applied once. Used to prefill the wizard and to notice "your weight changed —
+     * recalculate?" when new weigh-ins drift from the stored value.
+     */
+    val wizardInputs: Flow<WizardInputs?> =
+        prefs.map { prefs ->
+            val age = prefs[wizardAgeKey] ?: return@map null
+            val heightCm = prefs[wizardHeightCmKey] ?: return@map null
+            val weightKg = prefs[wizardWeightKgKey] ?: return@map null
+            WizardInputs(
+                male = prefs[wizardMaleKey] ?: true,
+                age = age,
+                heightCm = heightCm,
+                weightKg = weightKg,
+                work = prefs[wizardWorkKey],
+                exercise = prefs[wizardExerciseKey],
+            )
+        }
+
+    suspend fun setWizardInputs(inputs: WizardInputs) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[wizardMaleKey] = inputs.male
+            prefs[wizardAgeKey] = inputs.age
+            prefs[wizardHeightCmKey] = inputs.heightCm
+            prefs[wizardWeightKgKey] = inputs.weightKg
+            inputs.work?.let { prefs[wizardWorkKey] = it }
+            inputs.exercise?.let { prefs[wizardExerciseKey] = it }
+        }
+    }
+
+    private val macroSplitProteinKey = intPreferencesKey("macro_split_protein")
+    private val macroSplitFatKey = intPreferencesKey("macro_split_fat")
+
+    /** Macro calorie split applied by the wizard; carbs take the remainder to 100. */
+    val macroSplit: Flow<MacroSplit> =
+        prefs.map { prefs ->
+            MacroSplit(
+                proteinPercent = prefs[macroSplitProteinKey] ?: MacroSplit.DEFAULT_PROTEIN_PERCENT,
+                fatPercent = prefs[macroSplitFatKey] ?: MacroSplit.DEFAULT_FAT_PERCENT,
+            )
+        }
+
+    suspend fun setMacroSplit(split: MacroSplit) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[macroSplitProteinKey] = split.proteinPercent
+            prefs[macroSplitFatKey] = split.fatPercent
+        }
     }
 
     // --- Notifications ---
@@ -109,7 +183,7 @@ class SettingsRepository(
 
     /** Off by default — notifications are opt-in. */
     val reminderEnabled: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[reminderEnabledKey] ?: false }
+        prefs.map { prefs -> prefs[reminderEnabledKey] ?: false }
 
     suspend fun setReminderEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[reminderEnabledKey] = enabled }
@@ -117,7 +191,7 @@ class SettingsRepository(
 
     /** Minutes of day when the "nothing logged yet" reminder fires. Default 20:00. */
     val reminderTimeMinutes: Flow<Int> =
-        context.settingsDataStore.data.map { prefs -> prefs[reminderTimeKey] ?: DEFAULT_REMINDER_MINUTES }
+        prefs.map { prefs -> prefs[reminderTimeKey] ?: DEFAULT_REMINDER_MINUTES }
 
     suspend fun setReminderTimeMinutes(minutes: Int) {
         context.settingsDataStore.edit { prefs -> prefs[reminderTimeKey] = minutes }
@@ -128,7 +202,7 @@ class SettingsRepository(
 
     /** Off by default — notifications are opt-in. */
     val weightReminderEnabled: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[weightReminderEnabledKey] ?: false }
+        prefs.map { prefs -> prefs[weightReminderEnabledKey] ?: false }
 
     suspend fun setWeightReminderEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[weightReminderEnabledKey] = enabled }
@@ -136,7 +210,7 @@ class SettingsRepository(
 
     /** Minutes of day when the "no weight logged" reminder fires. Default 09:00. */
     val weightReminderTimeMinutes: Flow<Int> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             prefs[weightReminderTimeKey] ?: DEFAULT_WEIGHT_REMINDER_MINUTES
         }
 
@@ -148,10 +222,20 @@ class SettingsRepository(
 
     /** Off by default — fires at the morning/day boundaries when that part logged nothing. */
     val dayPartRemindersEnabled: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[dayPartRemindersEnabledKey] ?: false }
+        prefs.map { prefs -> prefs[dayPartRemindersEnabledKey] ?: false }
 
     suspend fun setDayPartRemindersEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[dayPartRemindersEnabledKey] = enabled }
+    }
+
+    private val eveningReminderEnabledKey = booleanPreferencesKey("evening_reminder_enabled")
+
+    /** Off by default — the end-of-day "evening logged nothing" nudge. */
+    val eveningReminderEnabled: Flow<Boolean> =
+        prefs.map { prefs -> prefs[eveningReminderEnabledKey] ?: false }
+
+    suspend fun setEveningReminderEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs -> prefs[eveningReminderEnabledKey] = enabled }
     }
 
     // --- Appearance ---
@@ -160,7 +244,7 @@ class SettingsRepository(
     private val dynamicColorKey = booleanPreferencesKey("dynamic_color")
 
     val themeMode: Flow<ThemeMode> =
-        context.settingsDataStore.data.map { prefs ->
+        prefs.map { prefs ->
             prefs[themeModeKey]?.let { stored -> ThemeMode.entries.find { it.name == stored } }
                 ?: ThemeMode.SYSTEM
         }
@@ -171,7 +255,7 @@ class SettingsRepository(
 
     /** Material You dynamic color (Android 12+); the brand palette is used when off. */
     val dynamicColor: Flow<Boolean> =
-        context.settingsDataStore.data.map { prefs -> prefs[dynamicColorKey] ?: true }
+        prefs.map { prefs -> prefs[dynamicColorKey] ?: true }
 
     suspend fun setDynamicColor(enabled: Boolean) {
         context.settingsDataStore.edit { prefs -> prefs[dynamicColorKey] = enabled }
@@ -183,7 +267,7 @@ class SettingsRepository(
 
     /** How many recently logged foods the quick-access chip row shows. */
     val recentFoodsCount: Flow<Int> =
-        context.settingsDataStore.data.map { prefs -> prefs[recentFoodsCountKey] ?: DEFAULT_RECENT_FOODS_COUNT }
+        prefs.map { prefs -> prefs[recentFoodsCountKey] ?: DEFAULT_RECENT_FOODS_COUNT }
 
     suspend fun setRecentFoodsCount(count: Int) {
         context.settingsDataStore.edit { prefs -> prefs[recentFoodsCountKey] = count }
@@ -193,17 +277,39 @@ class SettingsRepository(
 
     /** Days raw diary rows are kept before folding into monthly averages. */
     val retentionDays: Flow<Int> =
-        context.settingsDataStore.data.map { prefs -> prefs[retentionDaysKey] ?: DEFAULT_RETENTION_DAYS }
+        prefs.map { prefs -> prefs[retentionDaysKey] ?: DEFAULT_RETENTION_DAYS }
 
     suspend fun setRetentionDays(days: Int) {
         context.settingsDataStore.edit { prefs -> prefs[retentionDaysKey] = days }
+    }
+
+    private val autoBackupUriKey = stringPreferencesKey("auto_backup_uri")
+
+    /** SAF tree URI the weekly automatic backup writes into; null = auto-backup off. */
+    val autoBackupUri: Flow<String?> =
+        prefs.map { prefs -> prefs[autoBackupUriKey] }
+
+    suspend fun setAutoBackupUri(uri: String?) {
+        context.settingsDataStore.edit { prefs ->
+            if (uri == null) prefs.remove(autoBackupUriKey) else prefs[autoBackupUriKey] = uri
+        }
+    }
+
+    private val lastBackupAtKey = longPreferencesKey("last_backup_at")
+
+    /** When a database backup was last exported; null = never. Drives the "back up your data" nudge. */
+    val lastBackupAt: Flow<Long?> =
+        prefs.map { prefs -> prefs[lastBackupAtKey] }
+
+    suspend fun setLastBackupAt(timestamp: Long) {
+        context.settingsDataStore.edit { prefs -> prefs[lastBackupAtKey] = timestamp }
     }
 
     // --- Internal bookkeeping ---
 
     /** Last seed-catalog version applied to the database; 0 means never synced. */
     val seedCatalogVersion: Flow<Int> =
-        context.settingsDataStore.data.map { prefs -> prefs[seedCatalogVersionKey] ?: 0 }
+        prefs.map { prefs -> prefs[seedCatalogVersionKey] ?: 0 }
 
     suspend fun setSeedCatalogVersion(version: Int) {
         context.settingsDataStore.edit { prefs -> prefs[seedCatalogVersionKey] = version }

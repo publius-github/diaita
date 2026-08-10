@@ -37,9 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.backup.AutoBackupWorker
 import app.diaita.data.backup.RestoreOutcome
+import app.diaita.data.repository.ImportOutcome
 import app.diaita.ui.AppViewModelProvider
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -56,6 +59,8 @@ fun BackupScreen(
     val scope = rememberCoroutineScope()
     var working by remember { mutableStateOf(false) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    val lastBackupAt by viewModel.lastBackupAt.collectAsStateWithLifecycle()
+    val autoBackupUri by viewModel.autoBackupUri.collectAsStateWithLifecycle()
 
     val exportedMessage = stringResource(R.string.diary_exported)
     val backupExportedMessage = stringResource(R.string.backup_exported)
@@ -71,10 +76,47 @@ fun BackupScreen(
             if (uri == null) return@rememberLauncherForActivityResult
             scope.launch {
                 working = true
-                val csv = viewModel.exportDiaryCsv()
+                val csv = viewModel.exportAllCsv()
                 context.contentResolver.openOutputStream(uri)?.use { it.write(csv.toByteArray()) }
                 working = false
                 snackbarHostState.showSnackbar(exportedMessage)
+            }
+        }
+
+    val csvImportLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            scope.launch {
+                working = true
+                val content =
+                    runCatching {
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            input.readBytes().toString(Charsets.UTF_8)
+                        }
+                    }.getOrNull()
+                val outcome = content?.let { viewModel.importCsv(it) }
+                working = false
+                when (outcome) {
+                    is ImportOutcome.Success ->
+                        snackbarHostState.showSnackbar(
+                            context.getString(
+                                R.string.import_summary,
+                                outcome.summary.diaryRowsInserted,
+                                outcome.summary.foodsCreated,
+                                outcome.summary.weightsUpserted,
+                                outcome.summary.presetsCreated,
+                            ),
+                        )
+                    is ImportOutcome.NotADiaitaExport ->
+                        snackbarHostState.showSnackbar(context.getString(R.string.import_not_diaita))
+                    is ImportOutcome.Malformed ->
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.import_malformed, outcome.line),
+                        )
+                    null -> snackbarHostState.showSnackbar(context.getString(R.string.import_read_failed))
+                }
             }
         }
 
@@ -96,6 +138,20 @@ fun BackupScreen(
             ActivityResultContracts.OpenDocument(),
         ) { uri ->
             if (uri != null) pendingRestoreUri = uri
+        }
+
+    val autoBackupFolderLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocumentTree(),
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            // Keep the folder grant across reboots — the weekly worker needs it long-term.
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+            viewModel.setAutoBackupUri(uri.toString())
+            AutoBackupWorker.schedule(context)
         }
 
     pendingRestoreUri?.let { uri ->
@@ -165,6 +221,32 @@ fun BackupScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            // The "last backed up" nag: quiet fact when recent, warning color once stale.
+            val lastBackupText =
+                lastBackupAt?.let { at ->
+                    stringResource(
+                        R.string.last_backup_at,
+                        java.time.Instant
+                            .ofEpochMilli(at)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                            .toString(),
+                    )
+                } ?: stringResource(R.string.last_backup_never)
+            val backupStale =
+                lastBackupAt == null ||
+                    System.currentTimeMillis() - lastBackupAt!! > BACKUP_NAG_MILLIS
+            Text(
+                lastBackupText,
+                style = MaterialTheme.typography.bodySmall,
+                color =
+                    if (backupStale) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+            )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = {
@@ -183,6 +265,35 @@ fun BackupScreen(
             ) {
                 Text(stringResource(R.string.backup_restore))
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                stringResource(
+                    if (autoBackupUri != null) R.string.auto_backup_on else R.string.auto_backup_hint,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            if (autoBackupUri == null) {
+                OutlinedButton(
+                    onClick = { autoBackupFolderLauncher.launch(null) },
+                    enabled = !working,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.auto_backup_enable))
+                }
+            } else {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.setAutoBackupUri(null)
+                        AutoBackupWorker.cancel(context)
+                    },
+                    enabled = !working,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.auto_backup_disable))
+                }
+            }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 stringResource(R.string.backup_csv_hint),
@@ -191,15 +302,26 @@ fun BackupScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedButton(
-                onClick = { csvLauncher.launch("calorie_counter_export.csv") },
+                onClick = { csvLauncher.launch("diaita-export-${LocalDate.now()}.csv") },
                 enabled = !working,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.export_csv))
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*")) },
+                enabled = !working,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.import_csv))
+            }
         }
     }
 }
+
+/** A week without a backup turns the "last backed up" line into a warning. */
+private const val BACKUP_NAG_MILLIS = 7L * 24 * 60 * 60 * 1000
 
 /** Relaunches the app in a fresh process so Room reopens the restored database file. */
 private fun restartApp(context: Context) {

@@ -1,6 +1,7 @@
 package app.diaita.data.db.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,17 +15,24 @@ interface FoodItemDao {
     @Insert
     suspend fun insert(food: FoodItem): Long
 
+    /** Race-safe cache insert: the unique offId index turns a concurrent duplicate into a no-op (-1). */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOrIgnore(food: FoodItem): Long
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(foods: List<FoodItem>)
 
     @Update
     suspend fun update(food: FoodItem)
 
+    @Delete
+    suspend fun delete(food: FoodItem)
+
     /**
-     * Name search ranked by how often (and, as a tiebreak, how recently) the food was actually
-     * logged since [since] — the staples someone eats every week surface above the alphabet.
-     * Never-logged foods sort alphabetically below them. QUICK rows are one-off calorie logs,
-     * not catalog entries, so they never appear.
+     * Name search ranked by pinned favorites first, then by how often (and, as a tiebreak,
+     * how recently) the food was actually logged since [since] — the staples someone eats
+     * every week surface above the alphabet. Never-logged foods sort alphabetically below
+     * them. QUICK rows are one-off calorie logs, not catalog entries, so they never appear.
      */
     @Query(
         """
@@ -32,7 +40,7 @@ interface FoodItemDao {
         LEFT JOIN diary_entries d ON d.foodItemId = f.id AND d.loggedAt >= :since
         WHERE f.name LIKE '%' || :query || '%' AND f.source != 'QUICK'
         GROUP BY f.id
-        ORDER BY COUNT(d.id) DESC, MAX(d.loggedAt) DESC, f.name ASC
+        ORDER BY f.isFavorite DESC, COUNT(d.id) DESC, MAX(d.loggedAt) DESC, f.name ASC
         LIMIT 50
         """,
     )
@@ -40,6 +48,15 @@ interface FoodItemDao {
         query: String,
         since: Long,
     ): Flow<List<FoodItem>>
+
+    @Query("SELECT * FROM food_items WHERE isFavorite = 1 AND source != 'QUICK' ORDER BY name ASC")
+    fun favorites(): Flow<List<FoodItem>>
+
+    @Query("UPDATE food_items SET isFavorite = :favorite WHERE id = :id")
+    suspend fun setFavorite(
+        id: Long,
+        favorite: Boolean,
+    )
 
     @Query("SELECT * FROM food_items")
     suspend fun getAll(): List<FoodItem>
@@ -58,4 +75,34 @@ interface FoodItemDao {
 
     @Query("SELECT * FROM food_items WHERE source = :source")
     suspend fun getBySource(source: FoodSource): List<FoodItem>
+
+    /** How many diary entries and preset items point at this food — 0 means it is safe to delete. */
+    @Query(
+        """
+        SELECT (SELECT COUNT(*) FROM diary_entries WHERE foodItemId = :id)
+             + (SELECT COUNT(*) FROM meal_preset_items WHERE foodItemId = :id)
+        """,
+    )
+    suspend fun referenceCount(id: Long): Int
+
+    /** Removes QUICK one-off rows whose diary entries are gone (deleted or folded by retention). */
+    @Query(
+        """
+        DELETE FROM food_items WHERE source = 'QUICK'
+            AND id NOT IN (SELECT foodItemId FROM diary_entries)
+            AND id NOT IN (SELECT foodItemId FROM meal_preset_items)
+        """,
+    )
+    suspend fun pruneOrphanQuickFoods()
+
+    /** Removes OFF cache rows never logged, never pinned, never edited, and older than [createdBefore]. */
+    @Query(
+        """
+        DELETE FROM food_items WHERE source = 'OPENFOODFACTS'
+            AND isFavorite = 0 AND editedByUser = 0 AND createdAt < :createdBefore
+            AND id NOT IN (SELECT foodItemId FROM diary_entries)
+            AND id NOT IN (SELECT foodItemId FROM meal_preset_items)
+        """,
+    )
+    suspend fun pruneStaleOffFoods(createdBefore: Long)
 }

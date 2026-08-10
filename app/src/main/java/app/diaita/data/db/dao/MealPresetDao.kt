@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
@@ -30,6 +31,13 @@ interface MealPresetDao {
 
     @Insert
     suspend fun insertItem(item: MealPresetItem): Long
+
+    /** Undo-restore path: re-inserting the same primary key twice must be a no-op, not a crash. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertPresetOrIgnore(preset: MealPreset): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertItemOrIgnore(item: MealPresetItem): Long
 
     @Delete
     suspend fun deletePreset(preset: MealPreset)

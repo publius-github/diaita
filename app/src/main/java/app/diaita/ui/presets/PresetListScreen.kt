@@ -2,11 +2,8 @@ package app.diaita.ui.presets
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -145,14 +142,14 @@ private fun PresetCard(
         onClick = onClick,
         modifier = modifier,
     ) {
-        IconButton(onClick = onLog, modifier = Modifier.size(36.dp)) {
+        // Default IconButton size keeps the Material-minimum 48dp touch target (a11y).
+        IconButton(onClick = onLog) {
             Icon(
                 Icons.Filled.PlayArrow,
                 contentDescription = stringResource(R.string.log_preset),
             )
         }
-        Spacer(modifier = Modifier.width(4.dp))
-        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+        IconButton(onClick = onDelete) {
             Icon(
                 Icons.Filled.Delete,
                 contentDescription = stringResource(R.string.delete_preset),

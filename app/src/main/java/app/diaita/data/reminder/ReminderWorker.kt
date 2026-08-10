@@ -18,6 +18,7 @@ import app.diaita.R
 import app.diaita.ui.diary.DayPart
 import app.diaita.ui.diary.dayPartOf
 import app.diaita.util.DateUtils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 
 /**
@@ -31,42 +32,52 @@ class ReminderWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
-        val container = (applicationContext as CalorieCounterApplication).container
-        val today = DateUtils.today()
-        when (inputData.getString(KEY_TYPE)) {
-            TYPE_WEIGHT -> {
-                val todayWeights = container.database.weightEntryDao().forDateOnce(today)
-                if (todayWeights.isEmpty()) {
-                    showNotification(R.string.weight_reminder_text, WEIGHT_NOTIFICATION_ID)
+        val container =
+            (applicationContext as? CalorieCounterApplication)?.container
+                ?: return Result.failure()
+        return try {
+            val today = DateUtils.today()
+            when (inputData.getString(KEY_TYPE)) {
+                TYPE_WEIGHT -> {
+                    if (container.weightRepository.forDate(today) == null) {
+                        showNotification(R.string.weight_reminder_text, WEIGHT_NOTIFICATION_ID)
+                    }
+                }
+                TYPE_DAY_PART_MORNING -> checkDayPart(container, today, DayPart.MORNING)
+                TYPE_DAY_PART_DAY -> checkDayPart(container, today, DayPart.DAY)
+                TYPE_DAY_PART_EVENING -> checkDayPart(container, today, DayPart.EVENING)
+                else -> {
+                    if (container.diaryRepository.entriesForDateOnce(today).isEmpty()) {
+                        showNotification(R.string.reminder_text, FOOD_NOTIFICATION_ID)
+                    }
                 }
             }
-            TYPE_DAY_PART_MORNING -> checkDayPart(container, today, DayPart.MORNING)
-            TYPE_DAY_PART_DAY -> checkDayPart(container, today, DayPart.DAY)
-            else -> {
-                val todayEntries = container.database.diaryEntryDao().entriesForDateOnce(today)
-                if (todayEntries.isEmpty()) {
-                    showNotification(R.string.reminder_text, FOOD_NOTIFICATION_ID)
-                }
-            }
+            Result.success()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A transient DB/read failure shouldn't silently eat the day's nudge.
+            Result.retry()
         }
-        return Result.success()
     }
 
-    /** Nudges when the just-ended [part] of the day has no logged entries at all. */
+    /** Nudges when the just-ended (or, for evening, still-running) [part] has no logged entries. */
     private suspend fun checkDayPart(
         container: AppContainer,
         today: String,
         part: DayPart,
     ) {
         val boundaries = container.settingsRepository.dayPartBoundaries.first()
-        val entries = container.database.diaryEntryDao().entriesForDateOnce(today)
+        val entries = container.diaryRepository.entriesForDateOnce(today)
         val partIsEmpty = entries.none { dayPartOf(it, boundaries) == part }
         if (partIsEmpty) {
             when (part) {
                 DayPart.MORNING ->
                     showNotification(R.string.day_part_reminder_morning_text, DAY_PART_MORNING_NOTIFICATION_ID)
-                else ->
+                DayPart.DAY ->
                     showNotification(R.string.day_part_reminder_day_text, DAY_PART_DAY_NOTIFICATION_ID)
+                DayPart.EVENING ->
+                    showNotification(R.string.day_part_reminder_evening_text, DAY_PART_EVENING_NOTIFICATION_ID)
             }
         }
     }
@@ -126,9 +137,11 @@ class ReminderWorker(
         const val TYPE_WEIGHT = "weight"
         const val TYPE_DAY_PART_MORNING = "day_part_morning"
         const val TYPE_DAY_PART_DAY = "day_part_day"
+        const val TYPE_DAY_PART_EVENING = "day_part_evening"
         const val FOOD_NOTIFICATION_ID = 1
         const val WEIGHT_NOTIFICATION_ID = 2
         const val DAY_PART_MORNING_NOTIFICATION_ID = 3
         const val DAY_PART_DAY_NOTIFICATION_ID = 4
+        const val DAY_PART_EVENING_NOTIFICATION_ID = 5
     }
 }

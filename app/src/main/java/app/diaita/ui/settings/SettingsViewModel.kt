@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.diaita.data.backup.DatabaseBackupManager
 import app.diaita.data.backup.RestoreOutcome
 import app.diaita.data.repository.ExportRepository
+import app.diaita.data.repository.ImportOutcome
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.DayPartShares
@@ -166,6 +167,14 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setDayPartRemindersEnabled(enabled) }
     }
 
+    val eveningReminderEnabled: StateFlow<Boolean> =
+        settingsRepository.eveningReminderEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setEveningReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setEveningReminderEnabled(enabled) }
+    }
+
     // --- Data ---
 
     val recentFoodsCount: StateFlow<Int> =
@@ -192,9 +201,26 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setRetentionDays(days) }
     }
 
-    suspend fun exportDiaryCsv(): String = exportRepository.exportDiaryCsv()
+    val lastBackupAt: StateFlow<Long?> =
+        settingsRepository.lastBackupAt
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    suspend fun exportDatabase(uri: Uri): Boolean = runCatching { backupManager.exportTo(uri) }.isSuccess
+    val autoBackupUri: StateFlow<String?> =
+        settingsRepository.autoBackupUri
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setAutoBackupUri(uri: String?) {
+        viewModelScope.launch { settingsRepository.setAutoBackupUri(uri) }
+    }
+
+    suspend fun exportAllCsv(): String = exportRepository.exportAllCsv()
+
+    suspend fun importCsv(content: String): ImportOutcome = exportRepository.importCsv(content)
+
+    suspend fun exportDatabase(uri: Uri): Boolean =
+        runCatching { backupManager.exportTo(uri) }
+            .onSuccess { settingsRepository.setLastBackupAt(System.currentTimeMillis()) }
+            .isSuccess
 
     suspend fun restoreDatabase(uri: Uri): RestoreOutcome = backupManager.restoreFrom(uri)
 

@@ -74,11 +74,14 @@ class PresetRepository(
 
     suspend fun deletePreset(preset: MealPreset) = mealPresetDao.deletePreset(preset)
 
-    /** Re-inserts a previously deleted preset and all its items as-is (same ids) — used to support delete-undo. */
+    /**
+     * Re-inserts a previously deleted preset and all its items as-is (same ids) — used to
+     * support delete-undo. Insert-or-ignore keeps a double "Undo" from throwing on reused ids.
+     */
     suspend fun restorePreset(presetWithItems: PresetWithItems) {
         database.withTransaction {
-            mealPresetDao.insertPreset(presetWithItems.preset)
-            presetWithItems.items.forEach { mealPresetDao.insertItem(it) }
+            mealPresetDao.insertPresetOrIgnore(presetWithItems.preset)
+            presetWithItems.items.forEach { mealPresetDao.insertItemOrIgnore(it) }
         }
     }
 
