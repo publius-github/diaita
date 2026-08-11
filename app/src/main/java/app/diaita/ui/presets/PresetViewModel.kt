@@ -145,7 +145,10 @@ class PresetViewModel(
         }
     }
 
-    fun onNameChanged(name: String) = _editState.update { it.copy(name = name, hasError = false) }
+    // Capped so preset names always fit a list row on one line (titles ellipsize, but a name
+    // that never shows fully is a naming error better caught while typing).
+    fun onNameChanged(name: String) =
+        _editState.update { it.copy(name = name.take(MAX_PRESET_NAME_LENGTH), hasError = false) }
 
     fun onMealSlotChanged(mealSlot: MealSlot) = _editState.update { it.copy(mealSlot = mealSlot) }
 
@@ -230,4 +233,8 @@ class PresetViewModel(
     }
 
     fun consumeSaved() = _editState.update { it.copy(saved = false) }
+
+    companion object {
+        const val MAX_PRESET_NAME_LENGTH = 30
+    }
 }

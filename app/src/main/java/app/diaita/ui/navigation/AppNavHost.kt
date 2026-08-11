@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -74,6 +76,13 @@ private const val NAV_FADE_MILLIS = 200
 /** Compact bottom-bar height (excl. system inset) replacing M3's default 80dp. */
 private val COMPACT_NAV_BAR_HEIGHT = 64.dp
 
+/**
+ * Item content (icon + indicator pill + label) measures 52dp, so a 64dp bar centers it with
+ * 6dp of slack above and below. Reserving 12dp at the top doubles the visible gap above the
+ * selection pill and drops the content those 6dp lower, flush with the bar's bottom edge.
+ */
+private val NAV_BAR_CONTENT_TOP_GAP = 12.dp
+
 @Composable
 fun AppNavHost(navController: NavHostController = rememberNavController()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -86,7 +95,11 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 // icon + label comfortably. The system nav inset is added back on top so the
                 // items themselves sit lower, right above the gesture/button area.
                 val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                NavigationBar(modifier = Modifier.height(COMPACT_NAV_BAR_HEIGHT + bottomInset)) {
+                NavigationBar(
+                    modifier = Modifier.height(COMPACT_NAV_BAR_HEIGHT + bottomInset),
+                    windowInsets =
+                        NavigationBarDefaults.windowInsets.add(WindowInsets(top = NAV_BAR_CONTENT_TOP_GAP)),
+                ) {
                     bottomNavItems.forEach { item ->
                         val label = stringResource(item.labelRes)
                         NavigationBarItem(
