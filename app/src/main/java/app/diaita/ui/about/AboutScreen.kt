@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -87,7 +88,7 @@ private fun AboutContent(
                 .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Image(
             painter = painterResource(R.drawable.ic_launcher_foreground),
             contentDescription = null,
@@ -109,6 +110,13 @@ private fun AboutContent(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
+            stringResource(R.string.about_etymology),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
             stringResource(R.string.about_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
@@ -124,21 +132,24 @@ private fun AboutContent(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
         // Attribution formally required by the Open Database License OFF data ships under.
+        // Reference sections read as documentation, so they align left unlike the intro.
         Text(
             stringResource(R.string.about_data_sources),
             style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             stringResource(R.string.about_off_attribution),
             style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             stringResource(R.string.about_oss_title),
             style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
         OSS_LIBRARIES.forEach { library ->
@@ -146,6 +157,7 @@ private fun AboutContent(
                 library,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

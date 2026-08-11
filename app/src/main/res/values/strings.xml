@@ -21,6 +21,7 @@
     <string name="nav_about">About</string>
     <string name="settings_about_desc">App version and info</string>
     <string name="about_version">Version %1$s</string>
+    <string name="about_etymology">Diaita (δίαιτα, ancient Greek) means “a way of living” — it’s where the word “diet” comes from. The Greeks meant your whole lifestyle, not two weeks of celery and regret. So let’s make it a way of living.</string>
     <string name="about_description">Diaita is a simple calorie, macro and weight tracker built for everyday use — log meals in seconds, reuse presets and keep an eye on your pace through the day.</string>
     <string name="about_privacy">All your data stays on this device. No accounts, no cloud, no tracking.</string>
 
@@ -341,7 +342,7 @@
     <!-- History -->
     <string name="history_title_days">Last %1$d days</string>
     <string name="range_days_chip">%1$d days</string>
-    <string name="range_year_chip">Year</string>
+    <string name="range_days_chip_short">%1$dd</string>
     <string name="history_empty">No history yet — log some food to see it here.</string>
     <string name="goal_line_label">Goal: %1$d kcal</string>
     <string name="maintenance_line_label">Maintenance: %1$d kcal</string>

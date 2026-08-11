@@ -21,6 +21,7 @@
     <string name="nav_about">О приложении</string>
     <string name="settings_about_desc">Версия и информация о приложении</string>
     <string name="about_version">Версия %1$s</string>
+    <string name="about_etymology">Diaita (δίαιτα, др.-греч.) — «образ жизни»; отсюда и слово «диета». Греки имели в виду весь уклад жизни, а не две недели сельдерея и сожалений. Так что пусть это будет образ жизни.</string>
     <string name="about_description">Diaita — простой дневник калорий, макронутриентов и веса на каждый день: записывайте еду за секунды, используйте шаблоны и следите за темпом в течение дня.</string>
     <string name="about_privacy">Все данные остаются на этом устройстве. Без аккаунтов, облака и слежки.</string>
 
@@ -341,7 +342,7 @@
     <!-- History -->
     <string name="history_title_days">Последние %1$d дн.</string>
     <string name="range_days_chip">%1$d дней</string>
-    <string name="range_year_chip">Год</string>
+    <string name="range_days_chip_short">%1$dд</string>
     <string name="history_empty">Истории пока нет — запишите еду, и она появится здесь.</string>
     <string name="goal_line_label">Цель: %1$d ккал</string>
     <string name="maintenance_line_label">Поддержание: %1$d ккал</string>

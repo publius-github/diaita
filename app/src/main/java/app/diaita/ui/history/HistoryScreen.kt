@@ -101,18 +101,21 @@ fun HistoryScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             HistoryViewModel.RANGE_OPTIONS.forEach { rangeDays ->
+                // Five chips leave no room for "%d days" labels (they wrapped to two
+                // lines); every chip uses the uniform "7d…365d" form, TalkBack keeps the words.
+                val fullLabel = stringResource(R.string.range_days_chip, rangeDays)
                 FilterChip(
                     selected = uiState.rangeDays == rangeDays,
                     onClick = { viewModel.setRangeDays(rangeDays) },
                     label = {
                         Text(
-                            if (rangeDays > HistoryViewModel.MAX_DAILY_BARS_RANGE) {
-                                stringResource(R.string.range_year_chip)
-                            } else {
-                                stringResource(R.string.range_days_chip, rangeDays)
-                            },
+                            stringResource(R.string.range_days_chip_short, rangeDays),
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .semantics { contentDescription = fullLabel },
                         )
                     },
                     modifier = Modifier.weight(1f),
@@ -228,6 +231,9 @@ fun HistoryScreen(
                 weightUnit = uiState.weightUnit,
                 windowStart = windowStart,
                 totalDays = uiState.rangeDays,
+                // In bucket space one calorie-bar step is bucketDays real days, so this
+                // lands the weight labels on exactly the dates the bars above label.
+                labelStepDays = xLabelStep(uiState.days.size) * uiState.bucketDays,
                 // The weekly view's bar indices live in bucket space, so the day-slot
                 // highlight can't line up — taps still select the containing week.
                 selectedIndex = uiState.selectedIndex.takeIf { uiState.bucketDays == 1 },
@@ -319,24 +325,21 @@ fun HistoryScreen(
 private val AXIS_LEFT_PAD = 42.dp
 private val AXIS_BOTTOM_PAD = 18.dp
 
-/** Label cadence per range so the date strip never overlaps itself. */
-private fun labelEvery(totalDays: Int): Int =
-    when {
-        totalDays <= 7 -> 1
-        totalDays <= 14 -> 2
-        totalDays <= 31 -> 5
-        totalDays <= 92 -> 15
-        else -> 60
-    }
+/**
+ * At most this many date labels on the x-axis — one rule for every range and both charts,
+ * so the cadence stops feeling arbitrary. 7 labels of "28.12" at 10sp still have clear
+ * air between them at the narrowest chart width.
+ */
+private const val MAX_X_LABELS = 7
+
+/** Items (days or weekly buckets) per date label so the strip never exceeds [MAX_X_LABELS]. */
+private fun xLabelStep(itemCount: Int): Int = ceil(itemCount / MAX_X_LABELS.toFloat()).toInt().coerceAtLeast(1)
 
 /** Weight point value labels overlap beyond ~2 weeks, so longer views keep only the first and last. */
 private fun showAllPointLabels(totalDays: Int): Boolean = totalDays <= 14
 
 /** TalkBack can't tap a canvas bar, so day selection is exposed as custom actions (short ranges). */
 private const val MAX_A11Y_DAY_ACTIONS = 31
-
-/** Weekly bars get a date label every 4 weeks — labelEvery() is tuned for day counts. */
-private const val WEEKLY_LABEL_STEP = 4
 
 @Composable
 private fun CalorieBarChart(
@@ -366,7 +369,7 @@ private fun CalorieBarChart(
             ) * 1.15
         ).coerceAtLeast(100.0)
     val gridStep = calorieGridStep(chartMax)
-    val labelStep = if (bucketDays > 1) WEEKLY_LABEL_STEP else labelEvery(days.size)
+    val labelStep = xLabelStep(days.size)
     val chartDescription =
         stringResource(
             if (bucketDays > 1) R.string.chart_calories_weeks_a11y else R.string.chart_calories_a11y,
@@ -536,6 +539,8 @@ private fun WeightLineChart(
     weightUnit: WeightUnit,
     windowStart: LocalDate,
     totalDays: Int,
+    /** Days between date labels — supplied by the caller so both charts label the same dates. */
+    labelStepDays: Int,
     selectedIndex: Int?,
     onDayTap: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -545,7 +550,6 @@ private fun WeightLineChart(
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val selectionColor = MaterialTheme.colorScheme.tertiary
     val labelTextSizePx = with(LocalDensity.current) { 10.sp.toPx() }
-    val labelStep = labelEvery(totalDays)
     val chartDescription =
         stringResource(
             R.string.chart_weight_a11y,
@@ -689,7 +693,7 @@ private fun WeightLineChart(
         )
 
         // Date labels — same timeline and cadence as the calorie chart above.
-        for (index in 0 until totalDays step labelStep) {
+        for (index in 0 until totalDays step labelStepDays) {
             drawContext.canvas.nativeCanvas.drawText(
                 windowStart.plusDays(index.toLong()).format(DATE_LABEL_FORMATTER),
                 leftPad + index * slot + slot / 2f,
