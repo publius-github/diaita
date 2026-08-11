@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -163,24 +162,28 @@ fun HistoryScreen(
                                 day.calories.toInt(),
                             )
                         }
-                    // The zone is also spelled out in words — color alone must never be the
-                    // only carrier of "over goal" (a11y and color-blind users).
-                    val zoneSuffix =
+                    // On screen the zone is carried by color only (the bar above already shows
+                    // it); the spelled-out zone stays in the semantics for TalkBack users, for
+                    // whom color is not perceivable at all.
+                    val zoneWord =
                         when (day.zone) {
                             CalorieZone.OFF_TRACK -> stringResource(R.string.zone_off_track)
                             CalorieZone.BETWEEN -> stringResource(R.string.zone_between)
                             CalorieZone.ON_TRACK -> null
                         }
                     Text(
-                        listOfNotNull(baseInfo, zoneSuffix).joinToString(" · "),
+                        baseInfo,
                         style = MaterialTheme.typography.bodyMedium,
                         color =
                             when (day.zone) {
                                 CalorieZone.OFF_TRACK -> MaterialTheme.colorScheme.error
                                 CalorieZone.BETWEEN -> MaterialTheme.colorScheme.tertiary
-                                CalorieZone.ON_TRACK -> Color.Unspecified
+                                CalorieZone.ON_TRACK -> MaterialTheme.colorScheme.primary
                             },
-                        modifier = Modifier.weight(1f),
+                        modifier =
+                            Modifier.weight(1f).semantics {
+                                zoneWord?.let { contentDescription = "$baseInfo · $it" }
+                            },
                     )
                     TextButton(onClick = { onViewDay(day.date) }) {
                         Text(stringResource(R.string.view_day))

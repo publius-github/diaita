@@ -3,7 +3,11 @@ package app.diaita.ui.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -20,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -66,6 +71,9 @@ private const val DIARY_JUMP_TO_TODAY_KEY = "diaryJumpToToday"
 /** Screen-switch cross-fade duration; NavHost's 700ms default reads as lag. */
 private const val NAV_FADE_MILLIS = 200
 
+/** Compact bottom-bar height (excl. system inset) replacing M3's default 80dp. */
+private val COMPACT_NAV_BAR_HEIGHT = 64.dp
+
 @Composable
 fun AppNavHost(navController: NavHostController = rememberNavController()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -74,7 +82,11 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
     Scaffold(
         bottomBar = {
             if (bottomNavItems.any { it.screen.route == currentRoute }) {
-                NavigationBar {
+                // M3's default 80dp bar reads as dead space above the icons; 64dp still fits
+                // icon + label comfortably. The system nav inset is added back on top so the
+                // items themselves sit lower, right above the gesture/button area.
+                val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                NavigationBar(modifier = Modifier.height(COMPACT_NAV_BAR_HEIGHT + bottomInset)) {
                     bottomNavItems.forEach { item ->
                         val label = stringResource(item.labelRes)
                         NavigationBarItem(

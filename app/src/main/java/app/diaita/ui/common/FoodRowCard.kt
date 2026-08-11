@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.diaita.R
 
 /**
@@ -41,18 +42,19 @@ fun CompactRowCard(
             modifier.fillMaxWidth()
         }
 
-    // Compact row: the default 48dp IconButton touch target plus uniform 12dp padding used
-    // to inflate every entry to ~72dp; trimming both fits noticeably more rows per screen.
+    // Compact row: trimmed vertical padding fits noticeably more rows per screen, and the
+    // title's line height is pulled down from bodyLarge's default 24sp so wrapped titles
+    // keep the same 4sp leading as the bodySmall subtitle instead of visibly looser lines.
     Card(modifier = cardModifier) {
         Row(
             modifier =
                 Modifier
-                    .padding(horizontal = 12.dp, vertical = 9.dp)
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
                     .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
+                Text(title, style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 20.sp))
                 Text(subtitle, style = MaterialTheme.typography.bodySmall)
             }
             trailing?.invoke(this)
