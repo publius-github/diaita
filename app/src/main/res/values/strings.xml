@@ -322,20 +322,32 @@
     <string name="settings_recent_foods">Recent foods in search</string>
     <string name="settings_recent_foods_desc">How many recently logged foods show as quick chips</string>
     <string name="settings_retention">Keep detailed history</string>
-    <string name="settings_retention_desc">Older entries are folded into monthly averages</string>
+    <string name="settings_retention_desc">Entries beyond this period are folded into monthly averages</string>
     <string name="retention_3_months">3 months</string>
     <string name="retention_6_months">6 months</string>
     <string name="retention_1_year">1 year</string>
     <string name="retention_2_years">2 years</string>
+    <string name="retention_forever">Forever</string>
+    <string name="retention_reduce_warning">Diary entries older than the selected period (%1$s) will be folded into monthly averages and deleted. This cannot be undone.</string>
+    <string name="retention_reduce_confirm">Fold older entries</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to %1$s</string>
+    <string name="onboarding_welcome_body">A calorie, macro and weight tracker that works fully offline — no account, no cloud, your data stays on this device.</string>
+    <string name="onboarding_units_label">Weight units</string>
+    <string name="onboarding_set_goal">Set up my goal</string>
+    <string name="onboarding_skip">Skip for now</string>
 
     <!-- History -->
     <string name="history_title_days">Last %1$d days</string>
     <string name="range_days_chip">%1$d days</string>
+    <string name="range_year_chip">Year</string>
     <string name="history_empty">No history yet — log some food to see it here.</string>
     <string name="goal_line_label">Goal: %1$d kcal</string>
     <string name="maintenance_line_label">Maintenance: %1$d kcal</string>
     <string name="selected_day_info">%1$s — %2$d kcal</string>
     <string name="selected_day_info_with_weight">%1$s — %2$d kcal · weight %3$s %4$s</string>
+    <string name="selected_week_info">Week of %1$s — avg %2$d kcal/day</string>
     <string name="view_day">View day →</string>
     <string name="weight_title">Weight</string>
     <string name="log_weight">Log weight</string>
@@ -349,6 +361,7 @@
     <string name="weight_error">Enter a valid weight</string>
     <string name="monthly_averages">Monthly averages</string>
     <string name="chart_calories_a11y">Calorie bar chart for the last %1$d days, average %2$d kcal per day</string>
+    <string name="chart_calories_weeks_a11y">Calorie bar chart for the last %1$d weeks, average %2$d kcal per day</string>
     <string name="chart_weight_a11y">Weight chart, latest %1$s %2$s</string>
     <string name="monthly_avg_row">%1$s — avg %2$d kcal/day</string>
 

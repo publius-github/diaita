@@ -227,6 +227,6 @@ class SettingsViewModel(
     companion object {
         const val MIN_DAY_PART_GAP_MINUTES = 60
         val RECENT_FOODS_RANGE = 5..20
-        val RETENTION_OPTIONS_DAYS = listOf(90, 180, 365, 730)
+        val RETENTION_OPTIONS_DAYS = listOf(90, 180, 365, 730, SettingsRepository.RETENTION_FOREVER)
     }
 }

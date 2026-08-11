@@ -275,7 +275,11 @@ class SettingsRepository(
 
     private val retentionDaysKey = intPreferencesKey("retention_days")
 
-    /** Days raw diary rows are kept before folding into monthly averages. */
+    /**
+     * Days raw diary rows are kept before folding into monthly averages.
+     * [RETENTION_FOREVER] disables folding entirely — the default, so full history is
+     * only ever compacted by an explicit user choice.
+     */
     val retentionDays: Flow<Int> =
         prefs.map { prefs -> prefs[retentionDaysKey] ?: DEFAULT_RETENTION_DAYS }
 
@@ -307,6 +311,19 @@ class SettingsRepository(
 
     // --- Internal bookkeeping ---
 
+    private val onboardingDoneKey = booleanPreferencesKey("onboarding_done")
+
+    /**
+     * Whether the first-run onboarding was completed, skipped, or ruled out (existing
+     * data found). Once true it never resets — onboarding shows at most once per install.
+     */
+    val onboardingDone: Flow<Boolean> =
+        prefs.map { prefs -> prefs[onboardingDoneKey] ?: false }
+
+    suspend fun setOnboardingDone() {
+        context.settingsDataStore.edit { prefs -> prefs[onboardingDoneKey] = true }
+    }
+
     /** Last seed-catalog version applied to the database; 0 means never synced. */
     val seedCatalogVersion: Flow<Int> =
         prefs.map { prefs -> prefs[seedCatalogVersionKey] ?: 0 }
@@ -319,6 +336,9 @@ class SettingsRepository(
         const val DEFAULT_REMINDER_MINUTES = 20 * 60
         const val DEFAULT_WEIGHT_REMINDER_MINUTES = 9 * 60
         const val DEFAULT_RECENT_FOODS_COUNT = 10
-        const val DEFAULT_RETENTION_DAYS = 365
+
+        /** Sentinel for [retentionDays]: never fold raw diary entries. */
+        const val RETENTION_FOREVER = 0
+        const val DEFAULT_RETENTION_DAYS = RETENTION_FOREVER
     }
 }

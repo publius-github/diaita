@@ -10,8 +10,9 @@ import java.time.format.DateTimeFormatter
 /**
  * Retention policy, run as a cheap idempotent check on every app start:
  * - raw [app.diaita.data.db.entities.DiaryEntry] rows are kept for
- *   [retentionDays] (user-configurable, default a full year, so "what did I eat back
- *   then" keeps working);
+ *   [retentionDays] (user-configurable; a non-positive value —
+ *   [app.diaita.data.settings.SettingsRepository.RETENTION_FOREVER], the default —
+ *   disables folding entirely so full history is kept);
  * - anything older gets folded into per-month averages ([MonthlyAggregate]) and the raw
  *   rows deleted. Aggregates are kept indefinitely — they are a handful of rows per year.
  * - orphaned catalog rows are pruned: QUICK one-offs nothing references any more, and
@@ -33,16 +34,18 @@ class RetentionMaintenance(
     private val transactionRunner: suspend (suspend () -> Unit) -> Unit = { it() },
 ) {
     suspend fun run() {
-        val cutoffDate =
-            today
-                .minusDays(retentionDays - 1L)
-                .format(DateTimeFormatter.ISO_LOCAL_DATE)
+        if (retentionDays > 0) {
+            val cutoffDate =
+                today
+                    .minusDays(retentionDays - 1L)
+                    .format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-        val oldDays = diaryEntryDao.dailyTotalsBefore(cutoffDate)
-        if (oldDays.isNotEmpty()) {
-            transactionRunner {
-                foldIntoAggregates(oldDays.groupBy { it.logDate.substring(0, 7) })
-                diaryEntryDao.deleteBefore(cutoffDate)
+            val oldDays = diaryEntryDao.dailyTotalsBefore(cutoffDate)
+            if (oldDays.isNotEmpty()) {
+                transactionRunner {
+                    foldIntoAggregates(oldDays.groupBy { it.logDate.substring(0, 7) })
+                    diaryEntryDao.deleteBefore(cutoffDate)
+                }
             }
         }
 

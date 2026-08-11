@@ -31,6 +31,8 @@ data class HistoryDayUi(
 
 data class HistoryUiState(
     val rangeDays: Int = HistoryViewModel.DEFAULT_RANGE_DAYS,
+    /** Days per calorie bar: 1 on daily ranges, 7 when the year range aggregates weekly. */
+    val bucketDays: Int = 1,
     val days: List<HistoryDayUi> = emptyList(),
     val goalCalories: Int? = null,
     /** Wizard-estimated TDEE; null until the wizard has been completed. */
@@ -79,11 +81,19 @@ class HistoryViewModel(
                     diaryRepository.monthlyAverages(),
                     combine(selectedIndexFlow, settingsRepository.weightUnit, ::Pair),
                 ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit) ->
-                    val days =
+                    val allDays =
                         buildFullRange(fromDate, toDate, totals, goal?.calorieTarget, goal?.maintenanceCalories)
+                    val bucketDays = if (rangeDays > MAX_DAILY_BARS_RANGE) 7 else 1
+                    val days =
+                        if (bucketDays > 1) {
+                            bucketWeekly(allDays, goal?.calorieTarget, goal?.maintenanceCalories)
+                        } else {
+                            allDays
+                        }
                     val weightPoints = weights.map { LocalDate.parse(it.date) to it.weightKg }
                     HistoryUiState(
                         rangeDays = rangeDays,
+                        bucketDays = bucketDays,
                         days = days,
                         goalCalories = goal?.calorieTarget,
                         maintenanceCalories = goal?.maintenanceCalories,
@@ -143,7 +153,32 @@ class HistoryViewModel(
     companion object {
         const val DEFAULT_RANGE_DAYS = 7
 
-        /** 90 days is the practical ceiling for now — a year-long chart was unreadable. */
-        val RANGE_OPTIONS = listOf(7, 14, 30, 90)
+        /** Longest range still drawn as one bar per day — 365 daily bars were unreadable. */
+        const val MAX_DAILY_BARS_RANGE = 90
+
+        /** The year range only became viable with weekly bucketing, see [bucketWeekly]. */
+        val RANGE_OPTIONS = listOf(7, 14, 30, 90, 365)
     }
 }
+
+/**
+ * Folds a per-day range into 7-day buckets for the year view: one bar per week, its value
+ * the average of the week's logged days (empty days don't drag the average toward zero;
+ * a week with nothing logged stays 0 and is skipped by the chart). Each bucket keeps its
+ * first day's date/label, so date labels and week-of info lines stay real dates.
+ */
+internal fun bucketWeekly(
+    days: List<HistoryDayUi>,
+    goalCalories: Int?,
+    maintenanceCalories: Int?,
+): List<HistoryDayUi> =
+    days.chunked(7).map { week ->
+        val logged = week.filter { it.calories > 0 }
+        val avgCalories = if (logged.isEmpty()) 0.0 else logged.sumOf { it.calories } / logged.size
+        HistoryDayUi(
+            date = week.first().date,
+            label = week.first().label,
+            calories = avgCalories,
+            zone = calorieZone(avgCalories, goalCalories, maintenanceCalories),
+        )
+    }

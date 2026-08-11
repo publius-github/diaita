@@ -322,20 +322,32 @@
     <string name="settings_recent_foods">Недавние продукты в поиске</string>
     <string name="settings_recent_foods_desc">Сколько недавно записанных продуктов показывать быстрыми чипами</string>
     <string name="settings_retention">Хранить подробную историю</string>
-    <string name="settings_retention_desc">Более старые записи сворачиваются в месячные средние</string>
+    <string name="settings_retention_desc">Записи за пределами этого срока сворачиваются в месячные средние</string>
     <string name="retention_3_months">3 месяца</string>
     <string name="retention_6_months">6 месяцев</string>
     <string name="retention_1_year">1 год</string>
     <string name="retention_2_years">2 года</string>
+    <string name="retention_forever">Всегда</string>
+    <string name="retention_reduce_warning">Записи дневника за пределами выбранного срока (%1$s) будут свёрнуты в месячные средние и удалены. Это нельзя отменить.</string>
+    <string name="retention_reduce_confirm">Свернуть старые записи</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Добро пожаловать в %1$s</string>
+    <string name="onboarding_welcome_body">Дневник калорий, БЖУ и веса, работающий полностью офлайн — без аккаунта и облака, все данные остаются на устройстве.</string>
+    <string name="onboarding_units_label">Единицы веса</string>
+    <string name="onboarding_set_goal">Настроить цель</string>
+    <string name="onboarding_skip">Пропустить</string>
 
     <!-- History -->
     <string name="history_title_days">Последние %1$d дн.</string>
     <string name="range_days_chip">%1$d дней</string>
+    <string name="range_year_chip">Год</string>
     <string name="history_empty">Истории пока нет — запишите еду, и она появится здесь.</string>
     <string name="goal_line_label">Цель: %1$d ккал</string>
     <string name="maintenance_line_label">Поддержание: %1$d ккал</string>
     <string name="selected_day_info">%1$s — %2$d ккал</string>
     <string name="selected_day_info_with_weight">%1$s — %2$d ккал · вес %3$s %4$s</string>
+    <string name="selected_week_info">Неделя с %1$s — в среднем %2$d ккал/день</string>
     <string name="view_day">Открыть день →</string>
     <string name="weight_title">Вес</string>
     <string name="log_weight">Записать вес</string>
@@ -349,6 +361,7 @@
     <string name="weight_error">Введите корректный вес</string>
     <string name="monthly_averages">Средние по месяцам</string>
     <string name="chart_calories_a11y">Столбчатая диаграмма калорий за последние %1$d дней, в среднем %2$d ккал в день</string>
+    <string name="chart_calories_weeks_a11y">Столбчатая диаграмма калорий за последние %1$d недель, в среднем %2$d ккал в день</string>
     <string name="chart_weight_a11y">График веса, последнее значение %1$s %2$s</string>
     <string name="monthly_avg_row">%1$s — в среднем %2$d ккал/день</string>
 

@@ -7,6 +7,7 @@ import app.diaita.data.backup.DatabaseBackupManager
 import app.diaita.data.connectivity.ConnectivityObserver
 import app.diaita.data.db.AppDatabase
 import app.diaita.data.maintenance.RetentionMaintenance
+import app.diaita.data.onboarding.OnboardingGate
 import app.diaita.data.remote.OpenFoodFactsClient
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.ExportRepository
@@ -55,6 +56,9 @@ class AppContainer(
     val weightRepository: WeightRepository by lazy { WeightRepository(database.weightEntryDao()) }
     val backupManager: DatabaseBackupManager by lazy {
         DatabaseBackupManager(context.applicationContext, database)
+    }
+    val onboardingGate: OnboardingGate by lazy {
+        OnboardingGate(settingsRepository, goalRepository, weightRepository, diaryRepository)
     }
 
     /** The start-of-app retention pass, wired with a real Room transaction runner. */

@@ -38,6 +38,8 @@ private class FakeDiaryEntryDao(
 
     override suspend fun getAllEntries(): List<DiaryEntry> = emptyList()
 
+    override suspend fun hasAny(): Boolean = false
+
     override fun entriesForDate(date: String): Flow<List<DiaryEntryWithFood>> = flowOf(emptyList())
 
     override suspend fun entriesForDateOnce(date: String): List<DiaryEntry> = emptyList()
@@ -152,6 +154,18 @@ class RetentionMaintenanceTest {
             assertEquals(1, transactions)
             assertEquals(1, aggregateDao.stored.size)
             assertEquals(1, diaryDao.deleteBeforeCalls.size)
+        }
+
+    @Test
+    fun `forever retention folds and deletes nothing even with old days present`() =
+        runTest {
+            val diaryDao = FakeDiaryEntryDao(listOf(day("2020-01-01", 2000.0)))
+            val aggregateDao = FakeMonthlyAggregateDao()
+
+            RetentionMaintenance(diaryDao, aggregateDao, today, retentionDays = 0).run()
+
+            assertTrue(aggregateDao.stored.isEmpty())
+            assertTrue(diaryDao.deleteBeforeCalls.isEmpty())
         }
 
     @Test

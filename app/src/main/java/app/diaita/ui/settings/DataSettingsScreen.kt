@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.settings.SettingsRepository
 import app.diaita.ui.AppViewModelProvider
 import kotlin.math.roundToInt
 
@@ -39,6 +40,7 @@ fun DataSettingsScreen(
     val retentionDays by viewModel.retentionDays.collectAsStateWithLifecycle()
     var showRecentCountDialog by remember { mutableStateOf(false) }
     var showRetentionDialog by remember { mutableStateOf(false) }
+    var pendingRetentionDays by remember { mutableStateOf<Int?>(null) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_data,
@@ -97,18 +99,57 @@ fun DataSettingsScreen(
                     ChoiceOption(
                         label = retentionLabel(days),
                         selected = days == retentionDays,
-                        onSelect = { viewModel.setRetentionDays(days) },
+                        onSelect = {
+                            if (retentionShrinks(current = retentionDays, new = days)) {
+                                pendingRetentionDays = days
+                            } else {
+                                viewModel.setRetentionDays(days)
+                            }
+                        },
                     )
                 },
             onDismiss = { showRetentionDialog = false },
         )
     }
+
+    // Reducing retention irreversibly folds the now-out-of-window entries on next app
+    // start, so it never happens straight from the radio tap.
+    pendingRetentionDays?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingRetentionDays = null },
+            title = { Text(stringResource(R.string.settings_retention)) },
+            text = { Text(stringResource(R.string.retention_reduce_warning, retentionLabel(pending))) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.setRetentionDays(pending)
+                        pendingRetentionDays = null
+                    },
+                ) { Text(stringResource(R.string.retention_reduce_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRetentionDays = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+}
+
+/** True when switching to [new] would fold history that the [current] setting still keeps. */
+private fun retentionShrinks(
+    current: Int,
+    new: Int,
+): Boolean {
+    if (new == SettingsRepository.RETENTION_FOREVER) return false
+    return current == SettingsRepository.RETENTION_FOREVER || new < current
 }
 
 @Composable
 private fun retentionLabel(days: Int): String =
     stringResource(
         when (days) {
+            SettingsRepository.RETENTION_FOREVER -> R.string.retention_forever
             90 -> R.string.retention_3_months
             180 -> R.string.retention_6_months
             730 -> R.string.retention_2_years

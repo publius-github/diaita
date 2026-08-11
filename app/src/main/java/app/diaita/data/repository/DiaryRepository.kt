@@ -23,6 +23,8 @@ class DiaryRepository(
 ) {
     fun entriesForDate(date: String): Flow<List<DiaryEntryWithFood>> = diaryEntryDao.entriesForDate(date)
 
+    suspend fun hasAnyEntries(): Boolean = diaryEntryDao.hasAny()
+
     suspend fun entriesForDateOnce(date: String): List<DiaryEntry> = diaryEntryDao.entriesForDateOnce(date)
 
     fun dailyTotals(date: String): Flow<DailyTotals> = diaryEntryDao.dailyTotals(date)

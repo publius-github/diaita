@@ -13,6 +13,7 @@ import app.diaita.ui.diary.DiaryViewModel
 import app.diaita.ui.goals.GoalWizardViewModel
 import app.diaita.ui.goals.GoalsViewModel
 import app.diaita.ui.history.HistoryViewModel
+import app.diaita.ui.onboarding.OnboardingViewModel
 import app.diaita.ui.presets.PresetViewModel
 import app.diaita.ui.settings.SettingsViewModel
 
@@ -82,6 +83,9 @@ object AppViewModelProvider {
                     appContainer().settingsRepository,
                     createSavedStateHandle(),
                 )
+            }
+            initializer {
+                OnboardingViewModel(appContainer().settingsRepository)
             }
         }
 }

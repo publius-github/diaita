@@ -106,7 +106,11 @@ fun HistoryScreen(
                     onClick = { viewModel.setRangeDays(rangeDays) },
                     label = {
                         Text(
-                            stringResource(R.string.range_days_chip, rangeDays),
+                            if (rangeDays > HistoryViewModel.MAX_DAILY_BARS_RANGE) {
+                                stringResource(R.string.range_year_chip)
+                            } else {
+                                stringResource(R.string.range_days_chip, rangeDays)
+                            },
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -123,6 +127,7 @@ fun HistoryScreen(
         } else {
             CalorieBarChart(
                 days = uiState.days,
+                bucketDays = uiState.bucketDays,
                 goalCalories = uiState.goalCalories,
                 maintenanceCalories = uiState.maintenanceCalories,
                 selectedIndex = uiState.selectedIndex,
@@ -147,20 +152,27 @@ fun HistoryScreen(
                 uiState.selectedDay?.let { day ->
                     val selectedWeightKg = uiState.selectedDayWeightKg
                     val baseInfo =
-                        if (selectedWeightKg != null) {
-                            stringResource(
-                                R.string.selected_day_info_with_weight,
-                                formatDate(day.date),
-                                day.calories.toInt(),
-                                formatWeightForDisplay(uiState.weightUnit.fromKg(selectedWeightKg)),
-                                uiState.weightUnit.label(),
-                            )
-                        } else {
-                            stringResource(
-                                R.string.selected_day_info,
-                                formatDate(day.date),
-                                day.calories.toInt(),
-                            )
+                        when {
+                            uiState.bucketDays > 1 ->
+                                stringResource(
+                                    R.string.selected_week_info,
+                                    formatDate(day.date),
+                                    day.calories.toInt(),
+                                )
+                            selectedWeightKg != null ->
+                                stringResource(
+                                    R.string.selected_day_info_with_weight,
+                                    formatDate(day.date),
+                                    day.calories.toInt(),
+                                    formatWeightForDisplay(uiState.weightUnit.fromKg(selectedWeightKg)),
+                                    uiState.weightUnit.label(),
+                                )
+                            else ->
+                                stringResource(
+                                    R.string.selected_day_info,
+                                    formatDate(day.date),
+                                    day.calories.toInt(),
+                                )
                         }
                     // On screen the zone is carried by color only (the bar above already shows
                     // it); the spelled-out zone stays in the semantics for TalkBack users, for
@@ -185,8 +197,11 @@ fun HistoryScreen(
                                 zoneWord?.let { contentDescription = "$baseInfo · $it" }
                             },
                     )
-                    TextButton(onClick = { onViewDay(day.date) }) {
-                        Text(stringResource(R.string.view_day))
+                    // A weekly bucket has no single day to open; drill-down stays daily-only.
+                    if (uiState.bucketDays == 1) {
+                        TextButton(onClick = { onViewDay(day.date) }) {
+                            Text(stringResource(R.string.view_day))
+                        }
                     }
                 }
             }
@@ -212,9 +227,11 @@ fun HistoryScreen(
                 targetKg = uiState.weightTargetKg,
                 weightUnit = uiState.weightUnit,
                 windowStart = windowStart,
-                totalDays = uiState.days.size.coerceAtLeast(1),
-                selectedIndex = uiState.selectedIndex,
-                onDayTap = viewModel::onBarSelected,
+                totalDays = uiState.rangeDays,
+                // The weekly view's bar indices live in bucket space, so the day-slot
+                // highlight can't line up — taps still select the containing week.
+                selectedIndex = uiState.selectedIndex.takeIf { uiState.bucketDays == 1 },
+                onDayTap = { dayIndex -> viewModel.onBarSelected(dayIndex / uiState.bucketDays) },
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -318,9 +335,13 @@ private fun showAllPointLabels(totalDays: Int): Boolean = totalDays <= 14
 /** TalkBack can't tap a canvas bar, so day selection is exposed as custom actions (short ranges). */
 private const val MAX_A11Y_DAY_ACTIONS = 31
 
+/** Weekly bars get a date label every 4 weeks — labelEvery() is tuned for day counts. */
+private const val WEEKLY_LABEL_STEP = 4
+
 @Composable
 private fun CalorieBarChart(
     days: List<HistoryDayUi>,
+    bucketDays: Int,
     goalCalories: Int?,
     maintenanceCalories: Int?,
     selectedIndex: Int?,
@@ -345,10 +366,10 @@ private fun CalorieBarChart(
             ) * 1.15
         ).coerceAtLeast(100.0)
     val gridStep = calorieGridStep(chartMax)
-    val labelStep = labelEvery(days.size)
+    val labelStep = if (bucketDays > 1) WEEKLY_LABEL_STEP else labelEvery(days.size)
     val chartDescription =
         stringResource(
-            R.string.chart_calories_a11y,
+            if (bucketDays > 1) R.string.chart_calories_weeks_a11y else R.string.chart_calories_a11y,
             days.size,
             days.map { it.calories }.average().toInt(),
         )

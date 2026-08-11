@@ -62,6 +62,9 @@ interface DiaryEntryDao {
     @Query("SELECT * FROM diary_entries ORDER BY logDate ASC, loggedAt ASC")
     suspend fun getAllEntries(): List<DiaryEntry>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM diary_entries)")
+    suspend fun hasAny(): Boolean
+
     @Transaction
     @Query("SELECT * FROM diary_entries WHERE logDate = :date ORDER BY loggedAt ASC")
     fun entriesForDate(date: String): Flow<List<DiaryEntryWithFood>>
