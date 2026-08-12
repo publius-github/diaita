@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
  * Keeps the seed food catalog in sync on database open (which also covers first
  * creation). Sync is versioned: when the stored catalog version is behind
  * [SeedFoods.CATALOG_VERSION], every entry is upserted by [SeedFoods]' stable seedKey —
- * existing rows get their name/macros/serving refreshed (so corrections reach existing
- * installs), missing rows are inserted. Rows keep their primary key, so diary entries
+ * existing rows get their name/macros/fiber/sugar/salt/serving refreshed (so corrections
+ * reach existing installs), missing rows are inserted. Rows keep their primary key, so diary entries
  * referencing them are unaffected. Rows the user has corrected ([FoodItem.editedByUser])
  * are never refreshed — a deliberate local fix outranks the shipped catalog.
  *
@@ -53,6 +53,9 @@ class SeedDatabaseCallback(
                             proteinPer100g = seed.proteinPer100g,
                             fatPer100g = seed.fatPer100g,
                             carbsPer100g = seed.carbsPer100g,
+                            fiberPer100g = seed.fiberPer100g,
+                            sugarPer100g = seed.sugarPer100g,
+                            saltPer100g = seed.saltPer100g,
                             defaultServingGrams = seed.defaultServingGrams,
                         ),
                     )
