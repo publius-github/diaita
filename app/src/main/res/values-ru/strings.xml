@@ -28,7 +28,7 @@
     <!-- Diary -->
     <string name="today_title">Сегодня</string>
     <string name="kcal_amount">%1$d ккал</string>
-    <string name="macros_line">Б: %1$dг   Ж: %2$dг   У: %3$dг</string>
+    <string name="macros_line">Белки %1$dг   Жиры %2$dг   Углеводы %3$dг</string>
     <string name="micro_fiber_value">Клетчатка %1$sг</string>
     <string name="micro_sugar_value">Сахар %1$sг</string>
     <string name="micro_salt_value">Соль %1$sг</string>

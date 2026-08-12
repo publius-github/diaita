@@ -28,7 +28,7 @@
     <!-- Diary -->
     <string name="today_title">Today</string>
     <string name="kcal_amount">%1$d kcal</string>
-    <string name="macros_line">P: %1$dg   F: %2$dg   C: %3$dg</string>
+    <string name="macros_line">Protein %1$dg   Fat %2$dg   Carbs %3$dg</string>
     <string name="micro_fiber_value">Fiber %1$sg</string>
     <string name="micro_sugar_value">Sugar %1$sg</string>
     <string name="micro_salt_value">Salt %1$sg</string>

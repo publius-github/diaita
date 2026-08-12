@@ -524,7 +524,10 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column {
+                // Weighted so the nutrient lines wrap inside their own space instead of
+                // squeezing the ring: with full nutrient names they need two lines on
+                // narrow screens, which costs nothing here — the 120dp ring sets the height.
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         stringResource(R.string.kcal_amount, uiState.totalCalories.toInt()),
                         style = MaterialTheme.typography.headlineSmall,
@@ -538,7 +541,8 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                                 uiState.totalFat.toInt(),
                                 uiState.totalCarbs.toInt(),
                             ),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (uiState.trackMicronutrients) {

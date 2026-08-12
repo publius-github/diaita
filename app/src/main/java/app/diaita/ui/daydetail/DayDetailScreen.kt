@@ -145,7 +145,8 @@ fun DayDetailScreen(
                                 uiState.totalFat.toInt(),
                                 uiState.totalCarbs.toInt(),
                             ),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (uiState.trackMicronutrients) {
