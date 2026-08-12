@@ -13,10 +13,12 @@ import app.diaita.util.micronutrientTotals
  * Fiber/sugar/salt totals under the day's calorie/macro figures, shared by the Diary card and
  * the History day detail.
  *
- * Not every food carries these values — quick-add entries never do, and so do foods cached from
- * OpenFoodFacts before the columns existed. A day made only of those has nothing to sum, and
- * silently rendering nothing then reads as a broken feature, so [hasEntries] days say "no data"
- * out loud instead. An empty day still renders nothing: there is no absence to explain.
+ * Always renders while the setting is on, exactly like the macro line above it — a line that
+ * disappears on its own reads as a broken feature, which is precisely how this looked before.
+ * Three cases: values when the day's foods carry them; a plain zero line on a day with nothing
+ * logged (eating nothing really is 0 g); and an explicit "no data" when the day has entries but
+ * none of them carries these values — quick-add entries never do, nor do foods cached from
+ * OpenFoodFacts before the columns existed.
  */
 @Composable
 fun MicronutrientTotalsLine(
