@@ -24,6 +24,13 @@ data class DailyTotals(
     val totalProtein: Double,
     val totalFat: Double,
     val totalCarbs: Double,
+    /**
+     * Null when nothing logged that day carries the nutrient — the catalog columns are
+     * optional, so "absent" must stay distinguishable from a summed 0.
+     */
+    val totalFiber: Double? = null,
+    val totalSugar: Double? = null,
+    val totalSalt: Double? = null,
 )
 
 data class DayTotal(
@@ -78,7 +85,10 @@ interface DiaryEntryDao {
             COALESCE(SUM(f.caloriesPer100g * d.quantityGrams / 100.0), 0) AS totalCalories,
             COALESCE(SUM(f.proteinPer100g * d.quantityGrams / 100.0), 0) AS totalProtein,
             COALESCE(SUM(f.fatPer100g * d.quantityGrams / 100.0), 0) AS totalFat,
-            COALESCE(SUM(f.carbsPer100g * d.quantityGrams / 100.0), 0) AS totalCarbs
+            COALESCE(SUM(f.carbsPer100g * d.quantityGrams / 100.0), 0) AS totalCarbs,
+            SUM(f.fiberPer100g * d.quantityGrams / 100.0) AS totalFiber,
+            SUM(f.sugarPer100g * d.quantityGrams / 100.0) AS totalSugar,
+            SUM(f.saltPer100g * d.quantityGrams / 100.0) AS totalSalt
         FROM diary_entries d
         JOIN food_items f ON f.id = d.foodItemId
         WHERE d.logDate = :date

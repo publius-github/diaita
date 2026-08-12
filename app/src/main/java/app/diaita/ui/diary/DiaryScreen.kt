@@ -71,6 +71,7 @@ import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
 import app.diaita.ui.common.MealSlotPicker
+import app.diaita.ui.common.MicronutrientTotalsLine
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
@@ -538,6 +539,13 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                                 uiState.totalCarbs.toInt(),
                             ),
                             style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    if (uiState.trackMicronutrients) {
+                        MicronutrientTotalsLine(
+                            fiberGrams = uiState.totalFiber,
+                            sugarGrams = uiState.totalSugar,
+                            saltGrams = uiState.totalSalt,
                         )
                     }
                 }

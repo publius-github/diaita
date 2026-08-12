@@ -43,6 +43,7 @@ import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.FoodRowCard
+import app.diaita.ui.common.MicronutrientTotalsLine
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.label
 import app.diaita.ui.diary.DiaryRow
@@ -145,6 +146,13 @@ fun DayDetailScreen(
                                 uiState.totalCarbs.toInt(),
                             ),
                             style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    if (uiState.trackMicronutrients) {
+                        MicronutrientTotalsLine(
+                            fiberGrams = uiState.totalFiber,
+                            sugarGrams = uiState.totalSugar,
+                            saltGrams = uiState.totalSalt,
                         )
                     }
                 }

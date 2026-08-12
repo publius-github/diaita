@@ -29,6 +29,9 @@
     <string name="today_title">Today</string>
     <string name="kcal_amount">%1$d kcal</string>
     <string name="macros_line">P: %1$dg   F: %2$dg   C: %3$dg</string>
+    <string name="micro_fiber_value">Fiber %1$sg</string>
+    <string name="micro_sugar_value">Sugar %1$sg</string>
+    <string name="micro_salt_value">Salt %1$sg</string>
     <string name="macro_protein_short">P</string>
     <string name="macro_fat_short">F</string>
     <string name="macro_carbs_short">C</string>
@@ -152,6 +155,8 @@
     <string name="scan_barcode">Scan barcode</string>
     <string name="scan_prompt">Point the camera at the product barcode</string>
     <string name="scan_not_found">Product not found — try searching by name or add it manually</string>
+    <string name="scan_add_with_barcode">Add this product manually</string>
+    <string name="manual_scanned_barcode">Scanned barcode: %1$s — it will be saved with this food</string>
 
     <!-- Repeat yesterday -->
     <string name="repeat_yesterday">Repeat yesterday</string>
@@ -286,6 +291,8 @@
     <string name="settings_section_data">Data</string>
     <string name="settings_track_macros">Track macros (P/F/C)</string>
     <string name="settings_track_macros_desc">Show protein, fat and carb progress on the Home screen</string>
+    <string name="settings_track_micros">Track fiber, sugar and salt</string>
+    <string name="settings_track_micros_desc">Show daily totals for foods that carry these values</string>
     <string name="settings_morning_end">Morning ends at</string>
     <string name="settings_morning_end_desc">Meals before this time count as morning</string>
     <string name="settings_day_end">Day ends at</string>

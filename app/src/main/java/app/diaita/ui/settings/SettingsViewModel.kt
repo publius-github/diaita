@@ -41,6 +41,14 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setTrackMacros(enabled) }
     }
 
+    val trackMicronutrients: StateFlow<Boolean> =
+        settingsRepository.trackMicronutrients
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setTrackMicronutrients(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setTrackMicronutrients(enabled) }
+    }
+
     val dayPartBoundaries: StateFlow<DayPartBoundaries> =
         settingsRepository.dayPartBoundaries
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartBoundaries())

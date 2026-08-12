@@ -44,6 +44,7 @@ fun TrackingSettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val trackMacros by viewModel.trackMacros.collectAsStateWithLifecycle()
+    val trackMicronutrients by viewModel.trackMicronutrients.collectAsStateWithLifecycle()
     val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
     val dayPartShares by viewModel.dayPartShares.collectAsStateWithLifecycle()
     val coachTone by viewModel.coachTone.collectAsStateWithLifecycle()
@@ -64,6 +65,17 @@ fun TrackingSettingsScreen(
             supportingContent = { Text(stringResource(R.string.settings_track_macros_desc)) },
             trailingContent = {
                 Switch(checked = trackMacros, onCheckedChange = viewModel::setTrackMacros)
+            },
+        )
+        HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_track_micros)) },
+            supportingContent = { Text(stringResource(R.string.settings_track_micros_desc)) },
+            trailingContent = {
+                Switch(
+                    checked = trackMicronutrients,
+                    onCheckedChange = viewModel::setTrackMicronutrients,
+                )
             },
         )
         HorizontalDivider()

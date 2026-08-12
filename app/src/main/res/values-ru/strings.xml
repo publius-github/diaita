@@ -29,6 +29,9 @@
     <string name="today_title">Сегодня</string>
     <string name="kcal_amount">%1$d ккал</string>
     <string name="macros_line">Б: %1$dг   Ж: %2$dг   У: %3$dг</string>
+    <string name="micro_fiber_value">Клетчатка %1$sг</string>
+    <string name="micro_sugar_value">Сахар %1$sг</string>
+    <string name="micro_salt_value">Соль %1$sг</string>
     <string name="macro_protein_short">Б</string>
     <string name="macro_fat_short">Ж</string>
     <string name="macro_carbs_short">У</string>
@@ -152,6 +155,8 @@
     <string name="scan_barcode">Сканировать штрихкод</string>
     <string name="scan_prompt">Наведите камеру на штрихкод продукта</string>
     <string name="scan_not_found">Продукт не найден — поищите по названию или добавьте вручную</string>
+    <string name="scan_add_with_barcode">Добавить этот продукт вручную</string>
+    <string name="manual_scanned_barcode">Отсканированный штрихкод: %1$s — сохранится вместе с продуктом</string>
 
     <!-- Repeat yesterday -->
     <string name="repeat_yesterday">Повторить вчера</string>
@@ -286,6 +291,8 @@
     <string name="settings_section_data">Данные</string>
     <string name="settings_track_macros">Учитывать Б/Ж/У</string>
     <string name="settings_track_macros_desc">Показывать прогресс белков, жиров и углеводов на главном экране</string>
+    <string name="settings_track_micros">Учитывать клетчатку, сахар и соль</string>
+    <string name="settings_track_micros_desc">Показывать суммы за день для продуктов, где эти значения указаны</string>
     <string name="settings_morning_end">Утро заканчивается в</string>
     <string name="settings_morning_end_desc">Приёмы пищи до этого времени считаются утренними</string>
     <string name="settings_day_end">День заканчивается в</string>

@@ -67,6 +67,10 @@ data class DiaryUiState(
     val totalProtein: Double = 0.0,
     val totalFat: Double = 0.0,
     val totalCarbs: Double = 0.0,
+    /** Null means no logged food carried the nutrient — the line is then hidden, not zeroed. */
+    val totalFiber: Double? = null,
+    val totalSugar: Double? = null,
+    val totalSalt: Double? = null,
     val goalCalories: Int? = null,
     val goalProteinG: Int? = null,
     val goalFatG: Int? = null,
@@ -74,6 +78,8 @@ data class DiaryUiState(
     val todayWeightKg: Double? = null,
     /** Mirrors the "track macros" setting — hides the P/F/C progress UI when false. */
     val trackMacros: Boolean = true,
+    /** Mirrors the "track fiber/sugar/salt" setting — hides the micronutrient line when false. */
+    val trackMicronutrients: Boolean = true,
     val dayPartShares: DayPartShares = DayPartShares(),
     val dayPartBoundaries: DayPartBoundaries = DayPartBoundaries(),
     val coachTone: CoachTone = CoachTone.SNARKY,
@@ -89,9 +95,15 @@ data class UndoDeleteEvent(
     val title: String?,
 )
 
+/** The "which nutrients do I care about" toggles, paired to fit the 5-flow combine overload. */
+private data class TrackingFlags(
+    val macros: Boolean,
+    val micronutrients: Boolean,
+)
+
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
 private data class HomeSettings(
-    val trackMacros: Boolean,
+    val tracking: TrackingFlags,
     val boundaries: DayPartBoundaries,
     val shares: DayPartShares,
     val coachTone: CoachTone,
@@ -116,7 +128,11 @@ class DiaryViewModel(
                     goalRepository.getGoal(),
                     weightRepository.range(date, date),
                     combine(
-                        settingsRepository.trackMacros,
+                        combine(
+                            settingsRepository.trackMacros,
+                            settingsRepository.trackMicronutrients,
+                            ::TrackingFlags,
+                        ),
                         settingsRepository.dayPartBoundaries,
                         settingsRepository.dayPartShares,
                         settingsRepository.coachTone,
@@ -134,12 +150,16 @@ class DiaryViewModel(
                         totalProtein = totals.totalProtein,
                         totalFat = totals.totalFat,
                         totalCarbs = totals.totalCarbs,
+                        totalFiber = totals.totalFiber,
+                        totalSugar = totals.totalSugar,
+                        totalSalt = totals.totalSalt,
                         goalCalories = goal?.calorieTarget,
                         goalProteinG = goal?.proteinTargetG,
                         goalFatG = goal?.fatTargetG,
                         goalCarbsG = goal?.carbsTargetG,
                         todayWeightKg = dayWeights.firstOrNull()?.weightKg,
-                        trackMacros = settings.trackMacros,
+                        trackMacros = settings.tracking.macros,
+                        trackMicronutrients = settings.tracking.micronutrients,
                         dayPartShares = settings.shares,
                         dayPartBoundaries = settings.boundaries,
                         coachTone = settings.coachTone,

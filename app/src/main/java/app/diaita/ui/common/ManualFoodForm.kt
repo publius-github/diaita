@@ -43,6 +43,8 @@ data class FoodDraft(
     val defaultServingGrams: Double? = null,
     val gramsPerMilliliter: Double? = null,
     val gramsPerPiece: Double? = null,
+    /** Set when the entry started from a scan of an unknown product; keeps it scannable later. */
+    val barcode: String? = null,
 )
 
 /**
@@ -53,6 +55,9 @@ data class FoodDraft(
  *
  * With [initial] set, the form becomes an editor prefilled from that food — used to fix
  * mistakes in catalog entries (seeded, manual or cached OpenFoodFacts) straight from search.
+ *
+ * With [barcode] set (a scan that OpenFoodFacts didn't know), the code is shown and attached to
+ * the saved food, so the same product resolves from the local cache on every later scan.
  */
 @Composable
 fun ManualFoodForm(
@@ -61,6 +66,7 @@ fun ManualFoodForm(
     onSave: (FoodDraft) -> Unit,
     modifier: Modifier = Modifier,
     initial: FoodItem? = null,
+    barcode: String? = null,
     /** Offered only when editing an existing catalog food; null hides the action. */
     onDelete: (() -> Unit)? = null,
     /** True when a delete was refused because diary entries still reference the food. */
@@ -121,6 +127,7 @@ fun ManualFoodForm(
                 defaultServingGrams = serving,
                 gramsPerMilliliter = gramsPerMl,
                 gramsPerPiece = gramsPerPiece,
+                barcode = barcode,
             ),
         )
     }
@@ -133,6 +140,14 @@ fun ManualFoodForm(
     ) {
         TextButton(onClick = onBack) {
             Text(stringResource(R.string.back_to_search))
+        }
+        barcode?.let { code ->
+            Text(
+                stringResource(R.string.manual_scanned_barcode, code),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
         }
         OutlinedTextField(
             value = name,

@@ -30,8 +30,14 @@ data class DayDetailUiState(
     val totalProtein: Double = 0.0,
     val totalFat: Double = 0.0,
     val totalCarbs: Double = 0.0,
+    /** Null means no logged food carried the nutrient — the line is then hidden, not zeroed. */
+    val totalFiber: Double? = null,
+    val totalSugar: Double? = null,
+    val totalSalt: Double? = null,
     /** Mirrors the "track macros" setting — hides the P/F/C line when false. */
     val trackMacros: Boolean = true,
+    /** Mirrors the "track fiber/sugar/salt" setting — hides the micronutrient line when false. */
+    val trackMicronutrients: Boolean = true,
 )
 
 /** Emitted right after a delete so the UI can offer a Snackbar "Undo". */
@@ -56,7 +62,8 @@ class DayDetailViewModel(
             diaryRepository.entriesForDate(date),
             diaryRepository.dailyTotals(date),
             settingsRepository.trackMacros,
-        ) { entries, totals, trackMacros ->
+            settingsRepository.trackMicronutrients,
+        ) { entries, totals, trackMacros, trackMicronutrients ->
             DayDetailUiState(
                 date = date,
                 sections = buildDiarySections(entries),
@@ -64,7 +71,11 @@ class DayDetailViewModel(
                 totalProtein = totals.totalProtein,
                 totalFat = totals.totalFat,
                 totalCarbs = totals.totalCarbs,
+                totalFiber = totals.totalFiber,
+                totalSugar = totals.totalSugar,
+                totalSalt = totals.totalSalt,
                 trackMacros = trackMacros,
+                trackMicronutrients = trackMicronutrients,
             )
         }.stateIn(
             scope = viewModelScope,

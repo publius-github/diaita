@@ -51,6 +51,19 @@ class SettingsRepository(
         context.settingsDataStore.edit { prefs -> prefs[trackMacrosKey] = enabled }
     }
 
+    private val trackMicronutrientsKey = booleanPreferencesKey("track_micronutrients")
+
+    /**
+     * Whether fiber/sugar/salt totals are shown. On by default, but they only ever appear
+     * for days whose foods actually carry those (optional) values.
+     */
+    val trackMicronutrients: Flow<Boolean> =
+        prefs.map { prefs -> prefs[trackMicronutrientsKey] ?: true }
+
+    suspend fun setTrackMicronutrients(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs -> prefs[trackMicronutrientsKey] = enabled }
+    }
+
     private val morningEndMinutesKey = intPreferencesKey("morning_end_minutes")
     private val dayEndMinutesKey = intPreferencesKey("day_end_minutes")
 

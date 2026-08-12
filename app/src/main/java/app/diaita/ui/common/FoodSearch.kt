@@ -91,6 +91,11 @@ data class FoodSearchUiState(
     /** True while OFF reports more result pages for the current query. */
     val offHasMore: Boolean = false,
     val scanError: ScanError? = null,
+    /**
+     * The code of the last scan OpenFoodFacts had no product for. Offered to manual entry so the
+     * unknown product gets stored with its barcode and resolves locally on the next scan.
+     */
+    val pendingBarcode: String? = null,
     /** Search result being corrected in the edit form; null means no edit in progress. */
     val foodBeingEdited: FoodItem? = null,
     /** True when deleting [foodBeingEdited] was refused because history references it. */
@@ -193,9 +198,12 @@ class FoodSearchController(
     }
 
     fun onSearchQueryChanged(query: String) {
-        _state.update { it.copy(searchQuery = query, scanError = null) }
+        _state.update { it.copy(searchQuery = query, scanError = null, pendingBarcode = null) }
         searchQueryFlow.value = query
     }
+
+    /** Drops a scan outcome (and the barcode it offered) once the user moves on from it. */
+    fun clearScanOutcome() = _state.update { it.copy(scanError = null, pendingBarcode = null) }
 
     fun onSourceFilterChanged(filter: SourceFilter) = _state.update { it.copy(sourceFilter = filter) }
 
@@ -207,14 +215,20 @@ class FoodSearchController(
 
     fun onBarcodeScanned(barcode: String) {
         scope.launch {
-            _state.update { it.copy(scanError = null, offSearching = true) }
+            _state.update { it.copy(scanError = null, pendingBarcode = null, offSearching = true) }
             when (val outcome = foodRepository.lookupByBarcode(barcode)) {
                 is BarcodeLookupOutcome.Found -> {
                     _state.update { it.copy(offSearching = false) }
                     onFoodReady(outcome.food)
                 }
                 BarcodeLookupOutcome.NotFound ->
-                    _state.update { it.copy(offSearching = false, scanError = ScanError.NOT_FOUND) }
+                    _state.update {
+                        it.copy(
+                            offSearching = false,
+                            scanError = ScanError.NOT_FOUND,
+                            pendingBarcode = barcode,
+                        )
+                    }
                 BarcodeLookupOutcome.NetworkError ->
                     _state.update { it.copy(offSearching = false, scanError = ScanError.NETWORK) }
             }
@@ -229,6 +243,7 @@ class FoodSearchController(
         scope.launch {
             val food = draft.toFoodItem()
             val id = foodRepository.addFood(food)
+            clearScanOutcome()
             onFoodReady(food.copy(id = id))
         }
     }
@@ -282,6 +297,7 @@ class FoodSearchController(
 private fun FoodDraft.toFoodItem(): FoodItem =
     FoodItem(
         name = name,
+        barcode = barcode,
         caloriesPer100g = caloriesPer100g,
         proteinPer100g = proteinPer100g,
         fatPer100g = fatPer100g,
@@ -341,6 +357,9 @@ fun FoodSearchContent(
     onQuickAdd: (() -> Unit)? = null,
 ) {
     var showManualEntry by rememberSaveable { mutableStateOf(false) }
+    // Set only when manual entry is opened from an unknown scan, so a plain "Add manually"
+    // never silently inherits the barcode of an earlier failed scan.
+    var manualEntryBarcode by rememberSaveable { mutableStateOf<String?>(null) }
 
     // Editing takes over the whole pane, same as manual entry — it's the same form, prefilled.
     state.foodBeingEdited?.let { food ->
@@ -359,12 +378,17 @@ fun FoodSearchContent(
     if (showManualEntry) {
         ManualFoodForm(
             saveLabel = manualSaveLabel,
-            onBack = { showManualEntry = false },
+            onBack = {
+                showManualEntry = false
+                manualEntryBarcode = null
+            },
             onSave = { draft ->
                 onManualSave(draft)
                 showManualEntry = false
+                manualEntryBarcode = null
             },
             modifier = modifier,
+            barcode = manualEntryBarcode,
         )
         return
     }
@@ -474,6 +498,20 @@ fun FoodSearchContent(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
+            // An unknown product is only a dead end once: entering it here stores the barcode
+            // with it, so the next scan of the same package resolves offline from the catalog.
+            if (error == ScanError.NOT_FOUND) {
+                state.pendingBarcode?.let { barcode ->
+                    TextButton(
+                        onClick = {
+                            manualEntryBarcode = barcode
+                            showManualEntry = true
+                        },
+                    ) {
+                        Text(stringResource(R.string.scan_add_with_barcode))
+                    }
+                }
+            }
         }
         if (!state.searchHadNetworkError &&
             !state.offSearching &&
@@ -534,7 +572,10 @@ fun FoodSearchContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedButton(
-                onClick = { showManualEntry = true },
+                onClick = {
+                    manualEntryBarcode = null
+                    showManualEntry = true
+                },
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.add_manually))
