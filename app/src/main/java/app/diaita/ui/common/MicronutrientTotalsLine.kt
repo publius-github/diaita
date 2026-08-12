@@ -29,19 +29,17 @@ fun MicronutrientTotalsLine(
     modifier: Modifier = Modifier,
 ) {
     val totals = micronutrientTotals(fiberGrams, sugarGrams, saltGrams)
-    if (totals.isEmpty()) {
-        if (hasEntries) {
-            Text(
-                stringResource(R.string.micro_no_data),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = modifier,
-            )
-        }
+    if (totals.isEmpty() && hasEntries) {
+        Text(
+            stringResource(R.string.micro_no_data),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier,
+        )
         return
     }
     val parts =
-        totals.map { total ->
+        totals.ifEmpty { micronutrientTotals(0.0, 0.0, 0.0) }.map { total ->
             stringResource(
                 when (total.nutrient) {
                     Micronutrient.FIBER -> R.string.micro_fiber_value

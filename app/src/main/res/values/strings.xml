@@ -33,12 +33,6 @@
     <string name="micro_sugar_value">Sugar %1$sg</string>
     <string name="micro_salt_value">Salt %1$sg</string>
     <string name="micro_no_data">Fiber/sugar/salt: no data for today\'s foods</string>
-    <string name="micro_fiber_label">Fiber</string>
-    <string name="micro_sugar_label">Sugar</string>
-    <string name="micro_salt_label">Salt</string>
-    <string name="micro_bar_line">%1$s %2$s / %3$s g</string>
-    <string name="micro_limit_exceeded">%1$s — over the reference limit</string>
-    <string name="micro_target_reached">%1$s — reference reached</string>
     <string name="macro_protein_short">P</string>
     <string name="macro_fat_short">F</string>
     <string name="macro_carbs_short">C</string>

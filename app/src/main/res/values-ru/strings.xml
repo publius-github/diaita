@@ -33,12 +33,6 @@
     <string name="micro_sugar_value">Сахар %1$sг</string>
     <string name="micro_salt_value">Соль %1$sг</string>
     <string name="micro_no_data">Клетчатка/сахар/соль: у продуктов за день нет данных</string>
-    <string name="micro_fiber_label">Клетчатка</string>
-    <string name="micro_sugar_label">Сахар</string>
-    <string name="micro_salt_label">Соль</string>
-    <string name="micro_bar_line">%1$s %2$s / %3$s г</string>
-    <string name="micro_limit_exceeded">%1$s — превышен ориентир</string>
-    <string name="micro_target_reached">%1$s — ориентир достигнут</string>
     <string name="macro_protein_short">Б</string>
     <string name="macro_fat_short">Ж</string>
     <string name="macro_carbs_short">У</string>
