@@ -649,24 +649,32 @@ private fun paceMessagePool(
                         R.string.pace_empty_gentle_1,
                         R.string.pace_empty_gentle_2,
                         R.string.pace_empty_gentle_3,
+                        R.string.pace_empty_gentle_4,
+                        R.string.pace_empty_gentle_5,
                     )
                 PaceMood.ON_TRACK ->
                     listOf(
                         R.string.pace_ok_gentle_1,
                         R.string.pace_ok_gentle_2,
                         R.string.pace_ok_gentle_3,
+                        R.string.pace_ok_gentle_4,
+                        R.string.pace_ok_gentle_5,
                     )
                 PaceMood.AHEAD ->
                     listOf(
                         R.string.pace_warn_gentle_1,
                         R.string.pace_warn_gentle_2,
                         R.string.pace_warn_gentle_3,
+                        R.string.pace_warn_gentle_4,
+                        R.string.pace_warn_gentle_5,
                     )
                 PaceMood.OVER ->
                     listOf(
                         R.string.pace_over_gentle_1,
                         R.string.pace_over_gentle_2,
                         R.string.pace_over_gentle_3,
+                        R.string.pace_over_gentle_4,
+                        R.string.pace_over_gentle_5,
                     )
             }
         CoachTone.BRUTAL ->
@@ -678,6 +686,8 @@ private fun paceMessagePool(
                         R.string.pace_empty_brutal_3,
                         R.string.pace_empty_brutal_4,
                         R.string.pace_empty_brutal_5,
+                        R.string.pace_empty_brutal_6,
+                        R.string.pace_empty_brutal_7,
                     )
                 PaceMood.ON_TRACK ->
                     listOf(
@@ -686,6 +696,8 @@ private fun paceMessagePool(
                         R.string.pace_ok_brutal_3,
                         R.string.pace_ok_brutal_4,
                         R.string.pace_ok_brutal_5,
+                        R.string.pace_ok_brutal_6,
+                        R.string.pace_ok_brutal_7,
                     )
                 PaceMood.AHEAD ->
                     listOf(
@@ -694,6 +706,8 @@ private fun paceMessagePool(
                         R.string.pace_warn_brutal_3,
                         R.string.pace_warn_brutal_4,
                         R.string.pace_warn_brutal_5,
+                        R.string.pace_warn_brutal_6,
+                        R.string.pace_warn_brutal_7,
                     )
                 PaceMood.OVER ->
                     listOf(
@@ -702,6 +716,8 @@ private fun paceMessagePool(
                         R.string.pace_over_brutal_3,
                         R.string.pace_over_brutal_4,
                         R.string.pace_over_brutal_5,
+                        R.string.pace_over_brutal_6,
+                        R.string.pace_over_brutal_7,
                     )
             }
         else ->
@@ -713,6 +729,8 @@ private fun paceMessagePool(
                         R.string.pace_empty_3,
                         R.string.pace_empty_4,
                         R.string.pace_empty_5,
+                        R.string.pace_empty_6,
+                        R.string.pace_empty_7,
                     )
                 PaceMood.ON_TRACK ->
                     listOf(
@@ -721,6 +739,8 @@ private fun paceMessagePool(
                         R.string.pace_ok_3,
                         R.string.pace_ok_4,
                         R.string.pace_ok_5,
+                        R.string.pace_ok_6,
+                        R.string.pace_ok_7,
                     )
                 PaceMood.AHEAD ->
                     listOf(
@@ -729,6 +749,8 @@ private fun paceMessagePool(
                         R.string.pace_warn_3,
                         R.string.pace_warn_4,
                         R.string.pace_warn_5,
+                        R.string.pace_warn_6,
+                        R.string.pace_warn_7,
                     )
                 PaceMood.OVER ->
                     listOf(
@@ -737,6 +759,8 @@ private fun paceMessagePool(
                         R.string.pace_over_3,
                         R.string.pace_over_4,
                         R.string.pace_over_5,
+                        R.string.pace_over_6,
+                        R.string.pace_over_7,
                     )
             }
     }
