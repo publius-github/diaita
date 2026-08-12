@@ -153,6 +153,7 @@ fun DayDetailScreen(
                             fiberGrams = uiState.totalFiber,
                             sugarGrams = uiState.totalSugar,
                             saltGrams = uiState.totalSalt,
+                            hasEntries = uiState.sections.isNotEmpty(),
                         )
                     }
                 }

@@ -546,6 +546,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                             fiberGrams = uiState.totalFiber,
                             sugarGrams = uiState.totalSugar,
                             saltGrams = uiState.totalSalt,
+                            hasEntries = !uiState.isEmpty,
                         )
                     }
                 }
