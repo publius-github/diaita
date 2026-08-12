@@ -10,6 +10,11 @@ import app.diaita.data.db.entities.FoodSource
  * covering ~95% of daily logging without the network. Values are widely accepted
  * approximate nutrition figures, not medical-grade data.
  *
+ * Fiber/sugar/salt were cross-checked against the USDA SR Legacy dataset where a
+ * one-to-one match exists (generic whole foods); Russian and composite/brand-dependent
+ * entries — tvorog, borodinsky bread, syrniki, olivier, kvass, sausages, prepared
+ * dishes — have no counterpart there and stay estimates. See the project notes for the coverage.
+ *
  * For anything typically bought raw and cooked at home (meat, poultry, fish, grains,
  * some vegetables), the catalog lists the raw/dry form first — for weighing before
  * you cook, the only way to know how much you actually used, since cooked yield
@@ -26,7 +31,7 @@ import app.diaita.data.db.entities.FoodSource
  */
 object SeedFoods {
     /** Bump on every catalog change so existing installs pick it up on next app start. */
-    const val CATALOG_VERSION = 5
+    const val CATALOG_VERSION = 6
 
     /**
      * Positional on purpose — the entries below read as a nutrition table, and named
@@ -85,7 +90,7 @@ object SeedFoods {
             food("whole_wheat_pasta_cooked", "Whole wheat pasta, cooked", 124.0, 5.3, 0.5, 26.0, 4.5, 0.8, 0.0),
             food("egg_noodles_dry", "Egg noodles, dry", 384.0, 14.0, 4.5, 71.0, 3.3, 2.0, 0.1),
             food("egg_noodles_cooked", "Egg noodles, cooked", 138.0, 4.5, 2.1, 25.0, 1.2, 0.6, 0.0),
-            food("rice_noodles_dry", "Rice noodles, dry", 364.0, 6.0, 0.6, 83.0, 1.6, 0.1, 0.1),
+            food("rice_noodles_dry", "Rice noodles, dry", 364.0, 6.0, 0.6, 83.0, 1.6, 0.1, 0.45),
             food("rice_noodles_cooked", "Rice noodles, cooked", 109.0, 0.9, 0.2, 25.0, 0.5, 0.0, 0.0),
             food("buckwheat_dry", "Buckwheat, dry (groats)", 343.0, 13.3, 3.4, 71.5, 10.0, 1.5, 0.0),
             food("buckwheat_cooked", "Buckwheat, cooked", 92.0, 3.4, 0.6, 20.0, 2.7, 0.4, 0.0),
@@ -117,11 +122,11 @@ object SeedFoods {
             food("muesli", "Muesli", 367.0, 8.2, 5.9, 72.0, 7.5, 16.0, 0.1),
             food("granola", "Granola", 471.0, 10.0, 20.0, 64.0, 7.0, 24.0, 0.3),
             food("corn_flakes", "Corn flakes", 357.0, 7.5, 0.4, 84.0, 3.3, 8.0, 1.5),
-            food("wheat_bran", "Wheat bran", 216.0, 16.0, 4.3, 65.0, 42.0, 0.4, 0.0),
+            food("wheat_bran", "Wheat bran", 216.0, 16.0, 4.3, 65.0, 42.8, 0.4, 0.0),
             // Bread & bakery
             food("white_bread", "White bread", 265.0, 9.0, 3.2, 49.0, 2.7, 5.0, 1.2, 25.0),
-            food("whole_wheat_bread", "Whole wheat bread", 247.0, 13.0, 3.4, 41.0, 7.0, 4.3, 1.2, 30.0),
-            food("rye_bread", "Rye bread", 259.0, 8.5, 3.3, 48.0, 5.8, 3.9, 1.2, 30.0),
+            food("whole_wheat_bread", "Whole wheat bread", 247.0, 13.0, 3.4, 41.0, 6.0, 4.3, 1.1, 30.0),
+            food("rye_bread", "Rye bread", 259.0, 8.5, 3.3, 48.0, 5.8, 3.9, 1.5, 30.0),
             food("borodinsky_bread", "Borodinsky bread", 208.0, 6.8, 1.3, 40.0, 7.9, 4.0, 1.2, 35.0),
             food("baguette", "Baguette", 274.0, 9.0, 1.8, 56.0, 2.5, 2.0, 1.4, 50.0),
             food("bagel", "Bagel", 250.0, 10.0, 1.5, 49.0, 2.1, 6.0, 1.2, 85.0),
@@ -181,10 +186,10 @@ object SeedFoods {
             food("doctor_s_sausage_bologna", "Doctor's sausage (bologna)", 257.0, 13.0, 22.0, 1.5, 0.0, 1.0, 2.2),
             food("milk_boiled_sausage", "Milk boiled sausage", 252.0, 11.0, 22.0, 1.6, 0.0, 1.0, 2.2),
             food("smoked_sausage_servelat", "Smoked sausage (servelat)", 425.0, 16.0, 40.0, 0.3, 0.0, 0.3, 2.8),
-            food("salami_dry", "Salami, dry", 407.0, 23.0, 34.0, 2.0, 0.0, 1.0, 4.0),
+            food("salami_dry", "Salami, dry", 407.0, 23.0, 34.0, 2.0, 0.0, 1.0, 5.7),
             food("hunting_sausages_kabanosy", "Hunting sausages (kabanosy)", 463.0, 17.0, 44.0, 0.3, 0.0, 0.3, 3.5),
             food("wieners_sosiski", "Wieners (sosiski)", 266.0, 11.0, 24.0, 1.5, 0.0, 1.0, 2.2, 50.0),
-            food("frankfurter", "Frankfurter", 290.0, 12.0, 26.0, 2.0, 0.0, 1.5, 2.3, 60.0),
+            food("frankfurter", "Frankfurter", 290.0, 12.0, 26.0, 2.0, 0.0, 1.5, 2.7, 60.0),
             food("ham", "Ham", 145.0, 21.0, 5.5, 1.5, 0.0, 1.0, 2.5),
             food("smoked_ham", "Smoked ham", 180.0, 20.0, 10.0, 1.0, 0.0, 0.8, 2.8),
             food("turkey_ham", "Turkey ham", 104.0, 17.0, 3.0, 2.0, 0.0, 1.5, 2.2),
@@ -198,7 +203,7 @@ object SeedFoods {
             // home; canned/smoked/prepared items have no meaningful "raw" state, left as-is.
             food("salmon_raw", "Salmon, raw", 142.0, 20.0, 6.3, 0.0, 0.0, 0.0, 0.15),
             food("salmon_cooked", "Salmon, cooked", 208.0, 20.0, 13.0, 0.0, 0.0, 0.0, 0.2),
-            food("smoked_salmon", "Smoked salmon", 117.0, 18.0, 4.3, 0.0, 0.0, 0.0, 3.0),
+            food("smoked_salmon", "Smoked salmon", 117.0, 18.0, 4.3, 0.0, 0.0, 0.0, 1.7),
             food("canned_pink_salmon", "Canned pink salmon", 136.0, 21.0, 6.0, 0.0, 0.0, 0.0, 1.5),
             food("trout_raw", "Trout, raw", 148.0, 20.8, 6.6, 0.0, 0.0, 0.0, 0.1),
             food("trout_cooked", "Trout, cooked", 168.0, 24.0, 7.5, 0.0, 0.0, 0.0, 0.15),
@@ -222,8 +227,8 @@ object SeedFoods {
             food("mackerel_smoked", "Mackerel, smoked", 296.0, 19.0, 24.0, 0.0, 0.0, 0.0, 2.5),
             food("sardines_canned_in_oil", "Sardines, canned in oil", 208.0, 25.0, 11.0, 0.0, 0.0, 0.0, 1.0),
             food("sprats_canned_in_oil", "Sprats, canned in oil", 363.0, 17.0, 32.0, 0.0, 0.0, 0.0, 1.2),
-            food("shrimp_raw", "Shrimp, raw", 85.0, 20.1, 0.5, 0.2, 0.0, 0.0, 0.6),
-            food("shrimp_cooked", "Shrimp, cooked", 99.0, 24.0, 0.3, 0.2, 0.0, 0.0, 0.6),
+            food("shrimp_raw", "Shrimp, raw", 85.0, 20.1, 0.5, 0.2, 0.0, 0.0, 0.3),
+            food("shrimp_cooked", "Shrimp, cooked", 99.0, 24.0, 0.3, 0.2, 0.0, 0.0, 0.3),
             food("squid_raw", "Squid, raw", 92.0, 15.6, 1.4, 3.1, 0.0, 0.0, 0.9),
             food("squid_cooked", "Squid, cooked", 100.0, 18.0, 2.0, 1.0, 0.0, 0.0, 1.0),
             food("mussels_raw", "Mussels, raw", 86.0, 11.9, 2.2, 3.7, 0.0, 0.0, 0.7),
@@ -272,15 +277,15 @@ object SeedFoods {
             // Cheeses
             food("cheddar_cheese", "Cheddar cheese", 402.0, 25.0, 33.0, 1.3, 0.0, 0.5, 1.8),
             food("mozzarella_cheese", "Mozzarella cheese", 280.0, 28.0, 17.0, 3.1, 0.0, 1.0, 1.4),
-            food("parmesan_cheese", "Parmesan cheese", 392.0, 35.8, 25.0, 3.2, 0.0, 0.9, 3.5),
+            food("parmesan_cheese", "Parmesan cheese", 392.0, 35.8, 25.0, 3.2, 0.0, 0.1, 3.0),
             food("gouda_cheese", "Gouda cheese", 356.0, 25.0, 27.0, 2.2, 0.0, 2.2, 2.0),
             food("brie_cheese", "Brie cheese", 334.0, 21.0, 28.0, 0.5, 0.0, 0.5, 1.5),
-            food("feta_cheese", "Feta cheese", 264.0, 14.0, 21.0, 4.0, 0.0, 4.0, 3.0),
+            food("feta_cheese", "Feta cheese", 264.0, 14.0, 21.0, 4.0, 0.0, 4.0, 2.9),
             food("suluguni_cheese", "Suluguni cheese", 290.0, 20.5, 22.0, 0.4, 0.0, 0.4, 2.5),
             food("processed_cheese", "Processed cheese", 257.0, 16.8, 19.9, 2.3, 0.0, 2.0, 2.5),
             food("smoked_sausage_cheese", "Smoked sausage cheese", 271.0, 23.0, 19.0, 2.0, 0.0, 2.0, 2.5),
             food("cream_cheese", "Cream cheese", 342.0, 6.0, 34.0, 4.0, 0.0, 3.5, 0.9),
-            food("blue_cheese", "Blue cheese", 353.0, 21.0, 29.0, 2.3, 0.0, 0.5, 3.5),
+            food("blue_cheese", "Blue cheese", 353.0, 21.0, 29.0, 2.3, 0.0, 0.5, 2.9),
             food("halloumi_cheese", "Halloumi cheese", 321.0, 22.0, 25.0, 2.2, 0.0, 2.2, 2.5),
             food("cottage_cheese", "Cottage cheese", 98.0, 11.0, 4.3, 3.4, 0.0, 2.7, 0.9),
             // Vegetables & greens
@@ -316,7 +321,7 @@ object SeedFoods {
             food("mushrooms_fried", "Mushrooms, fried", 55.0, 3.6, 3.0, 4.0, 1.2, 1.5, 0.5),
             food("pumpkin_raw", "Pumpkin, raw", 26.0, 1.0, 0.1, 6.5, 0.5, 2.8, 0.0),
             food("green_beans", "Green beans", 31.0, 1.8, 0.2, 7.0, 2.7, 3.3, 0.0),
-            food("green_peas", "Green peas", 81.0, 5.4, 0.4, 14.0, 5.1, 5.7, 0.0),
+            food("green_peas", "Green peas", 81.0, 5.4, 0.4, 14.0, 5.7, 5.7, 0.0),
             food("radish", "Radish", 16.0, 0.7, 0.1, 3.4, 1.6, 1.9, 0.1),
             food("celery", "Celery", 16.0, 0.7, 0.2, 3.0, 1.6, 1.3, 0.2),
             food("asparagus", "Asparagus", 20.0, 2.2, 0.1, 3.9, 2.1, 1.9, 0.0),
@@ -324,7 +329,7 @@ object SeedFoods {
             food("sweet_corn_canned", "Sweet corn, canned", 76.0, 2.5, 0.8, 17.0, 2.0, 5.0, 0.8),
             food("olives_green", "Olives, green", 145.0, 1.0, 15.0, 4.0, 3.3, 0.5, 3.3),
             food("olives_black", "Olives, black", 115.0, 0.8, 11.0, 6.0, 3.2, 0.5, 3.0),
-            food("dill_fresh", "Dill, fresh", 43.0, 2.5, 1.1, 7.0, 2.8, 0.0, 0.2),
+            food("dill_fresh", "Dill, fresh", 43.0, 2.5, 1.1, 7.0, 2.1, 0.0, 0.2),
             food("parsley_fresh", "Parsley, fresh", 36.0, 3.0, 0.8, 6.0, 3.3, 0.9, 0.1),
             // Fruits & berries
             food("banana", "Banana", 89.0, 1.1, 0.3, 23.0, 2.6, 12.0, 0.0, 120.0),
@@ -363,11 +368,11 @@ object SeedFoods {
             food("black_beans_cooked", "Black beans, cooked", 132.0, 8.9, 0.5, 24.0, 8.7, 0.3, 0.0),
             food("white_beans_dry", "White beans, dry", 333.0, 23.4, 0.9, 60.0, 15.2, 2.1, 0.0),
             food("white_beans_cooked", "White beans, cooked", 139.0, 9.7, 0.4, 25.0, 6.3, 0.3, 0.0),
-            food("kidney_beans_dry", "Kidney beans, dry", 333.0, 24.0, 0.8, 60.0, 15.2, 2.2, 0.0),
-            food("kidney_beans_cooked", "Kidney beans, cooked", 127.0, 8.7, 0.5, 23.0, 7.4, 0.3, 0.0),
+            food("kidney_beans_dry", "Kidney beans, dry", 333.0, 24.0, 0.8, 60.0, 24.9, 2.2, 0.0),
+            food("kidney_beans_cooked", "Kidney beans, cooked", 127.0, 8.7, 0.5, 23.0, 6.4, 0.3, 0.0),
             food("chickpeas_dry", "Chickpeas, dry", 364.0, 19.3, 6.0, 61.0, 12.2, 10.7, 0.1),
             food("chickpeas_cooked", "Chickpeas, cooked", 164.0, 8.9, 2.6, 27.0, 7.6, 4.8, 0.0),
-            food("lentils_dry", "Lentils, dry", 352.0, 25.8, 1.1, 60.0, 30.5, 2.0, 0.0),
+            food("lentils_dry", "Lentils, dry", 352.0, 25.8, 1.1, 60.0, 10.7, 2.0, 0.0),
             food("lentils_cooked", "Lentils, cooked", 116.0, 9.0, 0.4, 20.0, 7.9, 1.8, 0.0),
             food("edamame", "Edamame", 121.0, 12.0, 5.0, 9.0, 5.2, 2.2, 0.0),
             food("hummus", "Hummus", 166.0, 8.0, 10.0, 14.0, 6.0, 0.3, 1.4),
@@ -384,22 +389,22 @@ object SeedFoods {
             food("pumpkin_seeds", "Pumpkin seeds", 559.0, 30.0, 49.0, 11.0, 6.0, 1.4, 0.0),
             food("chia_seeds", "Chia seeds", 486.0, 17.0, 31.0, 42.0, 34.4, 0.0, 0.0),
             food("flax_seeds", "Flax seeds", 534.0, 18.0, 42.0, 29.0, 27.3, 1.6, 0.1),
-            food("peanut_butter", "Peanut butter", 588.0, 25.0, 50.0, 20.0, 6.0, 9.0, 1.2),
+            food("peanut_butter", "Peanut butter", 588.0, 25.0, 50.0, 20.0, 8.0, 8.4, 1.2),
             // Fats, oils & sauces
             food("olive_oil", "Olive oil", 884.0, 0.0, 100.0, 0.0, 0.0, 0.0, 0.0),
             food("vegetable_oil", "Vegetable oil", 884.0, 0.0, 100.0, 0.0, 0.0, 0.0, 0.0),
             food("coconut_oil", "Coconut oil", 862.0, 0.0, 100.0, 0.0, 0.0, 0.0, 0.0),
-            food("mayonnaise", "Mayonnaise", 680.0, 1.0, 75.0, 0.6, 0.0, 0.6, 1.3),
+            food("mayonnaise", "Mayonnaise", 680.0, 1.0, 75.0, 0.6, 0.0, 0.6, 1.6),
             food("light_mayonnaise", "Light mayonnaise", 260.0, 0.8, 25.0, 6.0, 0.3, 5.0, 1.6),
             food("ketchup", "Ketchup", 101.0, 1.3, 0.1, 27.0, 0.9, 22.0, 2.0),
-            food("mustard", "Mustard", 66.0, 4.4, 4.0, 5.0, 3.3, 3.0, 3.0),
-            food("soy_sauce", "Soy sauce", 53.0, 8.0, 0.6, 4.9, 0.8, 1.7, 14.0),
+            food("mustard", "Mustard", 66.0, 4.4, 4.0, 5.0, 4.0, 0.9, 2.8),
+            food("soy_sauce", "Soy sauce", 53.0, 8.0, 0.6, 4.9, 0.8, 0.4, 13.7),
             food("tomato_paste", "Tomato paste", 82.0, 4.3, 0.5, 19.0, 4.1, 12.0, 0.3),
             food("pesto_sauce", "Pesto sauce", 458.0, 5.0, 47.0, 6.0, 1.5, 2.5, 2.5),
             food("tzatziki_sauce", "Tzatziki sauce", 94.0, 3.5, 7.0, 4.0, 0.5, 2.5, 0.8),
-            food("teriyaki_sauce", "Teriyaki sauce", 89.0, 6.0, 0.0, 16.0, 0.1, 14.0, 6.5),
+            food("teriyaki_sauce", "Teriyaki sauce", 89.0, 6.0, 0.0, 16.0, 0.1, 14.0, 9.6),
             food("bbq_sauce", "BBQ sauce", 172.0, 0.8, 0.6, 41.0, 0.8, 33.0, 2.5),
-            food("caesar_dressing", "Caesar dressing", 542.0, 2.0, 57.0, 4.0, 0.3, 2.5, 2.3),
+            food("caesar_dressing", "Caesar dressing", 542.0, 2.0, 57.0, 4.0, 0.5, 2.8, 3.0),
             food("tartar_sauce", "Tartar sauce", 211.0, 1.0, 20.0, 8.0, 0.4, 5.0, 1.8),
             food("adjika", "Adjika", 59.0, 1.0, 0.7, 12.0, 2.5, 8.0, 3.0),
             food("balsamic_vinegar", "Balsamic vinegar", 88.0, 0.5, 0.0, 17.0, 0.0, 15.0, 0.1),
@@ -415,13 +420,13 @@ object SeedFoods {
             food("pastila", "Pastila", 310.0, 0.5, 0.0, 80.0, 0.5, 75.0, 0.1),
             food("halva_sunflower", "Halva, sunflower", 523.0, 12.0, 30.0, 54.0, 6.0, 40.0, 0.2),
             food("oatmeal_cookies", "Oatmeal cookies", 437.0, 6.5, 14.0, 71.0, 3.0, 27.0, 0.5, 20.0),
-            food("shortbread_cookies", "Shortbread cookies", 502.0, 5.4, 26.0, 64.0, 1.7, 22.0, 0.6, 15.0),
+            food("shortbread_cookies", "Shortbread cookies", 502.0, 5.4, 26.0, 64.0, 1.3, 22.0, 0.9, 15.0),
             food("biscuit_cookies_galety", "Biscuit cookies (galety)", 400.0, 8.0, 9.0, 70.0, 2.5, 12.0, 1.0),
             food("chocolate_chip_cookies", "Chocolate chip cookies", 488.0, 5.5, 24.0, 64.0, 2.5, 32.0, 0.8, 15.0),
             food("wafers", "Wafers", 530.0, 5.3, 30.0, 62.0, 2.0, 35.0, 0.3, 15.0),
             food("gingerbread_pryanik", "Gingerbread (pryanik)", 364.0, 4.8, 2.8, 77.0, 1.5, 40.0, 0.5, 40.0),
             food("sponge_cake_with_cream", "Sponge cake with cream", 344.0, 4.9, 15.0, 49.0, 1.0, 30.0, 0.4),
-            food("cheesecake", "Cheesecake", 321.0, 5.5, 23.0, 26.0, 0.5, 22.0, 0.6),
+            food("cheesecake", "Cheesecake", 321.0, 5.5, 23.0, 26.0, 0.4, 21.8, 1.1),
             food("napoleon_cake", "Napoleon cake", 380.0, 5.0, 22.0, 40.0, 1.0, 25.0, 0.5),
             food("chocolate_muffin", "Chocolate muffin", 425.0, 5.5, 22.0, 52.0, 2.0, 32.0, 0.7),
             food("donut", "Donut", 452.0, 4.9, 25.0, 51.0, 1.5, 25.0, 0.8, 70.0),
