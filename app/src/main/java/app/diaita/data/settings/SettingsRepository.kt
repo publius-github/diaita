@@ -1,6 +1,7 @@
 package app.diaita.data.settings
 
 import android.content.Context
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
@@ -15,7 +16,14 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-private val Context.settingsDataStore by preferencesDataStore(name = "settings")
+// The corruption handler matters: a file corrupted mid-write (the process is killed during
+// an app update) otherwise throws CorruptionException on every read AND write forever —
+// reads would degrade to defaults while edits crash. Recreating the file empty is safe
+// because SettingsMirror gap-fills every lost key back from the database on next start.
+private val Context.settingsDataStore by preferencesDataStore(
+    name = "settings",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+)
 
 class SettingsRepository(
     private val context: Context,
