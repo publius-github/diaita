@@ -480,7 +480,9 @@
     <string name="zone_between">между целью и поддержанием</string>
     <string name="weight_rate_loss">Снижение %1$s %2$s в неделю</string>
     <string name="weight_rate_gain">Набор %1$s %2$s в неделю</string>
-    <string name="weight_projection">цель примерно %1$s</string>
+    <string name="weight_projection">примерно %1$s</string>
+    <string name="bmi_label">ИМТ</string>
+    <string name="bmi_value">%1$.1f</string>
     <string name="a11y_select_day">Выбрать день</string>
 
     <!-- CSV import / backup nag -->

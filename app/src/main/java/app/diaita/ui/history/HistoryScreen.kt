@@ -2,6 +2,7 @@ package app.diaita.ui.history
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -51,6 +54,9 @@ import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.label
+import app.diaita.util.BmiBand
+import app.diaita.util.bmi
+import app.diaita.util.bmiBand
 import app.diaita.util.formatWeightForDisplay
 import java.time.LocalDate
 import java.time.YearMonth
@@ -246,40 +252,51 @@ fun HistoryScreen(
             // 16dp mirrors the gap above the selection line (a bodySmall line centered in the
             // 48dp row), so both summary blocks sit at the same offset from their charts.
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                stringResource(
-                    R.string.latest_weight,
-                    formatWeightForDisplay(uiState.weightUnit.fromKg(uiState.weights.last().weightKg)),
-                    uiState.weightUnit.label(),
-                ),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            uiState.weightRatePerWeek?.let { rate ->
-                Text(
-                    stringResource(
-                        if (rate <= 0) R.string.weight_rate_loss else R.string.weight_rate_gain,
-                        formatWeightForDisplay(abs(uiState.weightUnit.fromKg(rate))),
-                        uiState.weightUnit.label(),
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            uiState.weightTargetKg?.let { target ->
-                Text(
-                    listOfNotNull(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
                         stringResource(
-                            R.string.weight_target_line,
-                            formatWeightForDisplay(uiState.weightUnit.fromKg(target)),
+                            R.string.latest_weight,
+                            formatWeightForDisplay(uiState.weightUnit.fromKg(uiState.weights.last().weightKg)),
                             uiState.weightUnit.label(),
                         ),
-                        uiState.projectedTargetDate?.let { date ->
-                            stringResource(R.string.weight_projection, formatDate(date))
-                        },
-                    ).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    uiState.weightRatePerWeek?.let { rate ->
+                        Text(
+                            stringResource(
+                                if (rate <= 0) R.string.weight_rate_loss else R.string.weight_rate_gain,
+                                formatWeightForDisplay(abs(uiState.weightUnit.fromKg(rate))),
+                                uiState.weightUnit.label(),
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    uiState.weightTargetKg?.let { target ->
+                        Text(
+                            listOfNotNull(
+                                stringResource(
+                                    R.string.weight_target_line,
+                                    formatWeightForDisplay(uiState.weightUnit.fromKg(target)),
+                                    uiState.weightUnit.label(),
+                                ),
+                                uiState.projectedTargetDate?.let { date ->
+                                    stringResource(R.string.weight_projection, formatDate(date))
+                                },
+                            ).joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                // Needs a height, which only the goal wizard collects — no wizard, no tile.
+                bmi(uiState.weights.last().weightKg, uiState.heightCm)?.let { value ->
+                    BmiTile(value, modifier = Modifier.padding(start = 12.dp))
+                }
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -707,6 +724,43 @@ private fun WeightLineChart(
 }
 
 private val DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
+
+/**
+ * BMI badge next to the weight summary. The value colors by WHO band: green inside the
+ * normal 18.5-25 range, amber for under/overweight, red for obese — the same
+ * green/amber/red language the rest of the app uses for on-track/warning/over.
+ */
+@Composable
+private fun BmiTile(
+    value: Double,
+    modifier: Modifier = Modifier,
+) {
+    val color =
+        when (bmiBand(value)) {
+            BmiBand.NORMAL -> MaterialTheme.colorScheme.primary
+            BmiBand.UNDERWEIGHT, BmiBand.OVERWEIGHT -> MaterialTheme.colorScheme.tertiary
+            BmiBand.OBESE -> MaterialTheme.colorScheme.error
+        }
+    Column(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(color.copy(alpha = 0.15f))
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            stringResource(R.string.bmi_label),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            stringResource(R.string.bmi_value, value),
+            style = MaterialTheme.typography.titleMedium,
+            color = color,
+        )
+    }
+}
 
 private fun formatDate(isoDate: String): String =
     LocalDate.parse(isoDate).format(DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()))

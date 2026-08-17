@@ -478,7 +478,9 @@
     <string name="zone_between">between goal and maintenance</string>
     <string name="weight_rate_loss">Losing %1$s %2$s per week</string>
     <string name="weight_rate_gain">Gaining %1$s %2$s per week</string>
-    <string name="weight_projection">target around %1$s</string>
+    <string name="weight_projection">around %1$s</string>
+    <string name="bmi_label">BMI</string>
+    <string name="bmi_value">%1$.1f</string>
     <string name="a11y_select_day">Select day</string>
 
     <!-- CSV import / backup nag -->

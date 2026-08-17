@@ -42,6 +42,8 @@ data class HistoryUiState(
     val weights: List<WeightEntry> = emptyList(),
     val monthlyAverages: List<MonthlyAggregate> = emptyList(),
     val weightUnit: WeightUnit = WeightUnit.KG,
+    /** Height from the last completed goal wizard; null until it ran once. Feeds the BMI tile. */
+    val heightCm: Double? = null,
     /** Least-squares weight change over the visible range, kg/week; null when too sparse. */
     val weightRatePerWeek: Double? = null,
     /** Date the weight trend crosses the target, ISO; null when flat/diverging/absent. */
@@ -79,8 +81,13 @@ class HistoryViewModel(
                     goalRepository.getGoal(),
                     weightRepository.range(fromIso, toIso),
                     diaryRepository.monthlyAverages(),
-                    combine(selectedIndexFlow, settingsRepository.weightUnit, ::Pair),
-                ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit) ->
+                    combine(
+                        selectedIndexFlow,
+                        settingsRepository.weightUnit,
+                        settingsRepository.wizardInputs,
+                        ::Triple,
+                    ),
+                ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit, wizardInputs) ->
                     val allDays =
                         buildFullRange(fromDate, toDate, totals, goal?.calorieTarget, goal?.maintenanceCalories)
                     val bucketDays = if (rangeDays > MAX_DAILY_BARS_RANGE) 7 else 1
@@ -102,6 +109,7 @@ class HistoryViewModel(
                         weights = weights,
                         monthlyAverages = aggregates,
                         weightUnit = weightUnit,
+                        heightCm = wizardInputs?.heightCm,
                         weightRatePerWeek = WeightTrend.ratePerWeek(weightPoints),
                         projectedTargetDate =
                             goal?.weightTargetKg?.let { target ->
