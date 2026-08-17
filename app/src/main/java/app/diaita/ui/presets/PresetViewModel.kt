@@ -13,6 +13,8 @@ import app.diaita.data.repository.PresetSummary
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.ui.common.FoodSearchController
 import app.diaita.util.DateUtils
+import app.diaita.util.formatGramsForInput
+import app.diaita.util.normalizedDecimalOrNull
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,12 +37,15 @@ data class PresetEditUiState(
     val editingPresetId: Long? = null,
     val name: String = "",
     val mealSlot: MealSlot = MealSlot.BREAKFAST,
+    /** Raw text of the optional cooked-weight field; blank = plain preset, a value = dish. */
+    val cookedWeightText: String = "",
     val foodPendingQuantity: FoodItem? = null,
     val showQuickAdd: Boolean = false,
     val draftItems: List<DraftPresetItem> = emptyList(),
     /** Index into [draftItems] of the row being edited via the quantity sheet, if any. */
     val editingDraftIndex: Int? = null,
     val hasError: Boolean = false,
+    val hasCookedWeightError: Boolean = false,
     val saved: Boolean = false,
 )
 
@@ -63,6 +68,9 @@ class PresetViewModel(
 
     private val _undoEvent = MutableSharedFlow<PresetWithItems>(extraBufferCapacity = 1)
     val undoEvent: SharedFlow<PresetWithItems> = _undoEvent.asSharedFlow()
+
+    private val _dishPendingPortion = MutableStateFlow<PresetSummary?>(null)
+    val dishPendingPortion: StateFlow<PresetSummary?> = _dishPendingPortion.asStateFlow()
 
     init {
         // Align a fresh draft's default meal slot with the user's day-part settings. Guarded on
@@ -104,6 +112,36 @@ class PresetViewModel(
         }
     }
 
+    /**
+     * Dish rows can't log one-tap — the eaten portion is unknown — so the tap parks the dish
+     * here and the screen shows the portion sheet; confirm inserts the scaled diary entries.
+     */
+    fun requestDishPortion(summary: PresetSummary) {
+        _dishPendingPortion.value = summary
+    }
+
+    fun dismissDishPortion() {
+        _dishPendingPortion.value = null
+    }
+
+    fun confirmDishPortion(
+        eatenGrams: Double,
+        date: String = DateUtils.today(),
+    ) {
+        val summary = _dishPendingPortion.value ?: return
+        _dishPendingPortion.value = null
+        viewModelScope.launch {
+            val boundaries = settingsRepository.dayPartBoundaries.first()
+            presetRepository.logDishPortion(
+                presetId = summary.preset.id,
+                eatenGrams = eatenGrams,
+                logDate = date,
+                fallbackSlot = DateUtils.defaultMealSlotNow(boundaries),
+            )
+            _justLogged.value = true
+        }
+    }
+
     fun consumeJustLogged() {
         _justLogged.value = false
     }
@@ -139,6 +177,10 @@ class PresetViewModel(
                     editingPresetId = presetId,
                     name = presetWithItems.preset.name,
                     mealSlot = presetWithItems.preset.mealSlot,
+                    cookedWeightText =
+                        presetWithItems.preset.cookedWeightGrams
+                            ?.let(::formatGramsForInput)
+                            .orEmpty(),
                     draftItems = draftItems,
                 )
             }
@@ -151,6 +193,9 @@ class PresetViewModel(
         _editState.update { it.copy(name = name.take(MAX_PRESET_NAME_LENGTH), hasError = false) }
 
     fun onMealSlotChanged(mealSlot: MealSlot) = _editState.update { it.copy(mealSlot = mealSlot) }
+
+    fun onCookedWeightChanged(text: String) =
+        _editState.update { it.copy(cookedWeightText = text, hasCookedWeightError = false) }
 
     fun dismissQuantityDialog() = _editState.update { it.copy(foodPendingQuantity = null) }
 
@@ -218,12 +263,24 @@ class PresetViewModel(
             _editState.update { it.copy(hasError = true) }
             return
         }
+        // Blank = plain preset; anything typed must parse to a positive number to save.
+        val cookedWeightGrams = state.cookedWeightText.normalizedDecimalOrNull()?.takeIf { it > 0 }
+        if (state.cookedWeightText.isNotBlank() && cookedWeightGrams == null) {
+            _editState.update { it.copy(hasCookedWeightError = true) }
+            return
+        }
         viewModelScope.launch {
             val items = state.draftItems.map { it.food.id to it.quantityGrams }
             if (state.editingPresetId != null) {
-                presetRepository.updatePreset(state.editingPresetId, state.name.trim(), state.mealSlot, items)
+                presetRepository.updatePreset(
+                    state.editingPresetId,
+                    state.name.trim(),
+                    state.mealSlot,
+                    items,
+                    cookedWeightGrams,
+                )
             } else {
-                presetRepository.createPreset(state.name.trim(), state.mealSlot, items)
+                presetRepository.createPreset(state.name.trim(), state.mealSlot, items, cookedWeightGrams)
             }
             val boundaries = settingsRepository.dayPartBoundaries.first()
             _editState.update {

@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +47,7 @@ import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.QuickAddDialog
 import app.diaita.ui.common.rememberFoodBarcodeScanner
 import app.diaita.util.NutrientMath
+import app.diaita.util.normalizedDecimalOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,6 +127,8 @@ fun PresetEditScreen(
                     selected = state.mealSlot,
                     onSelected = viewModel::onMealSlotChanged,
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                CookedWeightField(state, viewModel::onCookedWeightChanged)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(stringResource(R.string.items_in_preset), style = MaterialTheme.typography.titleSmall)
                 if (state.draftItems.isEmpty()) {
@@ -213,6 +217,43 @@ fun PresetEditScreen(
             )
         }
     }
+}
+
+/**
+ * Optional cooked-dish weight. Blank keeps a plain one-tap preset; a value turns the preset
+ * into a dish logged by portion. The helper line previews the resulting kcal per 100 g of
+ * cooked food so the user sees the dish's density while tuning ingredients.
+ */
+@Composable
+private fun CookedWeightField(
+    state: PresetEditUiState,
+    onValueChange: (String) -> Unit,
+) {
+    val cookedWeight = state.cookedWeightText.normalizedDecimalOrNull()?.takeIf { it > 0 }
+    val totalCalories = state.draftItems.sumOf { NutrientMath.caloriesFor(it.food, it.quantityGrams) }
+    OutlinedTextField(
+        value = state.cookedWeightText,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.cooked_weight_label)) },
+        singleLine = true,
+        isError = state.hasCookedWeightError,
+        supportingText = {
+            Text(
+                when {
+                    state.hasCookedWeightError -> stringResource(R.string.cooked_weight_error)
+                    cookedWeight != null && state.draftItems.isNotEmpty() ->
+                        stringResource(R.string.kcal_per_100g, (totalCalories / cookedWeight * 100).toInt())
+                    else -> stringResource(R.string.cooked_weight_helper)
+                },
+            )
+        },
+        keyboardOptions =
+            KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+            ),
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 /**

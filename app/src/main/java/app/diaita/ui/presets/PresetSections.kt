@@ -54,23 +54,35 @@ fun PresetSectionHeader(section: PresetSection) {
 /**
  * Tap-to-log preset list used by the Add-food screen's Presets tab: grouped by meal slot with
  * the same section headers as the management screen, each preset a tappable [CompactRowCard].
+ * Plain presets log one-tap; dishes (non-null cooked weight) route to the portion sheet instead.
  */
 fun LazyListScope.presetLogList(
     presets: List<PresetSummary>,
     onLogPreset: (Long) -> Unit,
+    onLogDish: (PresetSummary) -> Unit,
 ) {
     groupPresetsBySlot(presets).forEach { section ->
         item(key = "header_${section.slot}") { PresetSectionHeader(section) }
-        items(section.presets, key = { it.preset.id }) { presetWithItems ->
+        items(section.presets, key = { it.preset.id }) { summary ->
+            val cookedWeight = summary.preset.cookedWeightGrams
             CompactRowCard(
-                title = presetWithItems.preset.name,
+                title = summary.preset.name,
                 subtitle =
-                    stringResource(
-                        R.string.preset_items_kcal_tap_to_log,
-                        presetWithItems.items.size,
-                        presetWithItems.totalCalories.toInt(),
-                    ),
-                onClick = { onLogPreset(presetWithItems.preset.id) },
+                    if (cookedWeight != null) {
+                        stringResource(
+                            R.string.dish_kcal_per_100g_tap_to_log,
+                            (summary.totalCalories / cookedWeight * 100).toInt(),
+                        )
+                    } else {
+                        stringResource(
+                            R.string.preset_items_kcal_tap_to_log,
+                            summary.items.size,
+                            summary.totalCalories.toInt(),
+                        )
+                    },
+                onClick = {
+                    if (cookedWeight != null) onLogDish(summary) else onLogPreset(summary.preset.id)
+                },
             )
         }
     }

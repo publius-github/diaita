@@ -70,7 +70,7 @@ object AppCsv {
             "preset_name",
         )
     val WEIGHTS_HEADER = listOf("date", "weight_kg")
-    val PRESETS_HEADER = listOf("preset_ref", "name", "meal_slot", "food_ref", "quantity_g")
+    val PRESETS_HEADER = listOf("preset_ref", "name", "meal_slot", "food_ref", "quantity_g", "cooked_weight_g")
 
     // --- Export ---
 
@@ -147,6 +147,7 @@ object AppCsv {
                         preset.mealSlot.name,
                         item.foodItemId.toString(),
                         num(item.quantityGrams),
+                        optNum(preset.cookedWeightGrams),
                     )
             }
         }
@@ -206,6 +207,7 @@ object AppCsv {
         val name: String,
         val mealSlot: MealSlot,
         val items: List<Pair<Long, Double>>,
+        val cookedWeightGrams: Double? = null,
     )
 
     sealed class ParseResult {
@@ -275,6 +277,8 @@ object AppCsv {
                             name = untext(rows.first()[1]),
                             mealSlot = MealSlot.valueOf(rows.first()[2]),
                             items = rows.map { it[3].toLong() to it[4].toDouble() },
+                            // Absent in pre-dish (format 2, five-column) exports — stays null.
+                            cookedWeightGrams = rows.first().getOrNull(5)?.toDoubleOrNull(),
                         )
                     }
             } catch (e: RuntimeException) {

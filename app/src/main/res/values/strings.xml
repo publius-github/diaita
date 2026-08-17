@@ -197,6 +197,17 @@
     <string name="new_preset">New preset</string>
     <string name="edit_preset">Edit preset</string>
     <string name="no_presets_yet">No presets yet — tap + to create one (e.g. \"My usual breakfast\").</string>
+    <string name="tab_dishes">Dishes</string>
+    <string name="tab_custom_presets">Custom</string>
+    <string name="no_dishes_yet">No dishes yet. A dish is a preset with a cooked weight: add the ingredients, weigh the finished dish, and log any portion later by weighing your plate.</string>
+    <string name="dish_items_kcal_per_100g">%1$d items · %2$d kcal/100g</string>
+    <string name="dish_kcal_per_100g_tap_to_log">%1$d kcal/100g — tap to log a portion</string>
+    <string name="dish_whole_summary">Whole dish: %1$d g · %2$d kcal · %3$d kcal/100g</string>
+    <string name="whole_dish_chip">Whole dish</string>
+    <string name="dish_portion_label">Portion eaten (g)</string>
+    <string name="cooked_weight_label">Cooked dish weight, g (optional)</string>
+    <string name="cooked_weight_helper">Turns the preset into a dish: log portions by weight, kcal are computed per 100 g.</string>
+    <string name="cooked_weight_error">Enter a weight greater than 0, or leave the field empty</string>
     <string name="items_count_kcal">%1$d items · %2$d kcal</string>
     <string name="log_preset">Log preset</string>
     <string name="delete_preset">Delete preset</string>

@@ -9,6 +9,7 @@ import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.db.entities.WeightEntry
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Locale
@@ -56,13 +57,16 @@ class AppCsvTest {
     private val weight = WeightEntry(date = "2026-08-01", weightKg = 79.5)
     private val preset = MealPreset(id = 5, name = "My breakfast", mealSlot = MealSlot.BREAKFAST)
     private val presetItems = listOf(MealPresetItem(id = 1, presetId = 5, foodItemId = 1, quantityGrams = 60.0))
+    private val dish =
+        MealPreset(id = 6, name = "My borscht", mealSlot = MealSlot.LUNCH, cookedWeightGrams = 3000.0)
+    private val dishItems = listOf(MealPresetItem(id = 2, presetId = 6, foodItemId = 1, quantityGrams = 300.0))
 
     private fun exportAll(): String =
         AppCsv.export(
             foods = listOf(rice, evilFood),
             entries = listOf(entry),
             weights = listOf(weight),
-            presets = listOf(preset to presetItems),
+            presets = listOf(preset to presetItems, dish to dishItems),
         )
 
     @Test
@@ -109,11 +113,34 @@ class AppCsvTest {
         assertEquals(weight.date, parsed.weights.single().date)
         assertEquals(weight.weightKg, parsed.weights.single().weightKg, 1e-9)
 
-        assertEquals(1, parsed.presets.size)
-        val parsedPreset = parsed.presets.single()
+        assertEquals(2, parsed.presets.size)
+        val parsedPreset = parsed.presets.first { it.ref == 5L }
         assertEquals(preset.name, parsedPreset.name)
         assertEquals(MealSlot.BREAKFAST, parsedPreset.mealSlot)
         assertEquals(listOf(1L to 60.0), parsedPreset.items)
+        assertNull(parsedPreset.cookedWeightGrams)
+
+        val parsedDish = parsed.presets.first { it.ref == 6L }
+        assertEquals(dish.name, parsedDish.name)
+        assertEquals(3000.0, parsedDish.cookedWeightGrams!!, 1e-9)
+    }
+
+    @Test
+    fun `pre-dish five-column preset section still imports with null cooked weight`() {
+        val legacyCsv =
+            AppCsv.BOM +
+                listOf(
+                    AppCsv.FORMAT_HEADER,
+                    AppCsv.SECTION_PRESETS,
+                    "preset_ref,name,meal_slot,food_ref,quantity_g",
+                    "5,My breakfast,BREAKFAST,1,60",
+                ).joinToString("\n")
+
+        val parsed = (AppCsv.parse(legacyCsv) as AppCsv.ParseResult.Success).parsed
+        val parsedPreset = parsed.presets.single()
+        assertEquals("My breakfast", parsedPreset.name)
+        assertEquals(listOf(1L to 60.0), parsedPreset.items)
+        assertNull(parsedPreset.cookedWeightGrams)
     }
 
     @Test

@@ -45,11 +45,15 @@ interface MealPresetDao {
     @Delete
     suspend fun deleteItem(item: MealPresetItem)
 
-    @Query("UPDATE meal_presets SET name = :name, mealSlot = :mealSlot WHERE id = :presetId")
+    @Query(
+        "UPDATE meal_presets SET name = :name, mealSlot = :mealSlot, cookedWeightGrams = :cookedWeightGrams " +
+            "WHERE id = :presetId",
+    )
     suspend fun updatePresetHeader(
         presetId: Long,
         name: String,
         mealSlot: MealSlot,
+        cookedWeightGrams: Double?,
     )
 
     @Query("DELETE FROM meal_preset_items WHERE presetId = :presetId")

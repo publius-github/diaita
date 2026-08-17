@@ -36,6 +36,7 @@ import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.QuickAddDialog
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.rememberFoodBarcodeScanner
+import app.diaita.ui.presets.DishPortionSheet
 import app.diaita.ui.presets.PresetViewModel
 import app.diaita.ui.presets.presetLogList
 import app.diaita.util.DateUtils
@@ -173,6 +174,7 @@ private fun PresetsTab(
 ) {
     val presets by presetViewModel.presets.collectAsStateWithLifecycle()
     val justLogged by presetViewModel.justLogged.collectAsStateWithLifecycle()
+    val dishPendingPortion by presetViewModel.dishPendingPortion.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
 
     LaunchedEffect(justLogged) {
@@ -180,6 +182,17 @@ private fun PresetsTab(
             presetViewModel.consumeJustLogged()
             onLogged()
         }
+    }
+
+    dishPendingPortion?.let { dish ->
+        DishPortionSheet(
+            dish = dish,
+            onDismiss = presetViewModel::dismissDishPortion,
+            onConfirm = { eatenGrams ->
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                presetViewModel.confirmDishPortion(eatenGrams, logDate)
+            },
+        )
     }
 
     if (presets.isEmpty()) {
@@ -206,6 +219,7 @@ private fun PresetsTab(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     presetViewModel.logPreset(presetId, logDate)
                 },
+                onLogDish = presetViewModel::requestDishPortion,
             )
         }
     }

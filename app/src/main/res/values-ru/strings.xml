@@ -197,6 +197,17 @@
     <string name="new_preset">Новый шаблон</string>
     <string name="edit_preset">Изменить шаблон</string>
     <string name="no_presets_yet">Шаблонов пока нет — нажмите +, чтобы создать (например, «Мой обычный завтрак»).</string>
+    <string name="tab_dishes">Блюда</string>
+    <string name="tab_custom_presets">Шаблоны</string>
+    <string name="no_dishes_yet">Блюд пока нет. Блюдо — это шаблон с весом готового блюда: добавьте ингредиенты, взвесьте готовое блюдо, а потом записывайте любую порцию, просто взвесив тарелку.</string>
+    <string name="dish_items_kcal_per_100g">%1$d поз. · %2$d ккал/100 г</string>
+    <string name="dish_kcal_per_100g_tap_to_log">%1$d ккал/100 г — нажмите, чтобы записать порцию</string>
+    <string name="dish_whole_summary">Всё блюдо: %1$d г · %2$d ккал · %3$d ккал/100 г</string>
+    <string name="whole_dish_chip">Всё блюдо</string>
+    <string name="dish_portion_label">Съеденная порция (г)</string>
+    <string name="cooked_weight_label">Вес готового блюда, г (необязательно)</string>
+    <string name="cooked_weight_helper">Превращает шаблон в блюдо: порции записываются по весу, ккал считаются на 100 г.</string>
+    <string name="cooked_weight_error">Введите вес больше 0 или оставьте поле пустым</string>
     <string name="items_count_kcal">%1$d поз. · %2$d ккал</string>
     <string name="log_preset">Записать шаблон</string>
     <string name="delete_preset">Удалить шаблон</string>

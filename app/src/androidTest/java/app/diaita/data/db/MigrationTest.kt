@@ -130,6 +130,22 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate9To10_existingPresetsHaveNullCookedWeight() {
+        helper.createDatabase(testDbName, 9).use { db ->
+            db.execSQL(
+                "INSERT INTO meal_presets (name, mealSlot, createdAt) VALUES ('My usual breakfast', 'BREAKFAST', 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 10, true, Migrations.MIGRATION_9_10).use { db ->
+            db.query("SELECT cookedWeightGrams FROM meal_presets WHERE name = 'My usual breakfast'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(true, cursor.isNull(0))
+            }
+        }
+    }
+
+    @Test
     fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
         helper.createDatabase(testDbName, 7).use { db ->
             db.execSQL(

@@ -9,6 +9,7 @@ import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.util.DateUtils
+import app.diaita.util.dishPortionFactor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -43,9 +44,13 @@ class PresetRepository(
         name: String,
         mealSlot: MealSlot,
         items: List<Pair<Long, Double>>,
+        cookedWeightGrams: Double? = null,
     ): Long =
         database.withTransaction {
-            val presetId = mealPresetDao.insertPreset(MealPreset(name = name, mealSlot = mealSlot))
+            val presetId =
+                mealPresetDao.insertPreset(
+                    MealPreset(name = name, mealSlot = mealSlot, cookedWeightGrams = cookedWeightGrams),
+                )
             items.forEach { (foodItemId, quantityGrams) ->
                 mealPresetDao.insertItem(
                     MealPresetItem(presetId = presetId, foodItemId = foodItemId, quantityGrams = quantityGrams),
@@ -54,15 +59,16 @@ class PresetRepository(
             presetId
         }
 
-    /** Replaces the preset's header (name + slot) and full item list in one transaction. */
+    /** Replaces the preset's header (name + slot + cooked weight) and full item list in one transaction. */
     suspend fun updatePreset(
         presetId: Long,
         name: String,
         mealSlot: MealSlot,
         items: List<Pair<Long, Double>>,
+        cookedWeightGrams: Double? = null,
     ) {
         database.withTransaction {
-            mealPresetDao.updatePresetHeader(presetId, name, mealSlot)
+            mealPresetDao.updatePresetHeader(presetId, name, mealSlot, cookedWeightGrams)
             mealPresetDao.deleteItemsForPreset(presetId)
             items.forEach { (foodItemId, quantityGrams) ->
                 mealPresetDao.insertItem(
@@ -94,6 +100,32 @@ class PresetRepository(
         presetId: Long,
         logDate: String,
         fallbackSlot: MealSlot,
+    ) = logScaled(presetId, logDate, fallbackSlot, factor = 1.0)
+
+    /**
+     * Logs an eaten portion of a dish (a preset with [MealPreset.cookedWeightGrams]): every raw
+     * ingredient weight is scaled by eatenGrams / cookedWeightGrams, so nutrition comes from the
+     * raw per-100g values and water loss/gain during cooking cancels out. Inserted entries are
+     * snapshots — editing the dish later leaves history untouched. No-op for plain presets.
+     */
+    suspend fun logDishPortion(
+        presetId: Long,
+        eatenGrams: Double,
+        logDate: String,
+        fallbackSlot: MealSlot,
+    ) {
+        database.withTransaction {
+            val cookedWeight = mealPresetDao.getWithItems(presetId)?.preset?.cookedWeightGrams
+            val factor = dishPortionFactor(cookedWeight, eatenGrams) ?: return@withTransaction
+            logScaled(presetId, logDate, fallbackSlot, factor)
+        }
+    }
+
+    private suspend fun logScaled(
+        presetId: Long,
+        logDate: String,
+        fallbackSlot: MealSlot,
+        factor: Double,
     ) {
         database.withTransaction {
             val presetWithItems = mealPresetDao.getWithItems(presetId) ?: return@withTransaction
@@ -109,7 +141,7 @@ class PresetRepository(
                 diaryEntryDao.insert(
                     DiaryEntry(
                         foodItemId = item.foodItemId,
-                        quantityGrams = item.quantityGrams,
+                        quantityGrams = item.quantityGrams * factor,
                         logDate = logDate,
                         loggedAt = loggedAt,
                         mealSlot = mealSlot,

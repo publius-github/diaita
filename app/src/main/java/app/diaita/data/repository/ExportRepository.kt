@@ -135,7 +135,11 @@ class ExportRepository(
                     val presetId =
                         presetDao.insertPreset(
                             app.diaita.data.db.entities
-                                .MealPreset(name = preset.name, mealSlot = preset.mealSlot),
+                                .MealPreset(
+                                    name = preset.name,
+                                    mealSlot = preset.mealSlot,
+                                    cookedWeightGrams = preset.cookedWeightGrams,
+                                ),
                         )
                     preset.items.forEach { (foodRef, quantity) ->
                         refToId[foodRef]?.let { foodId ->

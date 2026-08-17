@@ -114,6 +114,18 @@ object Migrations {
             }
         }
 
+    /**
+     * Adds the cooked-dish weight to presets. A preset with a non-null value is a "dish":
+     * its items are raw ingredient weights, and logging asks for the eaten cooked grams,
+     * scaling every item by eaten/cooked. Null keeps plain one-tap preset semantics.
+     */
+    val MIGRATION_9_10 =
+        object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE meal_presets ADD COLUMN cookedWeightGrams REAL")
+            }
+        }
+
     val all: Array<Migration> =
-        arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+        arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 }
