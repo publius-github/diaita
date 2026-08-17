@@ -103,7 +103,7 @@ private fun AboutContent(
             Image(
                 painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
-                modifier = Modifier.requiredSize(192.dp),
+                modifier = Modifier.requiredSize(156.dp),
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
