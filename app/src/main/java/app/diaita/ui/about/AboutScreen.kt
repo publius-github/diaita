@@ -2,12 +2,14 @@ package app.diaita.ui.about
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -85,19 +87,25 @@ private fun AboutContent(
             modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_foreground),
-            contentDescription = null,
+        // The adaptive-icon foreground carries the launcher safe-zone padding, so drawn 1:1 the
+        // mark looks tiny inside the circle; oversizing it and clipping restores the launcher look.
+        Box(
             modifier =
                 Modifier
                     .size(120.dp)
                     .clip(CircleShape)
                     .background(GreenPrimary),
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_foreground),
+                contentDescription = null,
+                modifier = Modifier.requiredSize(192.dp),
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             stringResource(R.string.app_name),

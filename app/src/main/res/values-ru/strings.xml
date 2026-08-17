@@ -225,7 +225,7 @@
 
     <!-- Goal wizard -->
     <string name="calc_open">Не уверены? Рассчитать за меня</string>
-    <string name="wizard_title">Мастер калорий</string>
+    <string name="wizard_title">Калькулятор калорий</string>
     <string name="wizard_step">Шаг %1$d из %2$d</string>
     <string name="wizard_next">Далее</string>
     <string name="wizard_about_you">О вас</string>
@@ -285,7 +285,7 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_goals">Дневная цель</string>
     <string name="settings_goals_desc">Калории, макронутриенты и целевой вес</string>
-    <string name="settings_wizard">Мастер калорий</string>
+    <string name="settings_wizard">Калькулятор калорий</string>
     <string name="settings_wizard_desc">Рассчитать, сколько калорий вам нужно в день</string>
     <string name="settings_backup_desc">Резервная копия, восстановление и экспорт данных</string>
     <string name="settings_off_desc">Искать продукты онлайн при поиске</string>

@@ -188,7 +188,7 @@ fun HistoryScreen(
                         }
                     Text(
                         baseInfo,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color =
                             when (day.zone) {
                                 CalorieZone.OFF_TRACK -> MaterialTheme.colorScheme.error
@@ -243,7 +243,9 @@ fun HistoryScreen(
                         .fillMaxWidth()
                         .weight(1f),
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            // 16dp mirrors the gap above the selection line (a bodySmall line centered in the
+            // 48dp row), so both summary blocks sit at the same offset from their charts.
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 stringResource(
                     R.string.latest_weight,

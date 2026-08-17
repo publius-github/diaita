@@ -225,7 +225,7 @@
 
     <!-- Goal wizard -->
     <string name="calc_open">Not sure? Calculate for me</string>
-    <string name="wizard_title">Calorie wizard</string>
+    <string name="wizard_title">Calorie calculator</string>
     <string name="wizard_step">Step %1$d of %2$d</string>
     <string name="wizard_next">Next</string>
     <string name="wizard_about_you">About you</string>
@@ -285,7 +285,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_goals">Daily goals</string>
     <string name="settings_goals_desc">Calories, macros and weight target</string>
-    <string name="settings_wizard">Calorie wizard</string>
+    <string name="settings_wizard">Calorie calculator</string>
     <string name="settings_wizard_desc">Calculate how many calories you need per day</string>
     <string name="settings_backup_desc">Back up, restore or export your data</string>
     <string name="settings_off_desc">Look up foods online while searching</string>
