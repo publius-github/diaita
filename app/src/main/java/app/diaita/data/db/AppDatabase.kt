@@ -32,7 +32,7 @@ import kotlinx.coroutines.CoroutineScope
         WeightEntry::class,
         MonthlyAggregate::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

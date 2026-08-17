@@ -13,7 +13,9 @@ object Migrations {
     /**
      * Adds the stable seed-catalog identity column. Existing SEED rows are backfilled by
      * matching their (historically stable) names against the current catalog, so diary
-     * entries keep pointing at the same row once upserts switch to seedKey.
+     * entries keep pointing at the same row once upserts switch to seedKey. Retired
+     * entries are included so the backfill keeps covering exactly the catalog this
+     * migration originally shipped against.
      */
     val MIGRATION_4_5 =
         object : Migration(4, 5) {
@@ -22,10 +24,11 @@ object Migrations {
                 db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS `index_food_items_seedKey` ON `food_items` (`seedKey`)",
                 )
-                SeedFoods.all.forEach { seed ->
+                val backfill = SeedFoods.all.map { it.seedKey!! to it.name } + SeedFoods.retired.toList()
+                backfill.forEach { (seedKey, name) ->
                     db.execSQL(
                         "UPDATE food_items SET seedKey = ? WHERE source = 'SEED' AND name = ? AND seedKey IS NULL",
-                        arrayOf(seed.seedKey, seed.name),
+                        arrayOf(seedKey, name),
                     )
                 }
             }
@@ -126,6 +129,31 @@ object Migrations {
             }
         }
 
+    /**
+     * Adds the seeded-dish identity and the user-edit flag to presets, mirroring the
+     * food catalog's seedKey/editedByUser pattern so shipped dishes can be refreshed
+     * without clobbering user-tuned proportions. Existing presets are all user-created:
+     * seedKey stays NULL and they are never touched by the dish sync.
+     */
+    val MIGRATION_10_11 =
+        object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE meal_presets ADD COLUMN seedKey TEXT")
+                db.execSQL("ALTER TABLE meal_presets ADD COLUMN editedByUser INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_meal_presets_seedKey` ON `meal_presets` (`seedKey`)",
+                )
+            }
+        }
+
     val all: Array<Migration> =
-        arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+        arrayOf(
+            MIGRATION_4_5,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+        )
 }

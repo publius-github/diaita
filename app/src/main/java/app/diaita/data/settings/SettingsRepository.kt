@@ -31,6 +31,7 @@ class SettingsRepository(
 
     private val openFoodFactsKey = booleanPreferencesKey("open_food_facts_enabled")
     private val seedCatalogVersionKey = intPreferencesKey("seed_catalog_version")
+    private val seedDishVersionKey = intPreferencesKey("seed_dish_version")
 
     val openFoodFactsEnabled: Flow<Boolean> =
         prefs.map { prefs -> prefs[openFoodFactsKey] ?: true }
@@ -343,6 +344,14 @@ class SettingsRepository(
 
     suspend fun setSeedCatalogVersion(version: Int) {
         context.settingsDataStore.edit { prefs -> prefs[seedCatalogVersionKey] = version }
+    }
+
+    /** Last seeded-dish catalog version applied to the database; 0 means never synced. */
+    val seedDishVersion: Flow<Int> =
+        prefs.map { prefs -> prefs[seedDishVersionKey] ?: 0 }
+
+    suspend fun setSeedDishVersion(version: Int) {
+        context.settingsDataStore.edit { prefs -> prefs[seedDishVersionKey] = version }
     }
 
     companion object {

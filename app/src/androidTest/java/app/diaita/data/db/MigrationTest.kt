@@ -146,6 +146,23 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate10To11_existingPresetsStayUserOwned() {
+        helper.createDatabase(testDbName, 10).use { db ->
+            db.execSQL(
+                "INSERT INTO meal_presets (name, mealSlot, createdAt) VALUES ('My usual breakfast', 'BREAKFAST', 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(testDbName, 11, true, Migrations.MIGRATION_10_11).use { db ->
+            db.query("SELECT seedKey, editedByUser FROM meal_presets WHERE name = 'My usual breakfast'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(true, cursor.isNull(0))
+                assertEquals(0, cursor.getInt(1))
+            }
+        }
+    }
+
+    @Test
     fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
         helper.createDatabase(testDbName, 7).use { db ->
             db.execSQL(

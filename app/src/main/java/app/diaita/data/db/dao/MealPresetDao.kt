@@ -45,9 +45,11 @@ interface MealPresetDao {
     @Delete
     suspend fun deleteItem(item: MealPresetItem)
 
+    // editedByUser flips on every user edit so the seeded-dish sync never clobbers a tuned
+    // dish; the flag is meaningless (but harmless) on user-created presets.
     @Query(
-        "UPDATE meal_presets SET name = :name, mealSlot = :mealSlot, cookedWeightGrams = :cookedWeightGrams " +
-            "WHERE id = :presetId",
+        "UPDATE meal_presets SET name = :name, mealSlot = :mealSlot, cookedWeightGrams = :cookedWeightGrams, " +
+            "editedByUser = 1 WHERE id = :presetId",
     )
     suspend fun updatePresetHeader(
         presetId: Long,
@@ -55,6 +57,20 @@ interface MealPresetDao {
         mealSlot: MealSlot,
         cookedWeightGrams: Double?,
     )
+
+    /** Seed-sync refresh path: updates shipped fields without marking the dish user-edited. */
+    @Query(
+        "UPDATE meal_presets SET name = :name, cookedWeightGrams = :cookedWeightGrams WHERE id = :presetId",
+    )
+    suspend fun updateSeededDish(
+        presetId: Long,
+        name: String,
+        cookedWeightGrams: Double?,
+    )
+
+    @Transaction
+    @Query("SELECT * FROM meal_presets WHERE seedKey IS NOT NULL")
+    suspend fun getSeededWithItems(): List<PresetWithItems>
 
     @Query("DELETE FROM meal_preset_items WHERE presetId = :presetId")
     suspend fun deleteItemsForPreset(presetId: Long)

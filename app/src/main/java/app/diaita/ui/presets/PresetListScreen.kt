@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.PresetSummary
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactRowCard
@@ -138,8 +139,14 @@ fun PresetListScreen(
                             .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    groupPresetsBySlot(shownPresets).forEach { section ->
-                        item(key = "header_${section.slot}") { PresetSectionHeader(section) }
+                    val sections = groupPresetsBySlot(shownPresets)
+                    // Seeded dishes carry no meal slot, so a dishes-only list would show a
+                    // single meaningless "Other" header — drop it and render a flat list.
+                    val loneUnspecified = sections.size == 1 && sections.single().slot == MealSlot.UNSPECIFIED
+                    sections.forEach { section ->
+                        if (!loneUnspecified) {
+                            item(key = "header_${section.slot}") { PresetSectionHeader(section) }
+                        }
                         items(section.presets, key = { it.preset.id }) { summary ->
                             PresetCard(
                                 summary = summary,

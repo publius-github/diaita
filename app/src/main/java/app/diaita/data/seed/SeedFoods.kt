@@ -4,11 +4,12 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 
 /**
- * ~395 common foods with per-100g macros, shipped in-app so search works fully offline.
+ * ~375 common foods with per-100g macros, shipped in-app so search works fully offline.
  * Covers whole foods (grains, meat, fish, vegetables, fruits) plus everyday processed
- * food (sausages, cookies, chips, wafers, sauces, salads, cheeses, curds) — aimed at
- * covering ~95% of daily logging without the network. Values are widely accepted
- * approximate nutrition figures, not medical-grade data.
+ * food (sausages, cookies, chips, wafers, sauces, cheeses, curds) — aimed at covering
+ * ~95% of daily logging without the network. Values are widely accepted approximate
+ * nutrition figures, not medical-grade data. Home-cooked dishes live in [SeedDishes]
+ * as ingredient compositions, not here (see [retired]).
  *
  * Fiber/sugar/salt were cross-checked against the USDA SR Legacy dataset where a
  * one-to-one match exists (generic whole foods); Russian and composite/brand-dependent
@@ -31,7 +32,7 @@ import app.diaita.data.db.entities.FoodSource
  */
 object SeedFoods {
     /** Bump on every catalog change so existing installs pick it up on next app start. */
-    const val CATALOG_VERSION = 6
+    const val CATALOG_VERSION = 7
 
     /**
      * Positional on purpose — the entries below read as a nutrition table, and named
@@ -123,6 +124,7 @@ object SeedFoods {
             food("granola", "Granola", 471.0, 10.0, 20.0, 64.0, 7.0, 24.0, 0.3),
             food("corn_flakes", "Corn flakes", 357.0, 7.5, 0.4, 84.0, 3.3, 8.0, 1.5),
             food("wheat_bran", "Wheat bran", 216.0, 16.0, 4.3, 65.0, 42.8, 0.4, 0.0),
+            food("wheat_flour", "Wheat flour", 364.0, 10.3, 1.1, 76.3, 2.7, 0.3, 0.0),
             // Bread & bakery
             food("white_bread", "White bread", 265.0, 9.0, 3.2, 49.0, 2.7, 5.0, 1.2, 25.0),
             food("whole_wheat_bread", "Whole wheat bread", 247.0, 13.0, 3.4, 41.0, 6.0, 4.3, 1.1, 30.0),
@@ -373,6 +375,7 @@ object SeedFoods {
             food("chickpeas_dry", "Chickpeas, dry", 364.0, 19.3, 6.0, 61.0, 12.2, 10.7, 0.1),
             food("chickpeas_cooked", "Chickpeas, cooked", 164.0, 8.9, 2.6, 27.0, 7.6, 4.8, 0.0),
             food("lentils_dry", "Lentils, dry", 352.0, 25.8, 1.1, 60.0, 10.7, 2.0, 0.0),
+            food("split_peas_dry", "Split peas, dry", 341.0, 24.6, 1.2, 60.0, 25.5, 8.0, 0.0),
             food("lentils_cooked", "Lentils, cooked", 116.0, 9.0, 0.4, 20.0, 7.9, 1.8, 0.0),
             food("edamame", "Edamame", 121.0, 12.0, 5.0, 9.0, 5.2, 2.2, 0.0),
             food("hummus", "Hummus", 166.0, 8.0, 10.0, 14.0, 6.0, 0.3, 1.4),
@@ -460,29 +463,13 @@ object SeedFoods {
             food("wine_dry_white", "Wine, dry white", 82.0, 0.1, 0.0, 2.6, 0.0, 0.6, 0.0, 150.0),
             food("vodka", "Vodka", 231.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 40.0),
             food("energy_drink", "Energy drink", 45.0, 0.0, 0.0, 11.0, 0.0, 11.0, 0.1, 250.0),
-            // Soups
-            food("borscht", "Borscht", 49.0, 1.6, 2.2, 5.5, 1.2, 2.0, 0.7, 300.0),
-            food("chicken_noodle_soup", "Chicken noodle soup", 55.0, 3.0, 2.0, 6.0, 0.5, 0.8, 0.8, 300.0),
-            food("shchi_cabbage_soup", "Shchi (cabbage soup)", 38.0, 1.5, 2.0, 4.0, 1.0, 1.5, 0.7, 300.0),
-            food("solyanka_soup", "Solyanka soup", 69.0, 5.0, 4.0, 3.0, 0.7, 1.0, 1.2, 300.0),
-            food("pea_soup", "Pea soup", 66.0, 4.4, 2.4, 8.0, 1.8, 1.0, 0.7, 300.0),
-            food("mushroom_cream_soup", "Mushroom cream soup", 84.0, 2.0, 6.0, 6.0, 0.6, 1.5, 0.8, 300.0),
-            food("okroshka", "Okroshka", 60.0, 2.1, 3.1, 5.5, 0.6, 2.0, 0.6, 300.0),
-            // Prepared dishes & salads
+            // Prepared dishes & salads. Home-cooked dishes (soups, salads, cutlets, plov...)
+            // were retired in catalog v7 in favour of seeded component-based dishes
+            // ([SeedDishes]); what remains here is bought-ready food with no meaningful
+            // home composition (frozen pelmeni, fast food, sushi).
             food("pelmeni_boiled", "Pelmeni, boiled", 248.0, 11.0, 12.0, 23.0, 1.0, 0.8, 1.0),
             food("vareniki_with_potato", "Vareniki with potato", 221.0, 6.0, 7.0, 33.0, 1.5, 0.8, 0.8),
             food("vareniki_with_cottage_cheese", "Vareniki with cottage cheese", 210.0, 9.0, 6.0, 30.0, 1.0, 3.0, 0.6),
-            food("syrniki_curd_fritters", "Syrniki (curd fritters)", 230.0, 14.0, 10.0, 23.0, 0.6, 8.0, 0.4, 60.0),
-            food("plov_rice_pilaf_with_meat", "Plov (rice pilaf with meat)", 190.0, 8.0, 8.0, 21.0, 1.0, 1.5, 0.8),
-            food("fried_potatoes", "Fried potatoes", 192.0, 2.8, 9.5, 24.0, 2.3, 0.8, 0.6),
-            food("potato_pancakes_draniki", "Potato pancakes (draniki)", 208.0, 4.0, 11.0, 24.0, 1.8, 0.8, 0.8, 60.0),
-            food("cabbage_rolls_golubtsy", "Cabbage rolls (golubtsy)", 120.0, 7.0, 6.0, 10.0, 1.5, 2.5, 0.8),
-            food("beef_stroganoff", "Beef stroganoff", 193.0, 17.0, 11.0, 6.0, 0.4, 1.5, 0.9),
-            food("chicken_cutlet_fried", "Chicken cutlet, fried", 222.0, 18.0, 12.0, 10.0, 0.8, 1.0, 1.0, 90.0),
-            food("fish_cutlet_fried", "Fish cutlet, fried", 190.0, 13.0, 9.0, 13.0, 0.8, 1.0, 1.0, 80.0),
-            food("lasagna", "Lasagna", 165.0, 9.0, 8.0, 14.0, 1.2, 3.0, 0.8),
-            food("spaghetti_bolognese", "Spaghetti bolognese", 129.0, 7.0, 5.0, 14.0, 1.5, 2.5, 0.6),
-            food("mac_and_cheese", "Mac and cheese", 164.0, 7.0, 7.0, 18.0, 1.0, 2.5, 0.8),
             food("pizza_cheese_slice", "Pizza, cheese slice", 266.0, 11.0, 10.0, 33.0, 2.3, 3.5, 1.3, 110.0),
             food("pizza_pepperoni_slice", "Pizza, pepperoni slice", 298.0, 13.0, 13.0, 34.0, 2.3, 3.5, 1.6, 110.0),
             food("hamburger_fast_food", "Hamburger, fast food", 250.0, 12.0, 9.0, 30.0, 1.5, 5.0, 1.2, 105.0),
@@ -492,23 +479,42 @@ object SeedFoods {
             food("french_fries", "French fries", 312.0, 3.4, 15.0, 41.0, 3.8, 0.3, 0.5),
             food("sushi_roll_philadelphia", "Sushi roll, Philadelphia", 170.0, 9.0, 6.0, 21.0, 0.8, 3.0, 1.0, 250.0),
             food("sushi_roll_california", "Sushi roll, California", 130.0, 7.0, 3.0, 20.0, 1.0, 3.5, 1.0, 220.0),
-            food(
-                "summer_salad_cabbage_tomato_onion_pepper_oil",
-                "Summer salad (cabbage, tomato, onion, pepper, oil)",
-                67.0,
-                1.1,
-                4.7,
-                4.5,
-                1.5,
-                2.5,
-                0.4,
-            ),
             food("frozen_vegetable_mix_cooked", "Frozen vegetable mix, cooked", 48.0, 2.3, 0.6, 8.5, 3.0, 3.0, 0.1),
-            food("olivier_salad", "Olivier salad", 198.0, 5.5, 15.0, 8.0, 1.5, 2.0, 0.9),
-            food("vinaigrette_salad", "Vinaigrette salad", 120.0, 1.7, 8.0, 10.0, 2.5, 4.0, 0.8),
-            food("caesar_salad_with_chicken", "Caesar salad with chicken", 190.0, 12.0, 13.0, 8.0, 1.0, 2.0, 0.9),
-            food("greek_salad", "Greek salad", 90.0, 2.5, 7.0, 5.0, 1.8, 3.0, 1.0),
-            food("crab_stick_salad", "Crab stick salad", 190.0, 6.0, 15.0, 9.0, 0.8, 2.5, 1.0),
-            food("coleslaw", "Coleslaw", 152.0, 1.2, 12.0, 10.0, 1.8, 7.0, 0.5),
+        )
+
+    /**
+     * Flat prepared-dish rows retired in catalog v7, replaced by [SeedDishes] compositions.
+     * Kept as (seedKey -> shipped name) so [app.diaita.data.db.Migrations.MIGRATION_4_5]
+     * still backfills exactly the catalog it originally shipped against, and so the seed
+     * sync can delete leftover rows — only when nothing references them: a row used by a
+     * diary entry or preset item stays (and stays searchable) to keep history intact.
+     */
+    val retired: Map<String, String> =
+        mapOf(
+            "borscht" to "Borscht",
+            "chicken_noodle_soup" to "Chicken noodle soup",
+            "shchi_cabbage_soup" to "Shchi (cabbage soup)",
+            "solyanka_soup" to "Solyanka soup",
+            "pea_soup" to "Pea soup",
+            "mushroom_cream_soup" to "Mushroom cream soup",
+            "okroshka" to "Okroshka",
+            "syrniki_curd_fritters" to "Syrniki (curd fritters)",
+            "plov_rice_pilaf_with_meat" to "Plov (rice pilaf with meat)",
+            "fried_potatoes" to "Fried potatoes",
+            "potato_pancakes_draniki" to "Potato pancakes (draniki)",
+            "cabbage_rolls_golubtsy" to "Cabbage rolls (golubtsy)",
+            "beef_stroganoff" to "Beef stroganoff",
+            "chicken_cutlet_fried" to "Chicken cutlet, fried",
+            "fish_cutlet_fried" to "Fish cutlet, fried",
+            "lasagna" to "Lasagna",
+            "spaghetti_bolognese" to "Spaghetti bolognese",
+            "mac_and_cheese" to "Mac and cheese",
+            "summer_salad_cabbage_tomato_onion_pepper_oil" to "Summer salad (cabbage, tomato, onion, pepper, oil)",
+            "olivier_salad" to "Olivier salad",
+            "vinaigrette_salad" to "Vinaigrette salad",
+            "caesar_salad_with_chicken" to "Caesar salad with chicken",
+            "greek_salad" to "Greek salad",
+            "crab_stick_salad" to "Crab stick salad",
+            "coleslaw" to "Coleslaw",
         )
 }

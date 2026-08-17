@@ -76,6 +76,20 @@ interface FoodItemDao {
     @Query("SELECT * FROM food_items WHERE source = :source")
     suspend fun getBySource(source: FoodSource): List<FoodItem>
 
+    /**
+     * Removes retired seed-catalog rows ([app.diaita.data.seed.SeedFoods.retired]) — but
+     * only those nothing points at and the user never corrected: a referenced or edited
+     * row stays in the catalog so diary history and tuned entries survive the retirement.
+     */
+    @Query(
+        """
+        DELETE FROM food_items WHERE seedKey IN (:seedKeys) AND editedByUser = 0
+            AND id NOT IN (SELECT foodItemId FROM diary_entries)
+            AND id NOT IN (SELECT foodItemId FROM meal_preset_items)
+        """,
+    )
+    suspend fun deleteRetiredSeeds(seedKeys: List<String>)
+
     /** How many diary entries and preset items point at this food — 0 means it is safe to delete. */
     @Query(
         """
