@@ -15,6 +15,7 @@ import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.PresetRepository
 import app.diaita.data.repository.WeightRepository
+import app.diaita.data.settings.SettingsMirror
 import app.diaita.data.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -59,6 +60,9 @@ class AppContainer(
     }
     val onboardingGate: OnboardingGate by lazy {
         OnboardingGate(settingsRepository, goalRepository, weightRepository, diaryRepository)
+    }
+    val settingsMirror: SettingsMirror by lazy {
+        SettingsMirror(settingsRepository, database.settingsMirrorDao())
     }
 
     /** The start-of-app retention pass, wired with a real Room transaction runner. */

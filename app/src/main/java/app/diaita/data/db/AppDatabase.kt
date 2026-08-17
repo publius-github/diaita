@@ -10,6 +10,7 @@ import app.diaita.data.db.dao.DiaryEntryDao
 import app.diaita.data.db.dao.FoodItemDao
 import app.diaita.data.db.dao.MealPresetDao
 import app.diaita.data.db.dao.MonthlyAggregateDao
+import app.diaita.data.db.dao.SettingsMirrorDao
 import app.diaita.data.db.dao.WeightEntryDao
 import app.diaita.data.db.entities.DailyGoal
 import app.diaita.data.db.entities.DiaryEntry
@@ -17,6 +18,7 @@ import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealPreset
 import app.diaita.data.db.entities.MealPresetItem
 import app.diaita.data.db.entities.MonthlyAggregate
+import app.diaita.data.db.entities.SettingMirrorEntry
 import app.diaita.data.db.entities.WeightEntry
 import app.diaita.data.seed.SeedDatabaseCallback
 import app.diaita.data.settings.SettingsRepository
@@ -31,8 +33,9 @@ import kotlinx.coroutines.CoroutineScope
         DailyGoal::class,
         WeightEntry::class,
         MonthlyAggregate::class,
+        SettingMirrorEntry::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -48,6 +51,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun weightEntryDao(): WeightEntryDao
 
     abstract fun monthlyAggregateDao(): MonthlyAggregateDao
+
+    abstract fun settingsMirrorDao(): SettingsMirrorDao
 
     companion object {
         const val DATABASE_NAME = "calorie_counter.db"

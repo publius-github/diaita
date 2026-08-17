@@ -29,10 +29,14 @@ class SettingsRepository(
             if (error is IOException) emit(emptyPreferences()) else throw error
         }
 
+    /** Raw preference stream for the settings mirror ([SettingsMirror]); same failure policy as [prefs]. */
+    val rawPreferences: Flow<Preferences> get() = prefs
+
     private val openFoodFactsKey = booleanPreferencesKey("open_food_facts_enabled")
     private val seedCatalogVersionKey = intPreferencesKey("seed_catalog_version")
     private val seedDishVersionKey = intPreferencesKey("seed_dish_version")
     private val athleticBmiBandsKey = booleanPreferencesKey("athletic_bmi_bands")
+    private val settingsReplayPendingKey = booleanPreferencesKey("settings_replay_pending")
     private val macroOverProteinPercentKey = intPreferencesKey("macro_over_protein_percent")
     private val macroOverFatPercentKey = intPreferencesKey("macro_over_fat_percent")
     private val macroOverCarbsPercentKey = intPreferencesKey("macro_over_carbs_percent")
@@ -348,6 +352,35 @@ class SettingsRepository(
 
     suspend fun setSeedCatalogVersion(version: Int) {
         context.settingsDataStore.edit { prefs -> prefs[seedCatalogVersionKey] = version }
+    }
+
+    /**
+     * Replays mirror rows into DataStore. Gap-fill by default (only keys DataStore lost —
+     * the reinstall case); [overwrite] after an explicit backup restore, where the backup's
+     * settings are part of what the user asked to bring back.
+     */
+    suspend fun restoreFromMirror(
+        entries: List<app.diaita.data.db.entities.SettingMirrorEntry>,
+        overwrite: Boolean,
+    ) {
+        context.settingsDataStore.edit { prefs ->
+            entries.forEach { applyMirrorEntry(prefs, it, overwrite) }
+        }
+    }
+
+    /** Marks that the next start must replay the mirror over DataStore (set on backup restore). */
+    suspend fun setSettingsReplayPending() {
+        context.settingsDataStore.edit { prefs -> prefs[settingsReplayPendingKey] = true }
+    }
+
+    /** Reads and clears the replay marker; returns whether it was set. */
+    suspend fun consumeSettingsReplayPending(): Boolean {
+        var wasPending = false
+        context.settingsDataStore.edit { prefs ->
+            wasPending = prefs[settingsReplayPendingKey] == true
+            prefs.remove(settingsReplayPendingKey)
+        }
+        return wasPending
     }
 
     /** Widens the BMI tile's upper bands for muscular builds; see [app.diaita.util.bmiBand]. */

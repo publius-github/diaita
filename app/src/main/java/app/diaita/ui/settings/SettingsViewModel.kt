@@ -255,7 +255,12 @@ class SettingsViewModel(
             .onSuccess { settingsRepository.setLastBackupAt(System.currentTimeMillis()) }
             .isSuccess
 
-    suspend fun restoreDatabase(uri: Uri): RestoreOutcome = backupManager.restoreFrom(uri)
+    suspend fun restoreDatabase(uri: Uri): RestoreOutcome =
+        backupManager.restoreFrom(uri).also { outcome ->
+            // The restored file carries the settings mirror; make the next start replay it
+            // over DataStore so the backup's settings come back along with the data.
+            if (outcome == RestoreOutcome.Success) settingsRepository.setSettingsReplayPending()
+        }
 
     companion object {
         const val MIN_DAY_PART_GAP_MINUTES = 60

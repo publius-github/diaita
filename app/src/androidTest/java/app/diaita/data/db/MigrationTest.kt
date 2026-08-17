@@ -163,6 +163,18 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate11To12_createsEmptySettingsMirror() {
+        helper.createDatabase(testDbName, 11).close()
+
+        helper.runMigrationsAndValidate(testDbName, 12, true, Migrations.MIGRATION_11_12).use { db ->
+            db.query("SELECT COUNT(*) FROM settings_mirror").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
+    @Test
     fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
         helper.createDatabase(testDbName, 7).use { db ->
             db.execSQL(

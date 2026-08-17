@@ -146,6 +146,22 @@ object Migrations {
             }
         }
 
+    /**
+     * Adds the settings mirror: a write-through copy of every DataStore preference, so the
+     * single-file database backup carries the user's settings. Before this, a reinstall +
+     * restore brought the diary back but silently reset coach tone, day boundaries and
+     * every other preference (real user pain, 2026-08-17).
+     */
+    val MIGRATION_11_12 =
+        object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `settings_mirror` " +
+                        "(`key` TEXT NOT NULL, `type` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+                )
+            }
+        }
+
     val all: Array<Migration> =
         arrayOf(
             MIGRATION_4_5,
@@ -155,5 +171,6 @@ object Migrations {
             MIGRATION_8_9,
             MIGRATION_9_10,
             MIGRATION_10_11,
+            MIGRATION_11_12,
         )
 }

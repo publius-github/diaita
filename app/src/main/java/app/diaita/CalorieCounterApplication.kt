@@ -14,6 +14,8 @@ class CalorieCounterApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        // First replays mirrored settings lost to a reinstall, then follows every change.
+        container.settingsMirror.start(container.appScope)
         container.appScope.launch {
             runCatching {
                 val retentionDays = container.settingsRepository.retentionDays.first()
