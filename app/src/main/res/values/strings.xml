@@ -37,6 +37,14 @@
     <string name="macro_fat_short">F</string>
     <string name="macro_carbs_short">C</string>
     <string name="macro_goal_reached">Goal reached</string>
+    <string name="macro_over_limit">Over target</string>
+    <string name="settings_macro_over">Over-target warning</string>
+    <string name="settings_macro_over_desc">How far past a macro target before its bar turns amber</string>
+    <string name="macro_over_value">P +%1$d%% · F +%2$d%% · C +%3$d%%</string>
+    <string name="macro_over_dialog_hint">Within the tolerance a reached target keeps its green check; past it the bar shows a warning. Protein overshoot is harmless well beyond the target, fat is the densest calorie budget, carbs sit in between.</string>
+    <string name="macro_over_protein">Protein: +%1$d%%</string>
+    <string name="macro_over_fat">Fat: +%1$d%%</string>
+    <string name="macro_over_carbs">Carbs: +%1$d%%</string>
     <string name="diary_empty">Nothing logged yet today — tap + to add your first food.</string>
     <string name="first_run_goal_body">Set a daily calorie goal to make the ring and day-part bars meaningful.</string>
     <string name="first_run_goal_wizard">Calculate for me</string>

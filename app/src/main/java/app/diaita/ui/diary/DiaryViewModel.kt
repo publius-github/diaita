@@ -11,6 +11,7 @@ import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DateUtils
@@ -80,6 +81,8 @@ data class DiaryUiState(
     val trackMacros: Boolean = true,
     /** Mirrors the "track fiber/sugar/salt" setting — hides the micronutrient line when false. */
     val trackMicronutrients: Boolean = true,
+    /** Per-macro overshoot slack before a bar flips from "goal reached" to a warning. */
+    val macroOverTolerances: MacroOverTolerances = MacroOverTolerances(),
     val dayPartShares: DayPartShares = DayPartShares(),
     val dayPartBoundaries: DayPartBoundaries = DayPartBoundaries(),
     val coachTone: CoachTone = CoachTone.SNARKY,
@@ -99,6 +102,7 @@ data class UndoDeleteEvent(
 private data class TrackingFlags(
     val macros: Boolean,
     val micronutrients: Boolean,
+    val macroOverTolerances: MacroOverTolerances,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -131,6 +135,7 @@ class DiaryViewModel(
                         combine(
                             settingsRepository.trackMacros,
                             settingsRepository.trackMicronutrients,
+                            settingsRepository.macroOverTolerances,
                             ::TrackingFlags,
                         ),
                         settingsRepository.dayPartBoundaries,
@@ -160,6 +165,7 @@ class DiaryViewModel(
                         todayWeightKg = dayWeights.firstOrNull()?.weightKg,
                         trackMacros = settings.tracking.macros,
                         trackMicronutrients = settings.tracking.micronutrients,
+                        macroOverTolerances = settings.tracking.macroOverTolerances,
                         dayPartShares = settings.shares,
                         dayPartBoundaries = settings.boundaries,
                         coachTone = settings.coachTone,

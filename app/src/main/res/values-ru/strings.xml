@@ -37,6 +37,14 @@
     <string name="macro_fat_short">Ж</string>
     <string name="macro_carbs_short">У</string>
     <string name="macro_goal_reached">Цель достигнута</string>
+    <string name="macro_over_limit">Перебор</string>
+    <string name="settings_macro_over">Предупреждение о переборе</string>
+    <string name="settings_macro_over_desc">Насколько можно превысить цель по макросу, прежде чем полоска станет жёлтой</string>
+    <string name="macro_over_value">Б +%1$d%% · Ж +%2$d%% · У +%3$d%%</string>
+    <string name="macro_over_dialog_hint">В пределах допуска достигнутая цель остаётся с зелёной галочкой; сверх него полоска показывает предупреждение. Перебор белка безвреден сильно выше цели, жиры — самый плотный бюджет калорий, углеводы посередине.</string>
+    <string name="macro_over_protein">Белки: +%1$d%%</string>
+    <string name="macro_over_fat">Жиры: +%1$d%%</string>
+    <string name="macro_over_carbs">Углеводы: +%1$d%%</string>
     <string name="diary_empty">Сегодня ещё ничего не записано — нажмите +, чтобы добавить первый продукт.</string>
     <string name="first_run_goal_body">Задайте дневную цель по калориям, чтобы кольцо и полосы частей дня обрели смысл.</string>
     <string name="first_run_goal_wizard">Рассчитать за меня</string>

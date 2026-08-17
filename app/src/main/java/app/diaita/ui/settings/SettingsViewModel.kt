@@ -10,6 +10,7 @@ import app.diaita.data.repository.ImportOutcome
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.ThemeMode
 import app.diaita.data.settings.WeightUnit
@@ -88,6 +89,22 @@ class SettingsViewModel(
     ) {
         viewModelScope.launch {
             settingsRepository.setDayPartShares(DayPartShares.sanitized(morningPercent, dayPercent))
+        }
+    }
+
+    val macroOverTolerances: StateFlow<MacroOverTolerances> =
+        settingsRepository.macroOverTolerances
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MacroOverTolerances())
+
+    fun setMacroOverTolerances(
+        proteinPercent: Int,
+        fatPercent: Int,
+        carbsPercent: Int,
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setMacroOverTolerances(
+                MacroOverTolerances.sanitized(proteinPercent, fatPercent, carbsPercent),
+            )
         }
     }
 

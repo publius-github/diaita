@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarDuration
@@ -616,18 +618,21 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     label = stringResource(R.string.macro_protein_short),
                     consumed = uiState.totalProtein,
                     targetG = uiState.goalProteinG,
+                    overTolerancePercent = uiState.macroOverTolerances.proteinPercent,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 MacroBar(
                     label = stringResource(R.string.macro_fat_short),
                     consumed = uiState.totalFat,
                     targetG = uiState.goalFatG,
+                    overTolerancePercent = uiState.macroOverTolerances.fatPercent,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 MacroBar(
                     label = stringResource(R.string.macro_carbs_short),
                     consumed = uiState.totalCarbs,
                     targetG = uiState.goalCarbsG,
+                    overTolerancePercent = uiState.macroOverTolerances.carbsPercent,
                 )
             }
         }
@@ -853,7 +858,9 @@ private fun DayPartSegment(
                 Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-            color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            // Amber, not error red: a single overshot day part is recoverable within the
+            // same day, so it warns rather than declares failure (red stays for the day total).
+            color = if (isOver) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
             trackColor = progressTrackColor(),
         )
         // Label and figures are stacked, not side-by-side: a narrow (30%-width) segment can't
@@ -887,7 +894,7 @@ private fun DayPartSegment(
             softWrap = false,
             color =
                 if (isOver) {
-                    MaterialTheme.colorScheme.error
+                    MaterialTheme.colorScheme.tertiary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
@@ -909,18 +916,24 @@ private fun DayPart.label(): String =
     )
 
 /**
- * A small per-macro progress bar. Progress is clamped at 100% and the color never changes on
- * exceeding the target (per user preference) — a green check circle marks a reached goal instead.
+ * A small per-macro progress bar with three states. Below the target: plain progress,
+ * clamped at 100%. Target reached but within the macro's overshoot tolerance: green check —
+ * for protein the target is a floor, for fat/carbs a spent budget, both fine. Past the
+ * tolerance: the bar and a warning icon flip to the amber tertiary color — the same
+ * "overshot but recoverable" language the day-part bars use — never error red: a blown
+ * macro is a nudge, not a failure (only the day total earns red).
  */
 @Composable
 private fun MacroBar(
     label: String,
     consumed: Double,
     targetG: Int?,
+    overTolerancePercent: Int,
 ) {
     if (targetG == null || targetG <= 0) return
     val progress = (consumed / targetG).toFloat().coerceIn(0f, 1f)
     val reached = consumed >= targetG
+    val overLimit = consumed > targetG * (1 + overTolerancePercent / 100.0)
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -934,16 +947,25 @@ private fun MacroBar(
                 Modifier
                     .weight(1f)
                     .height(6.dp),
+            color = if (overLimit) MaterialTheme.colorScheme.tertiary else ProgressIndicatorDefaults.linearColor,
             trackColor = progressTrackColor(),
         )
         Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterEnd) {
-            if (reached) {
-                Icon(
-                    Icons.Filled.CheckCircle,
-                    contentDescription = stringResource(R.string.macro_goal_reached),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp),
-                )
+            when {
+                overLimit ->
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = stringResource(R.string.macro_over_limit),
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                reached ->
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        contentDescription = stringResource(R.string.macro_goal_reached),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
             }
         }
     }

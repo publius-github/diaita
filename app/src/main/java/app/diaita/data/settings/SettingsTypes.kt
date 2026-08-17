@@ -64,6 +64,39 @@ data class MacroSplit(
 }
 
 /**
+ * How far past its gram target each macro may run before the Diary card flags it. Expressed
+ * as a percentage of the target. The asymmetry is deliberate nutrition logic, not taste:
+ * protein is a floor whose overshoot is benign far beyond any realistic target (intakes up
+ * to ~3.3 g/kg are studied safe, roughly +50% over a typical 2 g/kg goal), fat is the
+ * tightest budget (densest at 9 kcal/g, and a fat target set near 30% of energy hits the
+ * top of the accepted 20-35% range at about +15%), and carbs are the flexible remainder
+ * (4 kcal/g, wide 45-65% accepted range) so they get more slack before the flag.
+ */
+data class MacroOverTolerances(
+    val proteinPercent: Int = DEFAULT_PROTEIN_PERCENT,
+    val fatPercent: Int = DEFAULT_FAT_PERCENT,
+    val carbsPercent: Int = DEFAULT_CARBS_PERCENT,
+) {
+    companion object {
+        const val DEFAULT_PROTEIN_PERCENT = 50
+        const val DEFAULT_FAT_PERCENT = 15
+        const val DEFAULT_CARBS_PERCENT = 20
+        const val MAX_PERCENT = 100
+
+        fun sanitized(
+            proteinPercent: Int,
+            fatPercent: Int,
+            carbsPercent: Int,
+        ): MacroOverTolerances =
+            MacroOverTolerances(
+                proteinPercent = proteinPercent.coerceIn(0, MAX_PERCENT),
+                fatPercent = fatPercent.coerceIn(0, MAX_PERCENT),
+                carbsPercent = carbsPercent.coerceIn(0, MAX_PERCENT),
+            )
+    }
+}
+
+/**
  * Reference shares of the daily calorie budget per day part. Evening is derived so the
  * three always sum to 100. Defaults follow the 30/40/30 dietitian guideline.
  */

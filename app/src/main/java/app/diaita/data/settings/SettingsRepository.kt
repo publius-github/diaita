@@ -32,6 +32,9 @@ class SettingsRepository(
     private val openFoodFactsKey = booleanPreferencesKey("open_food_facts_enabled")
     private val seedCatalogVersionKey = intPreferencesKey("seed_catalog_version")
     private val seedDishVersionKey = intPreferencesKey("seed_dish_version")
+    private val macroOverProteinPercentKey = intPreferencesKey("macro_over_protein_percent")
+    private val macroOverFatPercentKey = intPreferencesKey("macro_over_fat_percent")
+    private val macroOverCarbsPercentKey = intPreferencesKey("macro_over_carbs_percent")
 
     val openFoodFactsEnabled: Flow<Boolean> =
         prefs.map { prefs -> prefs[openFoodFactsKey] ?: true }
@@ -344,6 +347,25 @@ class SettingsRepository(
 
     suspend fun setSeedCatalogVersion(version: Int) {
         context.settingsDataStore.edit { prefs -> prefs[seedCatalogVersionKey] = version }
+    }
+
+    /** Per-macro overshoot tolerance before the Diary card flags it; see [MacroOverTolerances]. */
+    val macroOverTolerances: Flow<MacroOverTolerances> =
+        prefs.map { prefs ->
+            MacroOverTolerances(
+                proteinPercent =
+                    prefs[macroOverProteinPercentKey] ?: MacroOverTolerances.DEFAULT_PROTEIN_PERCENT,
+                fatPercent = prefs[macroOverFatPercentKey] ?: MacroOverTolerances.DEFAULT_FAT_PERCENT,
+                carbsPercent = prefs[macroOverCarbsPercentKey] ?: MacroOverTolerances.DEFAULT_CARBS_PERCENT,
+            )
+        }
+
+    suspend fun setMacroOverTolerances(tolerances: MacroOverTolerances) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[macroOverProteinPercentKey] = tolerances.proteinPercent
+            prefs[macroOverFatPercentKey] = tolerances.fatPercent
+            prefs[macroOverCarbsPercentKey] = tolerances.carbsPercent
+        }
     }
 
     /** Last seeded-dish catalog version applied to the database; 0 means never synced. */

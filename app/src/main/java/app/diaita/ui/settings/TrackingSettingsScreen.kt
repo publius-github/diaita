@@ -27,6 +27,7 @@ import app.diaita.R
 import app.diaita.data.reminder.ReminderScheduler
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import kotlin.math.roundToInt
@@ -50,10 +51,12 @@ fun TrackingSettingsScreen(
     val coachTone by viewModel.coachTone.collectAsStateWithLifecycle()
     val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
     val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
+    val macroOverTolerances by viewModel.macroOverTolerances.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
     var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
     var showSharesDialog by remember { mutableStateOf(false) }
+    var showMacroOverDialog by remember { mutableStateOf(false) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -77,6 +80,19 @@ fun TrackingSettingsScreen(
                     onCheckedChange = viewModel::setTrackMicronutrients,
                 )
             },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_macro_over,
+            descriptionRes = R.string.settings_macro_over_desc,
+            value =
+                stringResource(
+                    R.string.macro_over_value,
+                    macroOverTolerances.proteinPercent,
+                    macroOverTolerances.fatPercent,
+                    macroOverTolerances.carbsPercent,
+                ),
+            onClick = { showMacroOverDialog = true },
         )
         HorizontalDivider()
         ValueRow(
@@ -188,6 +204,17 @@ fun TrackingSettingsScreen(
             },
         )
     }
+
+    if (showMacroOverDialog) {
+        MacroOverDialog(
+            current = macroOverTolerances,
+            onDismiss = { showMacroOverDialog = false },
+            onConfirm = { protein, fat, carbs ->
+                viewModel.setMacroOverTolerances(protein, fat, carbs)
+                showMacroOverDialog = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -204,6 +231,63 @@ private fun CoachTone.label(): String =
             CoachTone.BRUTAL -> R.string.coach_brutal
         },
     )
+
+/**
+ * Three sliders for the per-macro overshoot tolerance. The defaults are asymmetric on
+ * purpose (protein overshoot is benign, fat is the tightest calorie budget, carbs sit in
+ * between) — see [MacroOverTolerances] for the nutrition reasoning.
+ */
+@Composable
+private fun MacroOverDialog(
+    current: MacroOverTolerances,
+    onDismiss: () -> Unit,
+    onConfirm: (proteinPercent: Int, fatPercent: Int, carbsPercent: Int) -> Unit,
+) {
+    var protein by remember { mutableIntStateOf(current.proteinPercent) }
+    var fat by remember { mutableIntStateOf(current.fatPercent) }
+    var carbs by remember { mutableIntStateOf(current.carbsPercent) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_macro_over)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.macro_over_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.macro_over_protein, protein))
+                Slider(
+                    value = protein.toFloat(),
+                    onValueChange = { protein = it.roundToInt() },
+                    valueRange = 0f..MacroOverTolerances.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.macro_over_fat, fat))
+                Slider(
+                    value = fat.toFloat(),
+                    onValueChange = { fat = it.roundToInt() },
+                    valueRange = 0f..MacroOverTolerances.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.macro_over_carbs, carbs))
+                Slider(
+                    value = carbs.toFloat(),
+                    onValueChange = { carbs = it.roundToInt() },
+                    valueRange = 0f..MacroOverTolerances.MAX_PERCENT.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(protein, fat, carbs) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
 
 /** Two sliders for morning/day percent; evening is derived so the three always sum to 100. */
 @Composable
