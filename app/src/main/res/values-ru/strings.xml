@@ -485,6 +485,7 @@
     <string name="settings_athletic_bmi">ИМТ для спортивного телосложения</string>
     <string name="settings_athletic_bmi_desc">Расширяет границы ИМТ (норма до 27.5) с поправкой на мышечную массу. Неофициальная поправка — официального «ИМТ для атлетов» не существует</string>
     <string name="bmi_value">%1$.1f</string>
+    <string name="bmi_no_height">—</string>
     <string name="a11y_select_day">Выбрать день</string>
 
     <!-- CSV import / backup nag -->

@@ -483,6 +483,7 @@
     <string name="settings_athletic_bmi">Athletic-build BMI</string>
     <string name="settings_athletic_bmi_desc">Widens the BMI bands (normal up to 27.5) to allow for muscle mass. An informal adjustment — there is no official athlete-corrected BMI</string>
     <string name="bmi_value">%1$.1f</string>
+    <string name="bmi_no_height">—</string>
     <string name="a11y_select_day">Select day</string>
 
     <!-- CSV import / backup nag -->

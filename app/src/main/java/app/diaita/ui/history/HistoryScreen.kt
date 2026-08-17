@@ -293,14 +293,15 @@ fun HistoryScreen(
                         )
                     }
                 }
-                // Needs a height, which only the goal wizard collects — no wizard, no tile.
-                bmi(uiState.weights.last().weightKg, uiState.heightCm)?.let { value ->
-                    BmiTile(
-                        value,
-                        athleticBuild = uiState.athleticBmiBands,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
-                }
+                // Needs a height, which only the goal wizard collects. Without one the tile
+                // shows a dash instead of vanishing — a silently missing element reads as a
+                // broken feature (happened for real: a settings reset wiped the wizard height
+                // and the tile just disappeared), and the dash says "run the goal wizard".
+                BmiTile(
+                    value = bmi(uiState.weights.last().weightKg, uiState.heightCm),
+                    athleticBuild = uiState.athleticBmiBands,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -736,15 +737,16 @@ private val DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
  */
 @Composable
 private fun BmiTile(
-    value: Double,
+    value: Double?,
     athleticBuild: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val color =
-        when (bmiBand(value, athleticBuild)) {
+        when (value?.let { bmiBand(it, athleticBuild) }) {
             BmiBand.NORMAL -> MaterialTheme.colorScheme.primary
             BmiBand.UNDERWEIGHT, BmiBand.OVERWEIGHT -> MaterialTheme.colorScheme.tertiary
             BmiBand.OBESE -> MaterialTheme.colorScheme.error
+            null -> MaterialTheme.colorScheme.onSurfaceVariant
         }
     Column(
         modifier =
@@ -760,7 +762,7 @@ private fun BmiTile(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            stringResource(R.string.bmi_value, value),
+            if (value != null) stringResource(R.string.bmi_value, value) else stringResource(R.string.bmi_no_height),
             style = MaterialTheme.typography.titleMedium,
             color = color,
         )
