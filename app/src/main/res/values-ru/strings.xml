@@ -482,6 +482,8 @@
     <string name="weight_rate_gain">Набор %1$s %2$s в неделю</string>
     <string name="weight_projection">примерно %1$s</string>
     <string name="bmi_label">ИМТ</string>
+    <string name="settings_athletic_bmi">ИМТ для спортивного телосложения</string>
+    <string name="settings_athletic_bmi_desc">Расширяет границы ИМТ (норма до 27.5) с поправкой на мышечную массу. Неофициальная поправка — официального «ИМТ для атлетов» не существует</string>
     <string name="bmi_value">%1$.1f</string>
     <string name="a11y_select_day">Выбрать день</string>
 

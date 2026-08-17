@@ -27,4 +27,13 @@ class BmiTest {
         assertEquals(BmiBand.OVERWEIGHT, bmiBand(29.9))
         assertEquals(BmiBand.OBESE, bmiBand(30.0))
     }
+
+    @Test
+    fun `athletic build widens the upper cut-offs but not the lower one`() {
+        assertEquals(BmiBand.UNDERWEIGHT, bmiBand(18.4, athleticBuild = true))
+        assertEquals(BmiBand.NORMAL, bmiBand(27.4, athleticBuild = true))
+        assertEquals(BmiBand.OVERWEIGHT, bmiBand(27.5, athleticBuild = true))
+        assertEquals(BmiBand.OVERWEIGHT, bmiBand(32.4, athleticBuild = true))
+        assertEquals(BmiBand.OBESE, bmiBand(32.5, athleticBuild = true))
+    }
 }

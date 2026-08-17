@@ -295,7 +295,11 @@ fun HistoryScreen(
                 }
                 // Needs a height, which only the goal wizard collects — no wizard, no tile.
                 bmi(uiState.weights.last().weightKg, uiState.heightCm)?.let { value ->
-                    BmiTile(value, modifier = Modifier.padding(start = 12.dp))
+                    BmiTile(
+                        value,
+                        athleticBuild = uiState.athleticBmiBands,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
                 }
             }
         }
@@ -733,10 +737,11 @@ private val DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
 @Composable
 private fun BmiTile(
     value: Double,
+    athleticBuild: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val color =
-        when (bmiBand(value)) {
+        when (bmiBand(value, athleticBuild)) {
             BmiBand.NORMAL -> MaterialTheme.colorScheme.primary
             BmiBand.UNDERWEIGHT, BmiBand.OVERWEIGHT -> MaterialTheme.colorScheme.tertiary
             BmiBand.OBESE -> MaterialTheme.colorScheme.error

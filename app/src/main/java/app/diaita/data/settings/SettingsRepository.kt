@@ -32,6 +32,7 @@ class SettingsRepository(
     private val openFoodFactsKey = booleanPreferencesKey("open_food_facts_enabled")
     private val seedCatalogVersionKey = intPreferencesKey("seed_catalog_version")
     private val seedDishVersionKey = intPreferencesKey("seed_dish_version")
+    private val athleticBmiBandsKey = booleanPreferencesKey("athletic_bmi_bands")
     private val macroOverProteinPercentKey = intPreferencesKey("macro_over_protein_percent")
     private val macroOverFatPercentKey = intPreferencesKey("macro_over_fat_percent")
     private val macroOverCarbsPercentKey = intPreferencesKey("macro_over_carbs_percent")
@@ -347,6 +348,14 @@ class SettingsRepository(
 
     suspend fun setSeedCatalogVersion(version: Int) {
         context.settingsDataStore.edit { prefs -> prefs[seedCatalogVersionKey] = version }
+    }
+
+    /** Widens the BMI tile's upper bands for muscular builds; see [app.diaita.util.bmiBand]. */
+    val athleticBmiBands: Flow<Boolean> =
+        prefs.map { prefs -> prefs[athleticBmiBandsKey] ?: false }
+
+    suspend fun setAthleticBmiBands(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs -> prefs[athleticBmiBandsKey] = enabled }
     }
 
     /** Per-macro overshoot tolerance before the Diary card flags it; see [MacroOverTolerances]. */

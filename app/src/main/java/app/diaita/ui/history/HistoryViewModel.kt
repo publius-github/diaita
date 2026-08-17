@@ -10,6 +10,7 @@ import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WeightUnit
+import app.diaita.data.settings.WizardInputs
 import app.diaita.util.DateUtils
 import app.diaita.util.WeightTrend
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,8 @@ data class HistoryUiState(
     val weightUnit: WeightUnit = WeightUnit.KG,
     /** Height from the last completed goal wizard; null until it ran once. Feeds the BMI tile. */
     val heightCm: Double? = null,
+    /** Widens the BMI tile's upper bands for muscular builds (informal heuristic, user-opted). */
+    val athleticBmiBands: Boolean = false,
     /** Least-squares weight change over the visible range, kg/week; null when too sparse. */
     val weightRatePerWeek: Double? = null,
     /** Date the weight trend crosses the target, ISO; null when flat/diverging/absent. */
@@ -58,6 +61,15 @@ data class HistoryUiState(
 }
 
 private val ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE
+
+/** UI-preference slice of the state, bundled to fit the 5-flow combine overload. */
+private data class HistoryPrefs(
+    val selectedIndex: Int?,
+    val weightUnit: WeightUnit,
+    val wizardInputs: WizardInputs?,
+    val athleticBmiBands: Boolean,
+)
+
 private val LABEL_FORMATTER = DateTimeFormatter.ofPattern("d.MM")
 
 class HistoryViewModel(
@@ -85,9 +97,10 @@ class HistoryViewModel(
                         selectedIndexFlow,
                         settingsRepository.weightUnit,
                         settingsRepository.wizardInputs,
-                        ::Triple,
+                        settingsRepository.athleticBmiBands,
+                        ::HistoryPrefs,
                     ),
-                ) { totals, goal, weights, aggregates, (selectedIndex, weightUnit, wizardInputs) ->
+                ) { totals, goal, weights, aggregates, prefs ->
                     val allDays =
                         buildFullRange(fromDate, toDate, totals, goal?.calorieTarget, goal?.maintenanceCalories)
                     val bucketDays = if (rangeDays > MAX_DAILY_BARS_RANGE) 7 else 1
@@ -105,11 +118,12 @@ class HistoryViewModel(
                         goalCalories = goal?.calorieTarget,
                         maintenanceCalories = goal?.maintenanceCalories,
                         weightTargetKg = goal?.weightTargetKg,
-                        selectedIndex = selectedIndex,
+                        selectedIndex = prefs.selectedIndex,
                         weights = weights,
                         monthlyAverages = aggregates,
-                        weightUnit = weightUnit,
-                        heightCm = wizardInputs?.heightCm,
+                        weightUnit = prefs.weightUnit,
+                        heightCm = prefs.wizardInputs?.heightCm,
+                        athleticBmiBands = prefs.athleticBmiBands,
                         weightRatePerWeek = WeightTrend.ratePerWeek(weightPoints),
                         projectedTargetDate =
                             goal?.weightTargetKg?.let { target ->

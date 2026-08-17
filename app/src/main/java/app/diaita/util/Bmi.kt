@@ -13,11 +13,24 @@ fun bmi(
     return weightKg / (heightM * heightM)
 }
 
-/** WHO adult cut-offs: 18.5 / 25 / 30. */
-fun bmiBand(bmi: Double): BmiBand =
-    when {
+/**
+ * WHO adult cut-offs: 18.5 / 25 / 30. With [athleticBuild] the upper cut-offs shift to
+ * 27.5 / 32.5 to allow for muscle mass. That shift is an informal heuristic, not a
+ * published standard — no body publishes an athlete-corrected BMI; the rigorous fixes are
+ * different metrics entirely (body fat %, FFMI, waist-to-height). The user chose this
+ * knowingly ("на безрыбье и рак рыба", 2026-08-17). The underweight cut-off never moves:
+ * muscle mass can't explain a BMI below 18.5.
+ */
+fun bmiBand(
+    bmi: Double,
+    athleticBuild: Boolean = false,
+): BmiBand {
+    val overweightFrom = if (athleticBuild) 27.5 else 25.0
+    val obeseFrom = if (athleticBuild) 32.5 else 30.0
+    return when {
         bmi < 18.5 -> BmiBand.UNDERWEIGHT
-        bmi < 25.0 -> BmiBand.NORMAL
-        bmi < 30.0 -> BmiBand.OVERWEIGHT
+        bmi < overweightFrom -> BmiBand.NORMAL
+        bmi < obeseFrom -> BmiBand.OVERWEIGHT
         else -> BmiBand.OBESE
     }
+}

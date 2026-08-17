@@ -92,6 +92,14 @@ class SettingsViewModel(
         }
     }
 
+    val athleticBmiBands: StateFlow<Boolean> =
+        settingsRepository.athleticBmiBands
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setAthleticBmiBands(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setAthleticBmiBands(enabled) }
+    }
+
     val macroOverTolerances: StateFlow<MacroOverTolerances> =
         settingsRepository.macroOverTolerances
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MacroOverTolerances())

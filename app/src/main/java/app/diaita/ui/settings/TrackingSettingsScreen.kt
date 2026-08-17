@@ -52,6 +52,7 @@ fun TrackingSettingsScreen(
     val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
     val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
     val macroOverTolerances by viewModel.macroOverTolerances.collectAsStateWithLifecycle()
+    val athleticBmiBands by viewModel.athleticBmiBands.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
     var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
@@ -79,6 +80,14 @@ fun TrackingSettingsScreen(
                     checked = trackMicronutrients,
                     onCheckedChange = viewModel::setTrackMicronutrients,
                 )
+            },
+        )
+        HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_athletic_bmi)) },
+            supportingContent = { Text(stringResource(R.string.settings_athletic_bmi_desc)) },
+            trailingContent = {
+                Switch(checked = athleticBmiBands, onCheckedChange = viewModel::setAthleticBmiBands)
             },
         )
         HorizontalDivider()
