@@ -38,6 +38,7 @@
     <string name="macro_carbs_short">У</string>
     <string name="macro_goal_reached">Цель достигнута</string>
     <string name="macro_over_limit">Перебор</string>
+    <string name="macro_bar_value">%1$d/%2$d г</string>
     <string name="settings_macro_over">Предупреждение о переборе</string>
     <string name="settings_macro_over_desc">Насколько можно превысить цель по макросу, прежде чем полоска станет жёлтой</string>
     <string name="macro_over_value">Б +%1$d%% · Ж +%2$d%% · У +%3$d%%</string>

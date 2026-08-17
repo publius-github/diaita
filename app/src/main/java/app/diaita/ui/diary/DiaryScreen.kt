@@ -519,6 +519,9 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
         uiState.goalCalories != null &&
             uiState.goalCalories > 0 &&
             uiState.totalCalories > uiState.goalCalories
+    val hasMacroGoals =
+        listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
+            .any { it > 0 }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -535,7 +538,10 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
-                    if (uiState.trackMacros) {
+                    // With macro goals set, the gram figures live next to the P/F/C bars
+                    // below (consumed/target); the header line only covers the no-goals case
+                    // so the numbers never vanish entirely.
+                    if (uiState.trackMacros && !hasMacroGoals) {
                         Text(
                             stringResource(
                                 R.string.macros_line,
@@ -609,9 +615,6 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     )
                 }
             }
-            val hasMacroGoals =
-                listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
-                    .any { it > 0 }
             if (hasMacroGoals && uiState.trackMacros) {
                 Spacer(modifier = Modifier.height(12.dp))
                 MacroBar(
@@ -949,6 +952,20 @@ private fun MacroBar(
                     .height(6.dp),
             color = if (overLimit) MaterialTheme.colorScheme.tertiary else ProgressIndicatorDefaults.linearColor,
             trackColor = progressTrackColor(),
+        )
+        // Same consumed/target language as the day-part figures, so both scales read alike.
+        Text(
+            stringResource(R.string.macro_bar_value, consumed.toInt(), targetG),
+            style = MaterialTheme.typography.labelSmall,
+            color =
+                if (overLimit) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            maxLines = 1,
+            softWrap = false,
+            modifier = Modifier.padding(start = 8.dp),
         )
         Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterEnd) {
             when {

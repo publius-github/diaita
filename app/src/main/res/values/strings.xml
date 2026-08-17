@@ -38,6 +38,7 @@
     <string name="macro_carbs_short">C</string>
     <string name="macro_goal_reached">Goal reached</string>
     <string name="macro_over_limit">Over target</string>
+    <string name="macro_bar_value">%1$d/%2$d g</string>
     <string name="settings_macro_over">Over-target warning</string>
     <string name="settings_macro_over_desc">How far past a macro target before its bar turns amber</string>
     <string name="macro_over_value">P +%1$d%% · F +%2$d%% · C +%3$d%%</string>
