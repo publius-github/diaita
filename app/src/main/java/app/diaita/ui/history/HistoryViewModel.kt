@@ -151,7 +151,7 @@ class HistoryViewModel(
     }
 
     companion object {
-        const val DEFAULT_RANGE_DAYS = 7
+        const val DEFAULT_RANGE_DAYS = 30
 
         /** Longest range still drawn as one bar per day — 365 daily bars were unreadable. */
         const val MAX_DAILY_BARS_RANGE = 90
