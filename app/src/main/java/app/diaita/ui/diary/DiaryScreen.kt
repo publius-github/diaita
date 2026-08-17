@@ -953,21 +953,9 @@ private fun MacroBar(
             color = if (overLimit) MaterialTheme.colorScheme.tertiary else ProgressIndicatorDefaults.linearColor,
             trackColor = progressTrackColor(),
         )
-        // Same consumed/target language as the day-part figures, so both scales read alike.
-        Text(
-            stringResource(R.string.macro_bar_value, consumed.toInt(), targetG),
-            style = MaterialTheme.typography.labelSmall,
-            color =
-                if (overLimit) {
-                    MaterialTheme.colorScheme.tertiary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            maxLines = 1,
-            softWrap = false,
-            modifier = Modifier.padding(start = 8.dp),
-        )
-        Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.CenterEnd) {
+        // Fixed-width slots on the right (icon, then figures pinned to the card edge) keep
+        // all three bars exactly the same length regardless of how many digits each ratio has.
+        Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.Center) {
             when {
                 overLimit ->
                     Icon(
@@ -985,8 +973,26 @@ private fun MacroBar(
                     )
             }
         }
+        // Same consumed/target language as the day-part figures, so both scales read alike.
+        Text(
+            stringResource(R.string.macro_bar_value, consumed.toInt(), targetG),
+            style = MaterialTheme.typography.labelSmall,
+            color =
+                if (overLimit) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(MACRO_FIGURES_WIDTH),
+        )
     }
 }
+
+/** Wide enough for the worst realistic case ("888/888 g") so the ratio never resizes the row. */
+private val MACRO_FIGURES_WIDTH = 64.dp
 
 private fun rowKey(row: DiaryRow): Long =
     when (row) {
