@@ -7,19 +7,26 @@ object WeightTrend {
     /** Below this absolute weekly rate the trend counts as flat — no projection is shown. */
     const val FLAT_RATE_KG_PER_WEEK = 0.05
 
+    /**
+     * Minimum span between the first and last weigh-in for a fit. Was 7 days, which made
+     * the rate/projection lines vanish on the 7-day History range (max span 6) — the user
+     * wants them there too, accepting that a short-span fit is noisier (2026-08-19).
+     */
+    const val MIN_TREND_SPAN_DAYS = 3
+
     /** Projections further out than this are noise, not forecasts. */
     const val MAX_PROJECTION_DAYS = 365L * 2
 
     /**
      * Rate of weight change in kg/week via a least-squares fit over the weigh-ins.
-     * Null when there are fewer than two points or they span less than a week —
-     * day-to-day water noise dominates anything shorter.
+     * Null when there are fewer than two points or they span less than
+     * [MIN_TREND_SPAN_DAYS] — day-to-day water noise dominates anything shorter.
      */
     fun ratePerWeek(entries: List<Pair<LocalDate, Double>>): Double? {
         if (entries.size < 2) return null
         val first = entries.minOf { it.first }
         val spanDays = entries.maxOf { it.first }.toEpochDay() - first.toEpochDay()
-        if (spanDays < 7) return null
+        if (spanDays < MIN_TREND_SPAN_DAYS) return null
 
         val points = entries.map { (date, kg) -> (date.toEpochDay() - first.toEpochDay()).toDouble() to kg }
         val n = points.size.toDouble()

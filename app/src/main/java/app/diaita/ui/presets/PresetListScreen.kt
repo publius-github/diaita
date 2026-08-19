@@ -3,17 +3,21 @@ package app.diaita.ui.presets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -26,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -64,6 +69,7 @@ fun PresetListScreen(
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.undo)
     var selectedTab by rememberSaveable { mutableIntStateOf(TAB_DISHES) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(justLogged) {
         if (justLogged) {
@@ -89,14 +95,16 @@ fun PresetListScreen(
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddPresetClick) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.new_preset))
-            }
-        },
     ) { innerPadding ->
         val (dishes, custom) = presets.partition { it.preset.cookedWeightGrams != null }
-        val shownPresets = if (selectedTab == TAB_DISHES) dishes else custom
+        val tabPresets = if (selectedTab == TAB_DISHES) dishes else custom
+        val query = searchQuery.trim()
+        val shownPresets =
+            if (query.isEmpty()) {
+                tabPresets
+            } else {
+                tabPresets.filter { it.preset.name.contains(query, ignoreCase = true) }
+            }
 
         Column(
             modifier =
@@ -120,13 +128,18 @@ fun PresetListScreen(
                 Box(
                     modifier =
                         Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .weight(1f)
                             .padding(16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         stringResource(
-                            if (selectedTab == TAB_DISHES) R.string.no_dishes_yet else R.string.no_presets_yet,
+                            when {
+                                query.isNotEmpty() -> R.string.preset_search_no_matches
+                                selectedTab == TAB_DISHES -> R.string.no_dishes_yet
+                                else -> R.string.no_presets_yet
+                            },
                         ),
                         textAlign = TextAlign.Center,
                     )
@@ -135,7 +148,8 @@ fun PresetListScreen(
                 LazyColumn(
                     modifier =
                         Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .weight(1f)
                             .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -167,6 +181,43 @@ fun PresetListScreen(
                             )
                         }
                     }
+                }
+            }
+            // Bottom bar in place of the FAB (it floated over the delete icons of the last
+            // rows): live-filter search on the left, the same filled green button as the
+            // Home action row in the bottom-right corner. imePadding lifts it above the
+            // keyboard while typing (edge-to-edge activity).
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .imePadding()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.preset_search_hint)) },
+                    trailingIcon =
+                        if (searchQuery.isNotEmpty()) {
+                            {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Filled.Close,
+                                        contentDescription = stringResource(R.string.clear_search),
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                )
+                Button(onClick = onAddPresetClick) {
+                    Text(stringResource(R.string.new_preset))
                 }
             }
         }

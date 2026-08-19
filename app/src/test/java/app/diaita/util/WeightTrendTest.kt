@@ -23,7 +23,14 @@ class WeightTrendTest {
     @Test
     fun `fewer than two points or a short span yields no rate`() {
         assertNull(WeightTrend.ratePerWeek(listOf(start to 90.0)))
-        assertNull(WeightTrend.ratePerWeek(listOf(start to 90.0, start.plusDays(3) to 89.5)))
+        assertNull(WeightTrend.ratePerWeek(listOf(start to 90.0, start.plusDays(2) to 89.5)))
+    }
+
+    @Test
+    fun `a fit inside a single week is allowed from the minimum span`() {
+        // Two points 3 days apart at -0.1 kg/day: the 7-day range must show a trend too.
+        val rate = WeightTrend.ratePerWeek(listOf(start to 90.0, start.plusDays(3) to 89.7))
+        assertEquals(-0.7, rate!!, 1e-9)
     }
 
     @Test

@@ -30,6 +30,8 @@ import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WaterOverThresholds
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import kotlin.math.roundToInt
@@ -64,9 +66,11 @@ fun TrackingSettingsScreen(
     var showMicroOverDialog by remember { mutableStateOf(false) }
     var showDayPartOverDialog by remember { mutableStateOf(false) }
     var showWaterGlassDialog by remember { mutableStateOf(false) }
+    var showWaterOverDialog by remember { mutableStateOf(false) }
     val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
     val trackWater by viewModel.trackWater.collectAsStateWithLifecycle()
     val waterGlassMl by viewModel.waterGlassMl.collectAsStateWithLifecycle()
+    val waterOverThresholds by viewModel.waterOverThresholds.collectAsStateWithLifecycle()
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -106,6 +110,18 @@ fun TrackingSettingsScreen(
                 descriptionRes = R.string.settings_water_glass_desc,
                 value = stringResource(R.string.water_ml_value, waterGlassMl),
                 onClick = { showWaterGlassDialog = true },
+            )
+            HorizontalDivider()
+            ValueRow(
+                titleRes = R.string.settings_water_over,
+                descriptionRes = R.string.settings_water_over_desc,
+                value =
+                    stringResource(
+                        R.string.water_over_value,
+                        waterOverThresholds.amberPercent,
+                        waterOverThresholds.redPercent,
+                    ),
+                onClick = { showWaterOverDialog = true },
             )
             HorizontalDivider()
         }
@@ -282,6 +298,17 @@ fun TrackingSettingsScreen(
         )
     }
 
+    if (showWaterOverDialog) {
+        WaterOverDialog(
+            current = waterOverThresholds,
+            onDismiss = { showWaterOverDialog = false },
+            onConfirm = { amber, red ->
+                viewModel.setWaterOverThresholds(amber, red)
+                showWaterOverDialog = false
+            },
+        )
+    }
+
     if (showDayPartOverDialog) {
         DayPartOverDialog(
             current = dayPartOverThresholds,
@@ -435,6 +462,55 @@ private fun MicroOverDialog(
     )
 }
 
+/**
+ * Two sliders for the overshoot slack past the daily water target: amber first, red past it.
+ * The red slider is floored at the amber value on save so the bands can't invert.
+ */
+@Composable
+private fun WaterOverDialog(
+    current: WaterOverThresholds,
+    onDismiss: () -> Unit,
+    onConfirm: (amberPercent: Int, redPercent: Int) -> Unit,
+) {
+    var amber by remember { mutableIntStateOf(current.amberPercent) }
+    var red by remember { mutableIntStateOf(current.redPercent) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_water_over)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.water_over_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.water_over_amber, amber))
+                Slider(
+                    value = amber.toFloat(),
+                    onValueChange = { amber = it.roundToInt() },
+                    valueRange = 0f..WaterOverThresholds.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.water_over_red, red))
+                Slider(
+                    value = red.toFloat(),
+                    onValueChange = { red = it.roundToInt() },
+                    valueRange = 0f..WaterOverThresholds.MAX_PERCENT.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(amber, red) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
 /** One slider, 50-500 ml in 50 ml steps: how much one tap of the water button logs. */
 @Composable
 private fun WaterGlassDialog(
@@ -443,7 +519,7 @@ private fun WaterGlassDialog(
     onConfirm: (ml: Int) -> Unit,
 ) {
     var ml by remember { mutableIntStateOf(currentMl) }
-    val range = SettingsViewModel.WATER_GLASS_RANGE_ML
+    val range = SettingsRepository.WATER_GLASS_RANGE_ML
 
     AlertDialog(
         onDismissRequest = onDismiss,

@@ -219,8 +219,11 @@
 
     <!-- Presets -->
     <string name="new_preset">Новый шаблон</string>
+    <string name="preset_search_hint">Поиск</string>
+    <string name="preset_search_no_matches">Ничего не найдено</string>
+    <string name="clear_search">Очистить поиск</string>
     <string name="edit_preset">Изменить шаблон</string>
-    <string name="no_presets_yet">Шаблонов пока нет — нажмите +, чтобы создать (например, «Мой обычный завтрак»).</string>
+    <string name="no_presets_yet">Шаблонов пока нет — нажмите «Новый шаблон», чтобы создать (например, «Мой обычный завтрак»).</string>
     <string name="tab_dishes">Блюда</string>
     <string name="tab_custom_presets">Шаблоны</string>
     <string name="no_dishes_yet">Блюд пока нет. Блюдо — это шаблон с весом готового блюда: добавьте ингредиенты, взвесьте готовое блюдо, а потом записывайте любую порцию, просто взвесив тарелку.</string>
@@ -432,6 +435,7 @@
     <string name="latest_weight">Последний: %1$s %2$s</string>
     <string name="weight_today">Вес: %1$s %2$s</string>
     <string name="weight_today_none">Вес: —</string>
+    <string name="log_food">Записать еду</string>
     <string name="log_water">Записать воду</string>
     <string name="water_short">В</string>
     <string name="water_bar_value">%1$d/%2$d</string>
@@ -441,6 +445,23 @@
     <string name="settings_water_glass">Вода за нажатие</string>
     <string name="settings_water_glass_desc">Сколько добавляет одно нажатие кнопки «Записать воду»</string>
     <string name="water_ml_value">%1$d мл</string>
+    <string name="settings_water_over">Перебор воды</string>
+    <string name="settings_water_over_desc">Насколько можно превысить дневную норму, прежде чем шкала станет жёлтой и затем красной</string>
+    <string name="water_over_value">+%1$d%% · +%2$d%%</string>
+    <string name="water_over_dialog_hint">Пить больше нормы — нормально: шкала предупреждает только о действительно избыточном объёме.</string>
+    <string name="water_over_amber">Жёлтый после нормы: +%1$d%%</string>
+    <string name="water_over_red">Красный после нормы: +%1$d%%</string>
+    <string name="water_goal_reached">Норма воды выполнена</string>
+    <string name="water_over_limit">Слишком много воды</string>
+    <string name="water_row_title">Вода</string>
+    <plurals name="water_row_subtitle">
+        <item quantity="one">%1$d мл · %2$d нажатие</item>
+        <item quantity="few">%1$d мл · %2$d нажатия</item>
+        <item quantity="many">%1$d мл · %2$d нажатий</item>
+        <item quantity="other">%1$d мл · %2$d нажатия</item>
+    </plurals>
+    <string name="water_entries_hint">Нажмите на запись, чтобы изменить объём</string>
+    <string name="water_edit_title">Изменить воду</string>
     <string name="weight_target_line">Цель: %1$s %2$s</string>
     <string name="weight_error">Введите корректный вес</string>
     <string name="monthly_averages">Средние по месяцам</string>

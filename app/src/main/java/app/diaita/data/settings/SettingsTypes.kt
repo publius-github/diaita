@@ -138,6 +138,35 @@ data class MicronutrientOverTolerances(
 }
 
 /**
+ * How far past the daily water target the blue bar may run before it warns: within
+ * [amberPercent] of overshoot drinking extra is fine and the bar stays blue, past it the
+ * bar turns amber, and past [redPercent] red. Wide defaults on purpose — the ~30 ml/kg
+ * target is a floor, not a ceiling, so only a genuinely excessive day should recolor.
+ */
+data class WaterOverThresholds(
+    val amberPercent: Int = DEFAULT_AMBER_PERCENT,
+    val redPercent: Int = DEFAULT_RED_PERCENT,
+) {
+    companion object {
+        const val DEFAULT_AMBER_PERCENT = 50
+        const val DEFAULT_RED_PERCENT = 100
+        const val MAX_PERCENT = 200
+
+        /** Clamps slider input; red never sits below amber so the bands can't invert. */
+        fun sanitized(
+            amberPercent: Int,
+            redPercent: Int,
+        ): WaterOverThresholds {
+            val amber = amberPercent.coerceIn(0, MAX_PERCENT)
+            return WaterOverThresholds(
+                amberPercent = amber,
+                redPercent = redPercent.coerceIn(amber, MAX_PERCENT),
+            )
+        }
+    }
+}
+
+/**
  * How much a morning/day/evening segment may overshoot its target before it stops reading
  * green (a small overshoot is noise, not a signal). Past this slack the segment warns in
  * amber; it escalates to red only when the DAY total is over too — a lone part overshoot

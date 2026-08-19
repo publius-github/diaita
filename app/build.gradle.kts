@@ -35,7 +35,7 @@ android {
         // versionCode is derived from the semver so the two can never diverge:
         // MAJOR*10000 + MINOR*100 + PATCH (0.10.0 -> 1000). Android only requires it to
         // increase on every shipped APK, which a version bump now guarantees.
-        val semVer = "0.33.0"
+        val semVer = "0.36.0"
         val (major, minor, patch) = semVer.split('.').map { it.toInt() }
         versionCode = major * 10000 + minor * 100 + patch
         versionName = semVer

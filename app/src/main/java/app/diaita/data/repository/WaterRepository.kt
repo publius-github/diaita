@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class WaterRepository(
     private val waterEntryDao: WaterEntryDao,
 ) {
-    fun totalForDate(date: String): Flow<Int?> = waterEntryDao.totalForDate(date)
+    /** The day's individual taps, oldest first — the diary's water row edits these directly. */
+    fun entriesForDate(date: String): Flow<List<WaterEntry>> = waterEntryDao.entriesForDate(date)
 
     /** Returns the stored row (with its id) so the caller can offer an exact undo. */
     suspend fun logWater(
@@ -19,5 +20,10 @@ class WaterRepository(
         return entry.copy(id = id)
     }
 
-    suspend fun delete(entry: WaterEntry) = waterEntryDao.deleteById(entry.id)
+    suspend fun updateAmount(
+        id: Long,
+        amountMl: Int,
+    ) = waterEntryDao.updateAmount(id, amountMl)
+
+    suspend fun delete(entries: List<WaterEntry>) = waterEntryDao.deleteByIds(entries.map { it.id })
 }

@@ -11,12 +11,17 @@ interface WaterEntryDao {
     @Insert
     suspend fun insert(entry: WaterEntry): Long
 
-    /** Null when the day has no water rows at all (SUM over nothing), 0 never occurs. */
-    @Query("SELECT SUM(amountMl) FROM water_entries WHERE date = :date")
-    fun totalForDate(date: String): Flow<Int?>
+    @Query("SELECT * FROM water_entries WHERE date = :date ORDER BY loggedAt ASC")
+    fun entriesForDate(date: String): Flow<List<WaterEntry>>
 
-    @Query("DELETE FROM water_entries WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    @Query("UPDATE water_entries SET amountMl = :amountMl WHERE id = :id")
+    suspend fun updateAmount(
+        id: Long,
+        amountMl: Int,
+    )
+
+    @Query("DELETE FROM water_entries WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 
     @Query("SELECT * FROM water_entries ORDER BY date ASC, loggedAt ASC")
     suspend fun getAll(): List<WaterEntry>

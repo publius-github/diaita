@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,20 +17,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -37,6 +41,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -47,6 +52,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -57,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -67,14 +74,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.db.entities.WaterEntry
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.HomeProgressStyle
+import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WaterOverThresholds
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CalorieOverBand
 import app.diaita.ui.common.CalorieProgressBar
 import app.diaita.ui.common.CompactProgressRing
+import app.diaita.ui.common.CompactRowCard
 import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
@@ -88,16 +99,20 @@ import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
 import app.diaita.util.BmiBand
 import app.diaita.util.DateUtils
+import app.diaita.util.WaterBand
 import app.diaita.util.bmi
 import app.diaita.util.bmiBand
 import app.diaita.util.formatWeightForDisplay
+import app.diaita.util.waterBand
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DiaryScreen(
     onAddFoodClick: (date: String) -> Unit,
@@ -118,6 +133,8 @@ fun DiaryScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showCopySourcePicker by remember { mutableStateOf(false) }
     var copySourceDate by remember { mutableStateOf<String?>(null) }
+    var showWaterEntries by remember { mutableStateOf(false) }
+    var editingWaterEntry by remember { mutableStateOf<WaterEntry?>(null) }
     val undoLabel = stringResource(R.string.undo)
 
     // The Home tab doubles as "back to today": AppNavHost raises this flag on every tap.
@@ -147,16 +164,31 @@ fun DiaryScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.waterAddedEvent.collect { entry ->
+        // Rapid taps must not queue a snackbar each: collectLatest cancels the previous
+        // showSnackbar (which removes it), and the burst list keeps every tap so the one
+        // visible snackbar shows the accumulated amount and Undo removes the whole burst.
+        val burst = mutableListOf<WaterEntry>()
+        viewModel.waterAddedEvent.collectLatest { entry ->
+            burst += entry
             val result =
                 snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.water_added, entry.amountMl),
+                    message = context.getString(R.string.water_added, burst.sumOf { it.amountMl }),
                     actionLabel = undoLabel,
                     duration = SnackbarDuration.Short,
                 )
             if (result == SnackbarResult.ActionPerformed) {
-                viewModel.undoWater(entry)
+                viewModel.undoWater(burst.toList())
             }
+            burst.clear()
+        }
+    }
+
+    // The taps dialog only exists while there are taps; deleting the last one (or switching
+    // to a day without any) closes it and any per-tap edit instead of leaving a stale dialog.
+    LaunchedEffect(uiState.waterEntries.isEmpty()) {
+        if (uiState.waterEntries.isEmpty()) {
+            showWaterEntries = false
+            editingWaterEntry = null
         }
     }
 
@@ -175,11 +207,6 @@ fun DiaryScreen(
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { onAddFoodClick(uiState.date) }) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_food))
-            }
-        },
     ) { innerPadding ->
         Column(
             modifier =
@@ -203,7 +230,9 @@ fun DiaryScreen(
                 SetGoalBanner(onOpenGoals = onOpenGoals, onOpenWizard = onOpenWizard)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // FlowRow, not Row: three labeled buttons don't fit one line on narrow screens
+            // in Russian — overflow must wrap, not clip.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { showWeightDialog = true }) {
                     Text(stringResource(R.string.log_weight))
                 }
@@ -214,6 +243,11 @@ fun DiaryScreen(
                     ) {
                         Text(stringResource(R.string.log_water))
                     }
+                }
+                // Replaces the FAB, which floated over the delete icons of the last list rows.
+                // Filled green (primary) and labeled like its two outlined neighbors.
+                Button(onClick = { onAddFoodClick(uiState.date) }) {
+                    Text(stringResource(R.string.log_food))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -231,14 +265,23 @@ fun DiaryScreen(
                         Text(stringResource(R.string.copy_from_day))
                     }
                 }
+                // Water logged on a day without food still needs its list row to stay editable.
+                if (uiState.trackWater && uiState.waterEntries.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    WaterRowCard(
+                        entries = uiState.waterEntries,
+                        totalMl = uiState.waterTotalMl,
+                        onClick = { showWaterEntries = true },
+                    )
+                }
             } else {
                 val showHeaders =
                     uiState.sections.size > 1 ||
                         uiState.sections.firstOrNull()?.slot != MealSlot.UNSPECIFIED
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    // clearance so the FAB never covers the last entry
-                    contentPadding = PaddingValues(bottom = 88.dp),
+                    // small clearance so the last card doesn't sit flush on the nav bar
+                    contentPadding = PaddingValues(bottom = 16.dp),
                 ) {
                     uiState.sections.forEach { section ->
                         if (showHeaders) {
@@ -280,6 +323,19 @@ fun DiaryScreen(
                             }
                         }
                     }
+                    // Water sits after the meals as one collapsed row; drilling in lists the
+                    // individual taps for per-tap delete/edit.
+                    if (uiState.trackWater && uiState.waterEntries.isNotEmpty()) {
+                        item(key = "water_row") {
+                            Box(modifier = Modifier.animateItem()) {
+                                WaterRowCard(
+                                    entries = uiState.waterEntries,
+                                    totalMl = uiState.waterTotalMl,
+                                    onClick = { showWaterEntries = true },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -314,6 +370,26 @@ fun DiaryScreen(
             onConfirm = { slot ->
                 copySourceDate = null
                 viewModel.copyFrom(source, slot)
+            },
+        )
+    }
+
+    if (showWaterEntries) {
+        WaterEntriesDialog(
+            entries = uiState.waterEntries,
+            onDismiss = { showWaterEntries = false },
+            onDelete = { entry -> viewModel.undoWater(listOf(entry)) },
+            onEdit = { entry -> editingWaterEntry = entry },
+        )
+    }
+
+    editingWaterEntry?.let { entry ->
+        WaterEditDialog(
+            entry = entry,
+            onDismiss = { editingWaterEntry = null },
+            onConfirm = { ml ->
+                viewModel.updateWaterEntry(entry, ml)
+                editingWaterEntry = null
             },
         )
     }
@@ -715,28 +791,45 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     overTolerancePercent = uiState.macroOverTolerances.carbsPercent,
                 )
                 if (uiState.trackWater) {
-                    WaterBar(totalMl = uiState.waterTotalMl, targetMl = uiState.waterTargetMl)
+                    WaterBar(
+                        totalMl = uiState.waterTotalMl,
+                        targetMl = uiState.waterTargetMl,
+                        overThresholds = uiState.waterOverThresholds,
+                    )
                 }
             } else if (uiState.trackWater) {
                 Spacer(modifier = Modifier.height(12.dp))
-                WaterBar(totalMl = uiState.waterTotalMl, targetMl = uiState.waterTargetMl)
+                WaterBar(
+                    totalMl = uiState.waterTotalMl,
+                    targetMl = uiState.waterTargetMl,
+                    overThresholds = uiState.waterOverThresholds,
+                )
             }
         }
     }
 }
 
 /**
- * The water scale under the P/F/C bars — same row anatomy (16dp label, bar, empty icon
- * slot, fixed-width figures) so the four bars align, but always water-blue: drinking more
- * than the target is fine, so there is no warning recolor. Target comes from the wizard
- * weight (~30 ml/kg) or a flat 2 l without one.
+ * The water scale under the P/F/C bars — same row anatomy (16dp label, bar, icon slot,
+ * fixed-width figures) so the four bars align. Reaching the target earns the same check
+ * mark as the macro bars, only water-blue; drinking moderately past it is still fine, but
+ * far past it the bar warns in amber and then red (user-tunable slack, wide by default).
+ * Target comes from the wizard weight (~30 ml/kg) or a flat 2 l without one.
  */
 @Composable
 private fun WaterBar(
     totalMl: Int,
     targetMl: Int,
+    overThresholds: WaterOverThresholds,
 ) {
     val progress = if (targetMl > 0) (totalMl.toFloat() / targetMl).coerceIn(0f, 1f) else 0f
+    val band = waterBand(totalMl, targetMl, overThresholds.amberPercent, overThresholds.redPercent)
+    val barColor =
+        when (band) {
+            WaterBand.WITHIN -> WaterBlue
+            WaterBand.OVER_AMBER -> MaterialTheme.colorScheme.tertiary
+            WaterBand.OVER_RED -> MaterialTheme.colorScheme.error
+        }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             stringResource(R.string.water_short),
@@ -750,20 +843,140 @@ private fun WaterBar(
                 Modifier
                     .weight(1f)
                     .height(6.dp),
-            color = WaterBlue,
+            color = barColor,
             trackColor = WaterBlue.copy(alpha = 0.24f),
         )
-        Box(modifier = Modifier.width(24.dp))
+        Box(modifier = Modifier.width(24.dp), contentAlignment = Alignment.Center) {
+            when {
+                band != WaterBand.WITHIN ->
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = stringResource(R.string.water_over_limit),
+                        tint = barColor,
+                        modifier = Modifier.size(16.dp),
+                    )
+                totalMl >= targetMl ->
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        contentDescription = stringResource(R.string.water_goal_reached),
+                        tint = WaterBlue,
+                        modifier = Modifier.size(16.dp),
+                    )
+            }
+        }
         Text(
             stringResource(R.string.water_bar_value, totalMl, targetMl),
             style = MaterialTheme.typography.labelSmall,
-            color = WaterBlue,
+            color = barColor,
             maxLines = 1,
             softWrap = false,
             textAlign = TextAlign.End,
             modifier = Modifier.width(MACRO_FIGURES_WIDTH),
         )
     }
+}
+
+/**
+ * The diary-list row that collapses the day's water taps, mirroring how a preset collapses
+ * its entries: title plus "total · N taps"; tapping opens the per-tap dialog. Deliberately
+ * no trailing delete — removing single taps (or all of them) lives in the drill-in.
+ */
+@Composable
+private fun WaterRowCard(
+    entries: List<WaterEntry>,
+    totalMl: Int,
+    onClick: () -> Unit,
+) {
+    CompactRowCard(
+        title = stringResource(R.string.water_row_title),
+        subtitle = pluralStringResource(R.plurals.water_row_subtitle, entries.size, totalMl, entries.size),
+        onClick = onClick,
+    )
+}
+
+/** The drill-in behind the water row: every tap with its time, deletable and tappable to edit. */
+@Composable
+private fun WaterEntriesDialog(
+    entries: List<WaterEntry>,
+    onDismiss: () -> Unit,
+    onDelete: (WaterEntry) -> Unit,
+    onEdit: (WaterEntry) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.water_row_title)) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    stringResource(R.string.water_entries_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                entries.forEach { entry ->
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onEdit(entry) },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            DateUtils.formatTime(entry.loggedAt),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            stringResource(R.string.water_ml_value, entry.amountMl),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { onDelete(entry) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) }
+        },
+    )
+}
+
+/** One slider to resize a single tap, same 50 ml steps and range as the glass-size setting. */
+@Composable
+private fun WaterEditDialog(
+    entry: WaterEntry,
+    onDismiss: () -> Unit,
+    onConfirm: (ml: Int) -> Unit,
+) {
+    var ml by remember(entry) { mutableIntStateOf(entry.amountMl) }
+    val range = SettingsRepository.WATER_GLASS_RANGE_ML
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.water_edit_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.water_ml_value, ml))
+                Slider(
+                    value = ml.toFloat(),
+                    onValueChange = { ml = ((it / 50).roundToInt() * 50).coerceIn(range) },
+                    valueRange = range.first.toFloat()..range.last.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(ml) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
 }
 
 /** Water is outside the Material scheme on purpose — no theme slot reads as "water". */

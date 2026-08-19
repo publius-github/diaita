@@ -219,8 +219,11 @@
 
     <!-- Presets -->
     <string name="new_preset">New preset</string>
+    <string name="preset_search_hint">Search</string>
+    <string name="preset_search_no_matches">Nothing found</string>
+    <string name="clear_search">Clear search</string>
     <string name="edit_preset">Edit preset</string>
-    <string name="no_presets_yet">No presets yet — tap + to create one (e.g. \"My usual breakfast\").</string>
+    <string name="no_presets_yet">No presets yet — tap New preset to create one (e.g. \"My usual breakfast\").</string>
     <string name="tab_dishes">Dishes</string>
     <string name="tab_custom_presets">Custom</string>
     <string name="no_dishes_yet">No dishes yet. A dish is a preset with a cooked weight: add the ingredients, weigh the finished dish, and log any portion later by weighing your plate.</string>
@@ -432,6 +435,7 @@
     <string name="latest_weight">Latest: %1$s %2$s</string>
     <string name="weight_today">Weight: %1$s %2$s</string>
     <string name="weight_today_none">Weight: —</string>
+    <string name="log_food">Log food</string>
     <string name="log_water">Log water</string>
     <string name="water_short">W</string>
     <string name="water_bar_value">%1$d/%2$d</string>
@@ -441,6 +445,21 @@
     <string name="settings_water_glass">Water per tap</string>
     <string name="settings_water_glass_desc">How much one tap of the Log water button adds</string>
     <string name="water_ml_value">%1$d ml</string>
+    <string name="settings_water_over">Water overshoot</string>
+    <string name="settings_water_over_desc">How far past the daily target before the bar turns amber and then red</string>
+    <string name="water_over_value">+%1$d%% · +%2$d%%</string>
+    <string name="water_over_dialog_hint">Drinking past the target is fine — the bar only warns about a genuinely excessive amount.</string>
+    <string name="water_over_amber">Amber past target: +%1$d%%</string>
+    <string name="water_over_red">Red past target: +%1$d%%</string>
+    <string name="water_goal_reached">Water target reached</string>
+    <string name="water_over_limit">Too much water</string>
+    <string name="water_row_title">Water</string>
+    <plurals name="water_row_subtitle">
+        <item quantity="one">%1$d ml · %2$d tap</item>
+        <item quantity="other">%1$d ml · %2$d taps</item>
+    </plurals>
+    <string name="water_entries_hint">Tap an entry to change its amount</string>
+    <string name="water_edit_title">Edit water</string>
     <string name="weight_target_line">Target: %1$s %2$s</string>
     <string name="weight_error">Enter a valid weight</string>
     <string name="monthly_averages">Monthly averages</string>

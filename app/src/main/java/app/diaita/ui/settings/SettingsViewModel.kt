@@ -16,6 +16,7 @@ import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.ThemeMode
+import app.diaita.data.settings.WaterOverThresholds
 import app.diaita.data.settings.WeightUnit
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -70,7 +71,24 @@ class SettingsViewModel(
             )
 
     fun setWaterGlassMl(ml: Int) {
-        viewModelScope.launch { settingsRepository.setWaterGlassMl(ml.coerceIn(WATER_GLASS_RANGE_ML)) }
+        viewModelScope.launch {
+            settingsRepository.setWaterGlassMl(ml.coerceIn(SettingsRepository.WATER_GLASS_RANGE_ML))
+        }
+    }
+
+    val waterOverThresholds: StateFlow<WaterOverThresholds> =
+        settingsRepository.waterOverThresholds
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WaterOverThresholds())
+
+    fun setWaterOverThresholds(
+        amberPercent: Int,
+        redPercent: Int,
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setWaterOverThresholds(
+                WaterOverThresholds.sanitized(amberPercent, redPercent),
+            )
+        }
     }
 
     val dayPartBoundaries: StateFlow<DayPartBoundaries> =
@@ -324,7 +342,6 @@ class SettingsViewModel(
     companion object {
         const val MIN_DAY_PART_GAP_MINUTES = 60
         val RECENT_FOODS_RANGE = 5..20
-        val WATER_GLASS_RANGE_ML = 50..500
         val RETENTION_OPTIONS_DAYS = listOf(90, 180, 365, 730, SettingsRepository.RETENTION_FOREVER)
     }
 }

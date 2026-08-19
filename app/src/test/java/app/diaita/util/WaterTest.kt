@@ -16,4 +16,23 @@ class WaterTest {
         assertEquals(DEFAULT_WATER_TARGET_ML, waterTargetMl(null))
         assertEquals(DEFAULT_WATER_TARGET_ML, waterTargetMl(0.0))
     }
+
+    @Test
+    fun `band stays within up to the amber slack inclusive`() {
+        assertEquals(WaterBand.WITHIN, waterBand(0, 2000, 50, 100))
+        assertEquals(WaterBand.WITHIN, waterBand(2000, 2000, 50, 100))
+        assertEquals(WaterBand.WITHIN, waterBand(3000, 2000, 50, 100))
+    }
+
+    @Test
+    fun `band escalates to amber past the amber slack and red past the red slack`() {
+        assertEquals(WaterBand.OVER_AMBER, waterBand(3001, 2000, 50, 100))
+        assertEquals(WaterBand.OVER_AMBER, waterBand(4000, 2000, 50, 100))
+        assertEquals(WaterBand.OVER_RED, waterBand(4001, 2000, 50, 100))
+    }
+
+    @Test
+    fun `band is within when the target is absent`() {
+        assertEquals(WaterBand.WITHIN, waterBand(5000, 0, 50, 100))
+    }
 }

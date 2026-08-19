@@ -18,6 +18,7 @@ import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
+import app.diaita.data.settings.WaterOverThresholds
 import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DEFAULT_WATER_TARGET_ML
 import app.diaita.util.DateUtils
@@ -88,6 +89,10 @@ data class DiaryUiState(
     val todayWeightKg: Double? = null,
     /** Water logged on the shown day, in ml; 0 when nothing logged yet. */
     val waterTotalMl: Int = 0,
+    /** The day's individual water taps, oldest first — the diary's water row drills into these. */
+    val waterEntries: List<WaterEntry> = emptyList(),
+    /** Overshoot slack past the water target before the bar turns amber and then red. */
+    val waterOverThresholds: WaterOverThresholds = WaterOverThresholds(),
     /** Daily water target from the wizard weight (~30 ml/kg), flat 2 l without a wizard run. */
     val waterTargetMl: Int = DEFAULT_WATER_TARGET_ML,
     /** Mirrors the "track water" setting — hides the water bar and button when false. */
@@ -148,6 +153,7 @@ private data class PresentationSettings(
 private data class WaterSettings(
     val track: Boolean,
     val glassMl: Int,
+    val overThresholds: WaterOverThresholds,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -178,7 +184,7 @@ class DiaryViewModel(
                     goalRepository.getGoal(),
                     combine(
                         weightRepository.range(date, date),
-                        waterRepository.totalForDate(date),
+                        waterRepository.entriesForDate(date),
                         ::Pair,
                     ),
                     combine(
@@ -211,11 +217,12 @@ class DiaryViewModel(
                         combine(
                             settingsRepository.trackWater,
                             settingsRepository.waterGlassMl,
+                            settingsRepository.waterOverThresholds,
                             ::WaterSettings,
                         ),
                         ::HomeSettings,
                     ),
-                ) { entries, totals, goal, (dayWeights, waterTotal), settings ->
+                ) { entries, totals, goal, (dayWeights, waterEntries), settings ->
                     DiaryUiState(
                         loaded = true,
                         date = date,
@@ -235,10 +242,12 @@ class DiaryViewModel(
                         goalFatG = goal?.fatTargetG,
                         goalCarbsG = goal?.carbsTargetG,
                         todayWeightKg = dayWeights.firstOrNull()?.weightKg,
-                        waterTotalMl = waterTotal ?: 0,
+                        waterTotalMl = waterEntries.sumOf { it.amountMl },
+                        waterEntries = waterEntries,
                         waterTargetMl = waterTargetMl(settings.presentation.wizardWeightKg),
                         trackWater = settings.water.track,
                         waterGlassMl = settings.water.glassMl,
+                        waterOverThresholds = settings.water.overThresholds,
                         wizardHeightCm = settings.presentation.wizardHeightCm,
                         athleticBmiBands = settings.presentation.athleticBmiBands,
                         trackMacros = settings.tracking.macros,
@@ -302,8 +311,16 @@ class DiaryViewModel(
         }
     }
 
-    fun undoWater(entry: WaterEntry) {
-        viewModelScope.launch { waterRepository.delete(entry) }
+    /** Removes a whole snackbar burst (or a single tap from the water row) in one go. */
+    fun undoWater(entries: List<WaterEntry>) {
+        viewModelScope.launch { waterRepository.delete(entries) }
+    }
+
+    fun updateWaterEntry(
+        entry: WaterEntry,
+        amountMl: Int,
+    ) {
+        viewModelScope.launch { waterRepository.updateAmount(entry.id, amountMl) }
     }
 
     private val _copyResultEvent = MutableSharedFlow<Int>(extraBufferCapacity = 1)

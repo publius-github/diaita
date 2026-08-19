@@ -101,6 +101,25 @@ class SettingsRepository(
         context.settingsDataStore.edit { prefs -> prefs[waterGlassMlKey] = ml }
     }
 
+    private val waterOverAmberPercentKey = intPreferencesKey("water_over_amber_percent")
+    private val waterOverRedPercentKey = intPreferencesKey("water_over_red_percent")
+
+    /** Overshoot slack past the daily water target before the bar recolors; see [WaterOverThresholds]. */
+    val waterOverThresholds: Flow<WaterOverThresholds> =
+        prefs.map { prefs ->
+            WaterOverThresholds(
+                amberPercent = prefs[waterOverAmberPercentKey] ?: WaterOverThresholds.DEFAULT_AMBER_PERCENT,
+                redPercent = prefs[waterOverRedPercentKey] ?: WaterOverThresholds.DEFAULT_RED_PERCENT,
+            )
+        }
+
+    suspend fun setWaterOverThresholds(thresholds: WaterOverThresholds) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[waterOverAmberPercentKey] = thresholds.amberPercent
+            prefs[waterOverRedPercentKey] = thresholds.redPercent
+        }
+    }
+
     private val morningEndMinutesKey = intPreferencesKey("morning_end_minutes")
     private val dayEndMinutesKey = intPreferencesKey("day_end_minutes")
 
@@ -506,6 +525,9 @@ class SettingsRepository(
         const val DEFAULT_WEIGHT_REMINDER_MINUTES = 9 * 60
         const val DEFAULT_RECENT_FOODS_COUNT = 10
         const val DEFAULT_WATER_GLASS_ML = 250
+
+        /** Valid glass sizes for one tap; sliders and the per-tap edit dialog share it. */
+        val WATER_GLASS_RANGE_ML = 50..500
 
         /** Sentinel for [retentionDays]: never fold raw diary entries. */
         const val RETENTION_FOREVER = 0
