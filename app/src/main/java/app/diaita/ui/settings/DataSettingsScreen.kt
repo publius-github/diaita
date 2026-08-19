@@ -1,15 +1,9 @@
 package app.diaita.ui.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,12 +41,11 @@ fun DataSettingsScreen(
         modifier = modifier,
     ) {
         SettingsGroupHeader(R.string.settings_group_food_search)
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.search_off_checkbox)) },
-            supportingContent = { Text(stringResource(R.string.settings_off_desc)) },
-            trailingContent = {
-                Switch(checked = openFoodFactsEnabled, onCheckedChange = viewModel::setOpenFoodFactsEnabled)
-            },
+        SwitchRow(
+            titleRes = R.string.search_off_checkbox,
+            descriptionRes = R.string.settings_off_desc,
+            checked = openFoodFactsEnabled,
+            onCheckedChange = viewModel::setOpenFoodFactsEnabled,
         )
         ValueRow(
             titleRes = R.string.settings_recent_foods,
@@ -68,13 +61,10 @@ fun DataSettingsScreen(
             value = retentionLabel(retentionDays),
             onClick = { showRetentionDialog = true },
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.backup_title)) },
-            supportingContent = { Text(stringResource(R.string.settings_backup_desc)) },
-            trailingContent = {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-            },
-            modifier = Modifier.clickable(onClick = onBackupClick),
+        NavRow(
+            titleRes = R.string.backup_title,
+            descriptionRes = R.string.settings_backup_desc,
+            onClick = onBackupClick,
         )
     }
 

@@ -13,14 +13,17 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -74,10 +77,7 @@ internal fun SettingsSubScreen(
     }
 }
 
-/**
- * Header above a group of related settings. Grouping is what carries structure on these
- * screens, so rows inside a group are not divided further — the next header is the divider.
- */
+/** Header above a group of related settings; rows keep their own dividers under it. */
 @Composable
 internal fun SettingsGroupHeader(titleRes: Int) {
     Text(
@@ -94,7 +94,11 @@ internal fun SettingsGroupHeader(titleRes: Int) {
     )
 }
 
-/** A settings row with the current value on the right; tapping opens its editor dialog. */
+/**
+ * A settings row with the current value on the right; tapping opens its editor dialog.
+ * Every row type here closes with its own divider, so screens list rows and never repeat the
+ * separator by hand.
+ */
 @Composable
 internal fun ValueRow(
     titleRes: Int,
@@ -114,6 +118,41 @@ internal fun ValueRow(
         },
         modifier = Modifier.clickable(onClick = onClick),
     )
+    HorizontalDivider()
+}
+
+/** A settings row carrying a switch — the on/off half of every settings screen. */
+@Composable
+internal fun SwitchRow(
+    titleRes: Int,
+    descriptionRes: Int?,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(stringResource(titleRes)) },
+        supportingContent = descriptionRes?.let { { Text(stringResource(it)) } },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+    )
+    HorizontalDivider()
+}
+
+/** A settings row that opens another screen. */
+@Composable
+internal fun NavRow(
+    titleRes: Int,
+    descriptionRes: Int,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(stringResource(titleRes)) },
+        supportingContent = { Text(stringResource(descriptionRes)) },
+        trailingContent = {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        },
+        modifier = Modifier.clickable(onClick = onClick),
+    )
+    HorizontalDivider()
 }
 
 /** A settings row showing an HH:mm value; tapping opens the time picker dialog. */

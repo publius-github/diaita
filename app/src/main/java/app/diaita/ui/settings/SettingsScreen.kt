@@ -1,15 +1,10 @@
 package app.diaita.ui.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,58 +41,42 @@ fun SettingsScreen(
             modifier = Modifier.padding(horizontal = ScreenPadding),
         )
         SettingsGroupHeader(R.string.settings_group_goals)
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_goals,
             descriptionRes = R.string.settings_goals_desc,
             onClick = onGoalsClick,
         )
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_wizard,
             descriptionRes = R.string.settings_wizard_desc,
             onClick = onWizardClick,
         )
 
         SettingsGroupHeader(R.string.settings_group_app)
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_section_appearance,
             descriptionRes = R.string.settings_appearance_desc,
             onClick = onAppearanceClick,
         )
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_section_tracking,
             descriptionRes = R.string.settings_tracking_desc,
             onClick = onTrackingClick,
         )
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_section_notifications,
             descriptionRes = R.string.settings_notifications_desc,
             onClick = onNotificationsClick,
         )
-        CategoryRow(
+        NavRow(
             titleRes = R.string.settings_section_data,
             descriptionRes = R.string.settings_data_desc,
             onClick = onDataClick,
         )
-        CategoryRow(
+        NavRow(
             titleRes = R.string.nav_about,
             descriptionRes = R.string.settings_about_desc,
             onClick = onAboutClick,
         )
     }
-}
-
-@Composable
-private fun CategoryRow(
-    titleRes: Int,
-    descriptionRes: Int,
-    onClick: () -> Unit,
-) {
-    ListItem(
-        headlineContent = { Text(stringResource(titleRes)) },
-        supportingContent = { Text(stringResource(descriptionRes)) },
-        trailingContent = {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-        },
-        modifier = Modifier.clickable(onClick = onClick),
-    )
 }

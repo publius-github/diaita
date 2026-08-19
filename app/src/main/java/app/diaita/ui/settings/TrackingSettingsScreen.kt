@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -82,12 +80,11 @@ fun TrackingSettingsScreen(
         modifier = modifier,
     ) {
         SettingsGroupHeader(R.string.settings_group_macros)
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_track_macros)) },
-            supportingContent = { Text(stringResource(R.string.settings_track_macros_desc)) },
-            trailingContent = {
-                Switch(checked = trackMacros, onCheckedChange = viewModel::setTrackMacros)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_track_macros,
+            descriptionRes = R.string.settings_track_macros_desc,
+            checked = trackMacros,
+            onCheckedChange = viewModel::setTrackMacros,
         )
         // The tolerance rows only mean something while their tracking is on, so they follow
         // their own switch and disappear with it — same rule as the water rows.
@@ -105,15 +102,11 @@ fun TrackingSettingsScreen(
                 onClick = { showMacroOverDialog = true },
             )
         }
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_track_micros)) },
-            supportingContent = { Text(stringResource(R.string.settings_track_micros_desc)) },
-            trailingContent = {
-                Switch(
-                    checked = trackMicronutrients,
-                    onCheckedChange = viewModel::setTrackMicronutrients,
-                )
-            },
+        SwitchRow(
+            titleRes = R.string.settings_track_micros,
+            descriptionRes = R.string.settings_track_micros_desc,
+            checked = trackMicronutrients,
+            onCheckedChange = viewModel::setTrackMicronutrients,
         )
         if (trackMicronutrients) {
             ValueRow(
@@ -131,12 +124,11 @@ fun TrackingSettingsScreen(
         }
 
         SettingsGroupHeader(R.string.settings_group_water)
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_track_water)) },
-            supportingContent = { Text(stringResource(R.string.settings_track_water_desc)) },
-            trailingContent = {
-                Switch(checked = trackWater, onCheckedChange = viewModel::setTrackWater)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_track_water,
+            descriptionRes = R.string.settings_track_water_desc,
+            checked = trackWater,
+            onCheckedChange = viewModel::setTrackWater,
         )
         if (trackWater) {
             ValueRow(
@@ -206,12 +198,11 @@ fun TrackingSettingsScreen(
             value = weightUnit.fullLabel(),
             onClick = { choiceTarget = ChoiceTarget.WEIGHT_UNIT },
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_athletic_bmi)) },
-            supportingContent = { Text(stringResource(R.string.settings_athletic_bmi_desc)) },
-            trailingContent = {
-                Switch(checked = athleticBmiBands, onCheckedChange = viewModel::setAthleticBmiBands)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_athletic_bmi,
+            descriptionRes = R.string.settings_athletic_bmi_desc,
+            checked = athleticBmiBands,
+            onCheckedChange = viewModel::setAthleticBmiBands,
         )
     }
 

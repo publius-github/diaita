@@ -1,8 +1,5 @@
 package app.diaita.ui.settings
 
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +40,11 @@ fun AppearanceSettingsScreen(
             value = themeMode.label(),
             onClick = { showThemeDialog = true },
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
-            supportingContent = { Text(stringResource(R.string.settings_dynamic_color_desc)) },
-            trailingContent = {
-                Switch(checked = dynamicColor, onCheckedChange = viewModel::setDynamicColor)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_dynamic_color,
+            descriptionRes = R.string.settings_dynamic_color_desc,
+            checked = dynamicColor,
+            onCheckedChange = viewModel::setDynamicColor,
         )
 
         // Both of these decide what the Home card shows, so they sit together here rather

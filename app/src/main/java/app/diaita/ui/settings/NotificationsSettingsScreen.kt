@@ -7,9 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -131,12 +129,11 @@ fun NotificationsSettingsScreen(
             HorizontalDivider()
         }
         SettingsGroupHeader(R.string.settings_group_log_reminders)
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_reminder)) },
-            supportingContent = { Text(stringResource(R.string.settings_reminder_desc)) },
-            trailingContent = {
-                Switch(checked = reminderEnabled, onCheckedChange = ::onReminderToggled)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_reminder,
+            descriptionRes = R.string.settings_reminder_desc,
+            checked = reminderEnabled,
+            onCheckedChange = ::onReminderToggled,
         )
         if (reminderEnabled) {
             TimeRow(
@@ -146,12 +143,11 @@ fun NotificationsSettingsScreen(
                 onClick = { timeTarget = ReminderTimeTarget.FOOD },
             )
         }
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_weight_reminder)) },
-            supportingContent = { Text(stringResource(R.string.settings_weight_reminder_desc)) },
-            trailingContent = {
-                Switch(checked = weightReminderEnabled, onCheckedChange = ::onWeightReminderToggled)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_weight_reminder,
+            descriptionRes = R.string.settings_weight_reminder_desc,
+            checked = weightReminderEnabled,
+            onCheckedChange = ::onWeightReminderToggled,
         )
         if (weightReminderEnabled) {
             TimeRow(
@@ -165,29 +161,24 @@ fun NotificationsSettingsScreen(
         // These two fire off the day-part boundaries rather than a time of their own, which
         // is why they are a group apart — their schedule lives in Tracking > Day parts.
         SettingsGroupHeader(R.string.settings_group_day_reminders)
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_day_part_reminder)) },
-            supportingContent = { Text(stringResource(R.string.settings_day_part_reminder_desc)) },
-            trailingContent = {
-                Switch(checked = dayPartRemindersEnabled, onCheckedChange = ::onDayPartRemindersToggled)
-            },
+        SwitchRow(
+            titleRes = R.string.settings_day_part_reminder,
+            descriptionRes = R.string.settings_day_part_reminder_desc,
+            checked = dayPartRemindersEnabled,
+            onCheckedChange = ::onDayPartRemindersToggled,
         )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_evening_reminder)) },
-            supportingContent = { Text(stringResource(R.string.settings_evening_reminder_desc)) },
-            trailingContent = {
-                Switch(
-                    checked = eveningReminderEnabled,
-                    onCheckedChange = { enabled ->
-                        viewModel.setEveningReminderEnabled(enabled)
-                        if (enabled) {
-                            requestNotificationPermission()
-                            ReminderScheduler.scheduleEveningReminder(context)
-                        } else {
-                            ReminderScheduler.cancelEveningReminder(context)
-                        }
-                    },
-                )
+        SwitchRow(
+            titleRes = R.string.settings_evening_reminder,
+            descriptionRes = R.string.settings_evening_reminder_desc,
+            checked = eveningReminderEnabled,
+            onCheckedChange = { enabled ->
+                viewModel.setEveningReminderEnabled(enabled)
+                if (enabled) {
+                    requestNotificationPermission()
+                    ReminderScheduler.scheduleEveningReminder(context)
+                } else {
+                    ReminderScheduler.cancelEveningReminder(context)
+                }
             },
         )
     }
