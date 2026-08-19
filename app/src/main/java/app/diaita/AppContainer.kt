@@ -14,6 +14,7 @@ import app.diaita.data.repository.ExportRepository
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.PresetRepository
+import app.diaita.data.repository.WaterRepository
 import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.SettingsMirror
 import app.diaita.data.settings.SettingsRepository
@@ -55,6 +56,7 @@ class AppContainer(
     val goalRepository: GoalRepository by lazy { GoalRepository(database.dailyGoalDao()) }
     val exportRepository: ExportRepository by lazy { ExportRepository(database) }
     val weightRepository: WeightRepository by lazy { WeightRepository(database.weightEntryDao()) }
+    val waterRepository: WaterRepository by lazy { WaterRepository(database.waterEntryDao()) }
     val backupManager: DatabaseBackupManager by lazy {
         DatabaseBackupManager(context.applicationContext, database)
     }

@@ -162,6 +162,19 @@ object Migrations {
             }
         }
 
+    /** Water tracking (F2): one row per tap of the water button, summed per day for the bar. */
+    val MIGRATION_12_13 =
+        object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `water_entries` " +
+                        "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, " +
+                        "`amountMl` INTEGER NOT NULL, `loggedAt` INTEGER NOT NULL)",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_water_entries_date` ON `water_entries` (`date`)")
+            }
+        }
+
     val all: Array<Migration> =
         arrayOf(
             MIGRATION_4_5,
@@ -172,5 +185,6 @@ object Migrations {
             MIGRATION_9_10,
             MIGRATION_10_11,
             MIGRATION_11_12,
+            MIGRATION_12_13,
         )
 }

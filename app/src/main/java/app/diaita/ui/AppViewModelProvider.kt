@@ -29,6 +29,7 @@ object AppViewModelProvider {
                     appContainer().diaryRepository,
                     appContainer().goalRepository,
                     appContainer().weightRepository,
+                    appContainer().waterRepository,
                     appContainer().settingsRepository,
                 )
             }

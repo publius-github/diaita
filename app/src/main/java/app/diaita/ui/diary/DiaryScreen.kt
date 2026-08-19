@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -85,7 +86,10 @@ import app.diaita.ui.common.calorieOverBand
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
+import app.diaita.util.BmiBand
 import app.diaita.util.DateUtils
+import app.diaita.util.bmi
+import app.diaita.util.bmiBand
 import app.diaita.util.formatWeightForDisplay
 import kotlinx.coroutines.delay
 import java.time.Instant
@@ -143,6 +147,20 @@ fun DiaryScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.waterAddedEvent.collect { entry ->
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.water_added, entry.amountMl),
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Short,
+                )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.undoWater(entry)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.copyResultEvent.collect { copied ->
             if (copied == 0) {
                 snackbarHostState.showSnackbar(context.getString(R.string.nothing_to_copy))
@@ -185,20 +203,17 @@ fun DiaryScreen(
                 SetGoalBanner(onOpenGoals = onOpenGoals, onOpenWizard = onOpenWizard)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { showWeightDialog = true }) {
                     Text(stringResource(R.string.log_weight))
                 }
-                uiState.todayWeightKg?.let { weight ->
-                    Text(
-                        stringResource(
-                            R.string.weight_today,
-                            formatWeightForDisplay(uiState.weightUnit.fromKg(weight)),
-                            uiState.weightUnit.label(),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
+                if (uiState.trackWater) {
+                    OutlinedButton(
+                        onClick = viewModel::logWater,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = WaterBlue),
+                    ) {
+                        Text(stringResource(R.string.log_water))
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -593,6 +608,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                             overTolerances = uiState.microOverTolerances,
                         )
                     }
+                    TodayWeightLine(uiState)
                 }
                 when {
                     style == HomeProgressStyle.RING ->
@@ -698,9 +714,95 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     targetG = uiState.goalCarbsG,
                     overTolerancePercent = uiState.macroOverTolerances.carbsPercent,
                 )
+                if (uiState.trackWater) {
+                    WaterBar(totalMl = uiState.waterTotalMl, targetMl = uiState.waterTargetMl)
+                }
+            } else if (uiState.trackWater) {
+                Spacer(modifier = Modifier.height(12.dp))
+                WaterBar(totalMl = uiState.waterTotalMl, targetMl = uiState.waterTargetMl)
             }
         }
     }
+}
+
+/**
+ * The water scale under the P/F/C bars — same row anatomy (16dp label, bar, empty icon
+ * slot, fixed-width figures) so the four bars align, but always water-blue: drinking more
+ * than the target is fine, so there is no warning recolor. Target comes from the wizard
+ * weight (~30 ml/kg) or a flat 2 l without one.
+ */
+@Composable
+private fun WaterBar(
+    totalMl: Int,
+    targetMl: Int,
+) {
+    val progress = if (targetMl > 0) (totalMl.toFloat() / targetMl).coerceIn(0f, 1f) else 0f
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.water_short),
+            style = MaterialTheme.typography.labelSmall,
+            color = WaterBlue,
+            modifier = Modifier.width(16.dp),
+        )
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(6.dp),
+            color = WaterBlue,
+            trackColor = WaterBlue.copy(alpha = 0.24f),
+        )
+        Box(modifier = Modifier.width(24.dp))
+        Text(
+            stringResource(R.string.water_bar_value, totalMl, targetMl),
+            style = MaterialTheme.typography.labelSmall,
+            color = WaterBlue,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(MACRO_FIGURES_WIDTH),
+        )
+    }
+}
+
+/** Water is outside the Material scheme on purpose — no theme slot reads as "water". */
+private val WaterBlue = Color(0xFF42A5F5)
+
+/**
+ * The day's weigh-in under the nutrient lines, colored by the BMI band it lands in — the
+ * same bands and palette as the History BMI tile (incl. the athletic-build shift), so the
+ * two never disagree. Neutral when no height is known (wizard never run) and a "—"
+ * placeholder when the day has no weigh-in — the line renders in every state per the
+ * no-self-hiding-UI guardrail.
+ */
+@Composable
+private fun TodayWeightLine(uiState: DiaryUiState) {
+    val weight = uiState.todayWeightKg
+    if (weight == null) {
+        Text(
+            stringResource(R.string.weight_today_none),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
+    }
+    val band = bmi(weight, uiState.wizardHeightCm)?.let { bmiBand(it, uiState.athleticBmiBands) }
+    Text(
+        stringResource(
+            R.string.weight_today,
+            formatWeightForDisplay(uiState.weightUnit.fromKg(weight)),
+            uiState.weightUnit.label(),
+        ),
+        style = MaterialTheme.typography.bodySmall,
+        color =
+            when (band) {
+                BmiBand.NORMAL -> MaterialTheme.colorScheme.primary
+                BmiBand.UNDERWEIGHT, BmiBand.OVERWEIGHT -> MaterialTheme.colorScheme.tertiary
+                BmiBand.OBESE -> MaterialTheme.colorScheme.error
+                null -> MaterialTheme.colorScheme.onSurfaceVariant
+            },
+    )
 }
 
 private enum class PaceMood { EMPTY, ON_TRACK, AHEAD, OVER }

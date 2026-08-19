@@ -63,7 +63,10 @@ fun TrackingSettingsScreen(
     var showMacroOverDialog by remember { mutableStateOf(false) }
     var showMicroOverDialog by remember { mutableStateOf(false) }
     var showDayPartOverDialog by remember { mutableStateOf(false) }
+    var showWaterGlassDialog by remember { mutableStateOf(false) }
     val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
+    val trackWater by viewModel.trackWater.collectAsStateWithLifecycle()
+    val waterGlassMl by viewModel.waterGlassMl.collectAsStateWithLifecycle()
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -89,6 +92,23 @@ fun TrackingSettingsScreen(
             },
         )
         HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_track_water)) },
+            supportingContent = { Text(stringResource(R.string.settings_track_water_desc)) },
+            trailingContent = {
+                Switch(checked = trackWater, onCheckedChange = viewModel::setTrackWater)
+            },
+        )
+        HorizontalDivider()
+        if (trackWater) {
+            ValueRow(
+                titleRes = R.string.settings_water_glass,
+                descriptionRes = R.string.settings_water_glass_desc,
+                value = stringResource(R.string.water_ml_value, waterGlassMl),
+                onClick = { showWaterGlassDialog = true },
+            )
+            HorizontalDivider()
+        }
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_athletic_bmi)) },
             supportingContent = { Text(stringResource(R.string.settings_athletic_bmi_desc)) },
@@ -251,6 +271,17 @@ fun TrackingSettingsScreen(
         )
     }
 
+    if (showWaterGlassDialog) {
+        WaterGlassDialog(
+            currentMl = waterGlassMl,
+            onDismiss = { showWaterGlassDialog = false },
+            onConfirm = { ml ->
+                viewModel.setWaterGlassMl(ml)
+                showWaterGlassDialog = false
+            },
+        )
+    }
+
     if (showDayPartOverDialog) {
         DayPartOverDialog(
             current = dayPartOverThresholds,
@@ -395,6 +426,40 @@ private fun MicroOverDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(fiber, sugar, salt) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/** One slider, 50-500 ml in 50 ml steps: how much one tap of the water button logs. */
+@Composable
+private fun WaterGlassDialog(
+    currentMl: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (ml: Int) -> Unit,
+) {
+    var ml by remember { mutableIntStateOf(currentMl) }
+    val range = SettingsViewModel.WATER_GLASS_RANGE_ML
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_water_glass)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.water_ml_value, ml))
+                Slider(
+                    value = ml.toFloat(),
+                    onValueChange = { ml = (it / 50).roundToInt() * 50 },
+                    valueRange = range.first.toFloat()..range.last.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(ml) }) {
                 Text(stringResource(R.string.save))
             }
         },

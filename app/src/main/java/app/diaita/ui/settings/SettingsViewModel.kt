@@ -53,6 +53,26 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.setTrackMicronutrients(enabled) }
     }
 
+    val trackWater: StateFlow<Boolean> =
+        settingsRepository.trackWater
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setTrackWater(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setTrackWater(enabled) }
+    }
+
+    val waterGlassMl: StateFlow<Int> =
+        settingsRepository.waterGlassMl
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                SettingsRepository.DEFAULT_WATER_GLASS_ML,
+            )
+
+    fun setWaterGlassMl(ml: Int) {
+        viewModelScope.launch { settingsRepository.setWaterGlassMl(ml.coerceIn(WATER_GLASS_RANGE_ML)) }
+    }
+
     val dayPartBoundaries: StateFlow<DayPartBoundaries> =
         settingsRepository.dayPartBoundaries
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartBoundaries())
@@ -304,6 +324,7 @@ class SettingsViewModel(
     companion object {
         const val MIN_DAY_PART_GAP_MINUTES = 60
         val RECENT_FOODS_RANGE = 5..20
+        val WATER_GLASS_RANGE_ML = 50..500
         val RETENTION_OPTIONS_DAYS = listOf(90, 180, 365, 730, SettingsRepository.RETENTION_FOREVER)
     }
 }

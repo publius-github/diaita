@@ -175,6 +175,18 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate12To13_createsEmptyWaterTable() {
+        helper.createDatabase(testDbName, 12).close()
+
+        helper.runMigrationsAndValidate(testDbName, 13, true, Migrations.MIGRATION_12_13).use { db ->
+            db.query("SELECT COUNT(*) FROM water_entries").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
+    @Test
     fun migrate7To8_existingFoodsDefaultToNotEditedByUser() {
         helper.createDatabase(testDbName, 7).use { db ->
             db.execSQL(

@@ -431,6 +431,16 @@
     <string name="weight_empty">Записей веса пока нет — сделайте первое взвешивание.</string>
     <string name="latest_weight">Последний: %1$s %2$s</string>
     <string name="weight_today">Вес: %1$s %2$s</string>
+    <string name="weight_today_none">Вес: —</string>
+    <string name="log_water">Записать воду</string>
+    <string name="water_short">В</string>
+    <string name="water_bar_value">%1$d/%2$d</string>
+    <string name="water_added">+%1$d мл воды</string>
+    <string name="settings_track_water">Трекинг воды</string>
+    <string name="settings_track_water_desc">Голубая шкала воды на главном экране, дневная норма ~30 мл на кг веса из калькулятора</string>
+    <string name="settings_water_glass">Вода за нажатие</string>
+    <string name="settings_water_glass_desc">Сколько добавляет одно нажатие кнопки «Записать воду»</string>
+    <string name="water_ml_value">%1$d мл</string>
     <string name="weight_target_line">Цель: %1$s %2$s</string>
     <string name="weight_error">Введите корректный вес</string>
     <string name="monthly_averages">Средние по месяцам</string>

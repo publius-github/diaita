@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.db.entities.WaterEntry
 import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.GoalRepository
+import app.diaita.data.repository.WaterRepository
 import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
@@ -17,8 +19,10 @@ import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WeightUnit
+import app.diaita.util.DEFAULT_WATER_TARGET_ML
 import app.diaita.util.DateUtils
 import app.diaita.util.NutrientMath
+import app.diaita.util.waterTargetMl
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -82,6 +86,18 @@ data class DiaryUiState(
     val goalFatG: Int? = null,
     val goalCarbsG: Int? = null,
     val todayWeightKg: Double? = null,
+    /** Water logged on the shown day, in ml; 0 when nothing logged yet. */
+    val waterTotalMl: Int = 0,
+    /** Daily water target from the wizard weight (~30 ml/kg), flat 2 l without a wizard run. */
+    val waterTargetMl: Int = DEFAULT_WATER_TARGET_ML,
+    /** Mirrors the "track water" setting — hides the water bar and button when false. */
+    val trackWater: Boolean = true,
+    /** How many ml one tap of the water button logs. */
+    val waterGlassMl: Int = SettingsRepository.DEFAULT_WATER_GLASS_ML,
+    /** Wizard height, for the BMI-colored weight line on the card; null = wizard never run. */
+    val wizardHeightCm: Double? = null,
+    /** Mirrors the athletic-build BMI setting so the weight line uses the same bands as the History tile. */
+    val athleticBmiBands: Boolean = false,
     /** Mirrors the "track macros" setting — hides the P/F/C progress UI when false. */
     val trackMacros: Boolean = true,
     /** Mirrors the "track fiber/sugar/salt" setting — hides the micronutrient line when false. */
@@ -123,6 +139,15 @@ private data class PresentationSettings(
     val coachTone: CoachTone,
     val weightUnit: WeightUnit,
     val homeProgressStyle: HomeProgressStyle,
+    val wizardHeightCm: Double?,
+    val wizardWeightKg: Double?,
+    val athleticBmiBands: Boolean,
+)
+
+/** The water-tracking slice of settings, paired to fit the combine overloads. */
+private data class WaterSettings(
+    val track: Boolean,
+    val glassMl: Int,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -131,12 +156,14 @@ private data class HomeSettings(
     val boundaries: DayPartBoundaries,
     val shares: DayPartShares,
     val presentation: PresentationSettings,
+    val water: WaterSettings,
 )
 
 class DiaryViewModel(
     private val diaryRepository: DiaryRepository,
     private val goalRepository: GoalRepository,
     private val weightRepository: WeightRepository,
+    private val waterRepository: WaterRepository,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
     /** The date the diary shows and every action (log, weight, copy) targets. */
@@ -149,7 +176,11 @@ class DiaryViewModel(
                     diaryRepository.entriesForDate(date),
                     diaryRepository.dailyTotals(date),
                     goalRepository.getGoal(),
-                    weightRepository.range(date, date),
+                    combine(
+                        weightRepository.range(date, date),
+                        waterRepository.totalForDate(date),
+                        ::Pair,
+                    ),
                     combine(
                         combine(
                             settingsRepository.trackMacros,
@@ -165,11 +196,26 @@ class DiaryViewModel(
                             settingsRepository.coachTone,
                             settingsRepository.weightUnit,
                             settingsRepository.homeProgressStyle,
-                            ::PresentationSettings,
+                            settingsRepository.wizardInputs,
+                            settingsRepository.athleticBmiBands,
+                        ) { coachTone, weightUnit, style, wizardInputs, athleticBmi ->
+                            PresentationSettings(
+                                coachTone = coachTone,
+                                weightUnit = weightUnit,
+                                homeProgressStyle = style,
+                                wizardHeightCm = wizardInputs?.heightCm,
+                                wizardWeightKg = wizardInputs?.weightKg,
+                                athleticBmiBands = athleticBmi,
+                            )
+                        },
+                        combine(
+                            settingsRepository.trackWater,
+                            settingsRepository.waterGlassMl,
+                            ::WaterSettings,
                         ),
                         ::HomeSettings,
                     ),
-                ) { entries, totals, goal, dayWeights, settings ->
+                ) { entries, totals, goal, (dayWeights, waterTotal), settings ->
                     DiaryUiState(
                         loaded = true,
                         date = date,
@@ -189,6 +235,12 @@ class DiaryViewModel(
                         goalFatG = goal?.fatTargetG,
                         goalCarbsG = goal?.carbsTargetG,
                         todayWeightKg = dayWeights.firstOrNull()?.weightKg,
+                        waterTotalMl = waterTotal ?: 0,
+                        waterTargetMl = waterTargetMl(settings.presentation.wizardWeightKg),
+                        trackWater = settings.water.track,
+                        waterGlassMl = settings.water.glassMl,
+                        wizardHeightCm = settings.presentation.wizardHeightCm,
+                        athleticBmiBands = settings.presentation.athleticBmiBands,
                         trackMacros = settings.tracking.macros,
                         trackMicronutrients = settings.tracking.micronutrients,
                         macroOverTolerances = settings.tracking.macroOverTolerances,
@@ -235,6 +287,23 @@ class DiaryViewModel(
 
     fun logWeight(weightKg: Double) {
         viewModelScope.launch { weightRepository.logWeight(selectedDate.value, weightKg) }
+    }
+
+    private val _waterAddedEvent = MutableSharedFlow<WaterEntry>(extraBufferCapacity = 1)
+
+    /** Emits the stored row after a water tap so the snackbar can offer an exact Undo. */
+    val waterAddedEvent: SharedFlow<WaterEntry> = _waterAddedEvent.asSharedFlow()
+
+    /** One tap of the water button: logs the configured glass onto the shown day. */
+    fun logWater() {
+        val glassMl = uiState.value.waterGlassMl
+        viewModelScope.launch {
+            _waterAddedEvent.emit(waterRepository.logWater(selectedDate.value, glassMl))
+        }
+    }
+
+    fun undoWater(entry: WaterEntry) {
+        viewModelScope.launch { waterRepository.delete(entry) }
     }
 
     private val _copyResultEvent = MutableSharedFlow<Int>(extraBufferCapacity = 1)

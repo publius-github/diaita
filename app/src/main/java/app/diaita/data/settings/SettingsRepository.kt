@@ -81,6 +81,26 @@ class SettingsRepository(
         context.settingsDataStore.edit { prefs -> prefs[trackMicronutrientsKey] = enabled }
     }
 
+    private val trackWaterKey = booleanPreferencesKey("track_water")
+
+    /** Whether the water bar and the one-tap water button are shown. */
+    val trackWater: Flow<Boolean> =
+        prefs.map { prefs -> prefs[trackWaterKey] ?: true }
+
+    suspend fun setTrackWater(enabled: Boolean) {
+        context.settingsDataStore.edit { prefs -> prefs[trackWaterKey] = enabled }
+    }
+
+    private val waterGlassMlKey = intPreferencesKey("water_glass_ml")
+
+    /** How many milliliters one tap of the water button logs. */
+    val waterGlassMl: Flow<Int> =
+        prefs.map { prefs -> prefs[waterGlassMlKey] ?: DEFAULT_WATER_GLASS_ML }
+
+    suspend fun setWaterGlassMl(ml: Int) {
+        context.settingsDataStore.edit { prefs -> prefs[waterGlassMlKey] = ml }
+    }
+
     private val morningEndMinutesKey = intPreferencesKey("morning_end_minutes")
     private val dayEndMinutesKey = intPreferencesKey("day_end_minutes")
 
@@ -485,6 +505,7 @@ class SettingsRepository(
         const val DEFAULT_REMINDER_MINUTES = 20 * 60
         const val DEFAULT_WEIGHT_REMINDER_MINUTES = 9 * 60
         const val DEFAULT_RECENT_FOODS_COUNT = 10
+        const val DEFAULT_WATER_GLASS_ML = 250
 
         /** Sentinel for [retentionDays]: never fold raw diary entries. */
         const val RETENTION_FOREVER = 0
