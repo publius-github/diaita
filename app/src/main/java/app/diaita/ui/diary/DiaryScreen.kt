@@ -332,6 +332,10 @@ fun DiaryScreen(
                                     entries = uiState.waterEntries,
                                     totalMl = uiState.waterTotalMl,
                                     onClick = { showWaterEntries = true },
+                                    // Water belongs to no meal, so it gets the same breathing
+                                    // room a meal header puts between two sections instead of
+                                    // reading as one more dinner item.
+                                    modifier = Modifier.padding(top = 16.dp),
                                 )
                             }
                         }
@@ -886,11 +890,14 @@ private fun WaterRowCard(
     entries: List<WaterEntry>,
     totalMl: Int,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     CompactRowCard(
         title = stringResource(R.string.water_row_title),
         subtitle = pluralStringResource(R.plurals.water_row_subtitle, entries.size, totalMl, entries.size),
         onClick = onClick,
+        modifier = modifier,
+        titleColor = WaterBlue,
     )
 }
 

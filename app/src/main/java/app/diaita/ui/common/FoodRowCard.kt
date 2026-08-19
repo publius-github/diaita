@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -16,11 +17,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.diaita.R
+
+/**
+ * The row height every list row lands on. Rows with trailing icon buttons get it for free from
+ * the 48dp touch target; rows without any trailing action would otherwise sit visibly shorter
+ * than their neighbours, so [CompactRowCard] enforces it for all of them.
+ */
+private val RowContentMinHeight = 48.dp
 
 /**
  * The single compact list-row card used by every content list in the app — diary rows, the
@@ -34,6 +43,7 @@ fun CompactRowCard(
     subtitle: String,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    titleColor: Color = Color.Unspecified,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val cardModifier =
@@ -56,7 +66,8 @@ fun CompactRowCard(
                         end = if (trailing != null) 4.dp else 12.dp,
                         top = 5.dp,
                         bottom = 5.dp,
-                    ).fillMaxWidth(),
+                    ).fillMaxWidth()
+                    .heightIn(min = RowContentMinHeight),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -65,6 +76,7 @@ fun CompactRowCard(
                     // 20sp line height (vs bodyLarge's 24sp) keeps the row-height trim from
                     // the density pass even for the single line.
                     style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 20.sp),
+                    color = titleColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
