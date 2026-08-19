@@ -68,12 +68,16 @@ import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CalorieProgressBar
+import app.diaita.ui.common.CompactProgressRing
 import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.MacroProgressRing
 import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.MicronutrientTotalsLine
+import app.diaita.ui.common.ProgressGauge
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
@@ -523,18 +527,36 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
         listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
             .any { it > 0 }
 
+    val style = uiState.homeProgressStyle
+    val hasCalorieGoal = uiState.goalCalories != null && uiState.goalCalories > 0
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                // The original ring is taller than the text block, so it anchors to the top
+                // like it always did; the compact indicators sit centered against the text.
+                verticalAlignment =
+                    if (style == HomeProgressStyle.RING) Alignment.Top else Alignment.CenterVertically,
             ) {
                 // Weighted so the nutrient lines wrap inside their own space instead of
                 // squeezing the ring: with full nutrient names they need two lines on
                 // narrow screens, which costs nothing here — the 120dp ring sets the height.
                 Column(modifier = Modifier.weight(1f)) {
+                    // The compact styles carry the goal in the headline ("X / Y kcal") because
+                    // their indicators only show a percentage; the classic ring keeps the
+                    // figures in its center, so its headline stays the plain total.
                     Text(
-                        stringResource(R.string.kcal_amount, uiState.totalCalories.toInt()),
+                        if (hasCalorieGoal && style != HomeProgressStyle.RING) {
+                            stringResource(
+                                R.string.kcal_amount_of_goal,
+                                uiState.totalCalories.toInt(),
+                                uiState.goalCalories,
+                            )
+                        } else {
+                            stringResource(R.string.kcal_amount, uiState.totalCalories.toInt())
+                        },
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
@@ -559,10 +581,40 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                             sugarGrams = uiState.totalSugar,
                             saltGrams = uiState.totalSalt,
                             hasEntries = !uiState.isEmpty,
+                            overTolerances = uiState.microOverTolerances,
                         )
                     }
                 }
-                MacroProgressRing(
+                when {
+                    style == HomeProgressStyle.RING ->
+                        MacroProgressRing(
+                            consumedCalories = uiState.totalCalories,
+                            goalCalories = uiState.goalCalories,
+                        )
+                    // "No self-hiding UI": without a goal the indicator slot still says why
+                    // it is empty instead of silently vanishing (BAR shows it here too, in
+                    // place of the bar that would otherwise render below).
+                    !hasCalorieGoal ->
+                        Text(
+                            stringResource(R.string.progress_no_goal),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    style == HomeProgressStyle.COMPACT_RING ->
+                        CompactProgressRing(
+                            consumedCalories = uiState.totalCalories,
+                            goalCalories = uiState.goalCalories,
+                        )
+                    style == HomeProgressStyle.GAUGE ->
+                        ProgressGauge(
+                            consumedCalories = uiState.totalCalories,
+                            goalCalories = uiState.goalCalories,
+                        )
+                }
+            }
+            if (style == HomeProgressStyle.BAR && hasCalorieGoal) {
+                Spacer(modifier = Modifier.height(10.dp))
+                CalorieProgressBar(
                     consumedCalories = uiState.totalCalories,
                     goalCalories = uiState.goalCalories,
                 )
@@ -617,20 +669,21 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
             }
             if (hasMacroGoals && uiState.trackMacros) {
                 Spacer(modifier = Modifier.height(12.dp))
+                // No spacers between the bars: each row is already as tall as one text line
+                // (16sp labels), so stacking them flush gives the same vertical rhythm as
+                // consecutive lines in the pace message — the user found 6dp gaps too airy.
                 MacroBar(
                     label = stringResource(R.string.macro_protein_short),
                     consumed = uiState.totalProtein,
                     targetG = uiState.goalProteinG,
                     overTolerancePercent = uiState.macroOverTolerances.proteinPercent,
                 )
-                Spacer(modifier = Modifier.height(6.dp))
                 MacroBar(
                     label = stringResource(R.string.macro_fat_short),
                     consumed = uiState.totalFat,
                     targetG = uiState.goalFatG,
                     overTolerancePercent = uiState.macroOverTolerances.fatPercent,
                 )
-                Spacer(modifier = Modifier.height(6.dp))
                 MacroBar(
                     label = stringResource(R.string.macro_carbs_short),
                     consumed = uiState.totalCarbs,

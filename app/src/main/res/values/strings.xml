@@ -46,6 +46,13 @@
     <string name="macro_over_protein">Protein: +%1$d%%</string>
     <string name="macro_over_fat">Fat: +%1$d%%</string>
     <string name="macro_over_carbs">Carbs: +%1$d%%</string>
+    <string name="settings_micro_over">Fiber/sugar/salt limits</string>
+    <string name="settings_micro_over_desc">Daily limits 70/50/5 g; how far past them before the figure turns red</string>
+    <string name="micro_over_value">+%1$d%% · +%2$d%% · +%3$d%%</string>
+    <string name="micro_over_dialog_hint">Figures stay green up to the daily limits (fiber 70 g, sugar 50 g, salt 5 g — WHO guidance; the fiber limit is a comfort ceiling far above the 25–38 g target), turn amber within the slack below and red past it. Note: the app counts total sugars, so fruit and milk push the figure while the 50 g norm is about added/free sugars — hence the generous default; salt counts only what the food itself carries, never the shaker.</string>
+    <string name="micro_over_fiber">Fiber: +%1$d%%</string>
+    <string name="micro_over_sugar">Sugar: +%1$d%%</string>
+    <string name="micro_over_salt">Salt: +%1$d%%</string>
     <string name="diary_empty">Nothing logged yet today — tap + to add your first food.</string>
     <string name="first_run_goal_body">Set a daily calorie goal to make the ring and day-part bars meaningful.</string>
     <string name="first_run_goal_wizard">Calculate for me</string>
@@ -159,6 +166,9 @@
     <!-- Progress ring -->
     <string name="ring_progress">%1$d\n/ %2$d kcal</string>
     <string name="ring_no_goal">%1$d kcal\n(no goal set)</string>
+    <string name="ring_percent">%1$d%%</string>
+    <string name="kcal_amount_of_goal">%1$d / %2$d kcal</string>
+    <string name="progress_no_goal">No goal set</string>
 
     <!-- Add food -->
     <string name="tab_foods">Foods</string>
@@ -354,6 +364,12 @@
     <string name="theme_dark">Dark</string>
     <string name="settings_dynamic_color">Dynamic colors</string>
     <string name="settings_dynamic_color_desc">Use Material You colors from your wallpaper (Android 12+)</string>
+    <string name="settings_home_progress_style">Calorie progress style</string>
+    <string name="settings_home_progress_style_desc">How the Home card shows the day\'s calorie progress</string>
+    <string name="progress_style_ring">Classic ring</string>
+    <string name="progress_style_compact_ring">Compact ring</string>
+    <string name="progress_style_gauge">Half-circle gauge</string>
+    <string name="progress_style_bar">Bar</string>
     <string name="settings_weight_unit">Weight unit</string>
     <string name="unit_kg_full">Kilograms (kg)</string>
     <string name="unit_lb_full">Pounds (lb)</string>

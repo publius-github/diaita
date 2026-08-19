@@ -155,6 +155,7 @@ fun DayDetailScreen(
                             sugarGrams = uiState.totalSugar,
                             saltGrams = uiState.totalSalt,
                             hasEntries = uiState.sections.isNotEmpty(),
+                            overTolerances = uiState.microOverTolerances,
                         )
                     }
                 }

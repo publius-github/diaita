@@ -291,6 +291,19 @@ class SettingsRepository(
         context.settingsDataStore.edit { prefs -> prefs[dynamicColorKey] = enabled }
     }
 
+    private val homeProgressStyleKey = stringPreferencesKey("home_progress_style")
+
+    /** Shape of the calorie progress indicator on the Home card; the original ring by default. */
+    val homeProgressStyle: Flow<HomeProgressStyle> =
+        prefs.map { prefs ->
+            prefs[homeProgressStyleKey]?.let { stored -> HomeProgressStyle.entries.find { it.name == stored } }
+                ?: HomeProgressStyle.RING
+        }
+
+    suspend fun setHomeProgressStyle(style: HomeProgressStyle) {
+        context.settingsDataStore.edit { prefs -> prefs[homeProgressStyleKey] = style.name }
+    }
+
     // --- Data ---
 
     private val recentFoodsCountKey = intPreferencesKey("recent_foods_count")
@@ -415,6 +428,31 @@ class SettingsRepository(
             prefs[macroOverProteinPercentKey] = tolerances.proteinPercent
             prefs[macroOverFatPercentKey] = tolerances.fatPercent
             prefs[macroOverCarbsPercentKey] = tolerances.carbsPercent
+        }
+    }
+
+    private val microOverFiberPercentKey = intPreferencesKey("micro_over_fiber_percent")
+    private val microOverSugarPercentKey = intPreferencesKey("micro_over_sugar_percent")
+    private val microOverSaltPercentKey = intPreferencesKey("micro_over_salt_percent")
+
+    /** Slack past the fiber/sugar/salt daily limits before the totals line turns red; see [MicronutrientOverTolerances]. */
+    val microOverTolerances: Flow<MicronutrientOverTolerances> =
+        prefs.map { prefs ->
+            MicronutrientOverTolerances(
+                fiberPercent =
+                    prefs[microOverFiberPercentKey] ?: MicronutrientOverTolerances.DEFAULT_FIBER_PERCENT,
+                sugarPercent =
+                    prefs[microOverSugarPercentKey] ?: MicronutrientOverTolerances.DEFAULT_SUGAR_PERCENT,
+                saltPercent =
+                    prefs[microOverSaltPercentKey] ?: MicronutrientOverTolerances.DEFAULT_SALT_PERCENT,
+            )
+        }
+
+    suspend fun setMicroOverTolerances(tolerances: MicronutrientOverTolerances) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[microOverFiberPercentKey] = tolerances.fiberPercent
+            prefs[microOverSugarPercentKey] = tolerances.sugarPercent
+            prefs[microOverSaltPercentKey] = tolerances.saltPercent
         }
     }
 

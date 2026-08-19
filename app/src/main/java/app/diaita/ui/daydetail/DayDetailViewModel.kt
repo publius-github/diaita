@@ -7,6 +7,7 @@ import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.DiaryRepository
+import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.ui.diary.DiaryRow
 import app.diaita.ui.diary.DiarySection
@@ -38,6 +39,8 @@ data class DayDetailUiState(
     val trackMacros: Boolean = true,
     /** Mirrors the "track fiber/sugar/salt" setting — hides the micronutrient line when false. */
     val trackMicronutrients: Boolean = true,
+    /** Per-nutrient slack past the fiber/sugar/salt limits before the totals line turns red. */
+    val microOverTolerances: MicronutrientOverTolerances = MicronutrientOverTolerances(),
 )
 
 /** Emitted right after a delete so the UI can offer a Snackbar "Undo". */
@@ -63,7 +66,8 @@ class DayDetailViewModel(
             diaryRepository.dailyTotals(date),
             settingsRepository.trackMacros,
             settingsRepository.trackMicronutrients,
-        ) { entries, totals, trackMacros, trackMicronutrients ->
+            settingsRepository.microOverTolerances,
+        ) { entries, totals, trackMacros, trackMicronutrients, microOverTolerances ->
             DayDetailUiState(
                 date = date,
                 sections = buildDiarySections(entries),
@@ -76,6 +80,7 @@ class DayDetailViewModel(
                 totalSalt = totals.totalSalt,
                 trackMacros = trackMacros,
                 trackMicronutrients = trackMicronutrients,
+                microOverTolerances = microOverTolerances,
             )
         }.stateIn(
             scope = viewModelScope,

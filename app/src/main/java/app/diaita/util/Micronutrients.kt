@@ -37,3 +37,40 @@ fun micronutrientTotals(
         sugarGrams?.let { MicronutrientTotal(Micronutrient.SUGAR, it) },
         saltGrams?.let { MicronutrientTotal(Micronutrient.SALT, it) },
     )
+
+/** Traffic-light zones for a day's fiber/sugar/salt total against its daily limit. */
+enum class MicronutrientBand { WITHIN, OVER, FAR_OVER }
+
+/**
+ * Daily limits the totals line colors against. Sugar and salt are the WHO ceilings (free
+ * sugars under 50 g at a 2000 kcal intake, salt under 5 g). Fiber has no harm ceiling in the
+ * guidelines — 25-38 g/day is an adequacy MINIMUM — so its limit is the ~70 g mark commonly
+ * cited for GI discomfort, far above the target; a normal high-fiber day must stay green.
+ */
+fun micronutrientLimitGrams(nutrient: Micronutrient): Double =
+    when (nutrient) {
+        Micronutrient.FIBER -> FIBER_LIMIT_G
+        Micronutrient.SUGAR -> SUGAR_LIMIT_G
+        Micronutrient.SALT -> SALT_LIMIT_G
+    }
+
+/**
+ * WITHIN up to the limit, OVER inside the user's tolerance past it, FAR_OVER beyond —
+ * the same three-zone semantics as the macro bars' overshoot handling.
+ */
+fun micronutrientBand(
+    nutrient: Micronutrient,
+    grams: Double,
+    overTolerancePercent: Int,
+): MicronutrientBand {
+    val limit = micronutrientLimitGrams(nutrient)
+    return when {
+        grams <= limit -> MicronutrientBand.WITHIN
+        grams <= limit * (1 + overTolerancePercent / 100.0) -> MicronutrientBand.OVER
+        else -> MicronutrientBand.FAR_OVER
+    }
+}
+
+const val FIBER_LIMIT_G = 70.0
+const val SUGAR_LIMIT_G = 50.0
+const val SALT_LIMIT_G = 5.0

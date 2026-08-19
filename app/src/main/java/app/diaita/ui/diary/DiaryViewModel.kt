@@ -11,7 +11,9 @@ import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.MacroOverTolerances
+import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DateUtils
@@ -83,10 +85,14 @@ data class DiaryUiState(
     val trackMicronutrients: Boolean = true,
     /** Per-macro overshoot slack before a bar flips from "goal reached" to a warning. */
     val macroOverTolerances: MacroOverTolerances = MacroOverTolerances(),
+    /** Per-nutrient slack past the fiber/sugar/salt limits before the totals line turns red. */
+    val microOverTolerances: MicronutrientOverTolerances = MicronutrientOverTolerances(),
     val dayPartShares: DayPartShares = DayPartShares(),
     val dayPartBoundaries: DayPartBoundaries = DayPartBoundaries(),
     val coachTone: CoachTone = CoachTone.SNARKY,
     val weightUnit: WeightUnit = WeightUnit.KG,
+    /** Shape of the day-total calorie indicator on the summary card (Appearance setting). */
+    val homeProgressStyle: HomeProgressStyle = HomeProgressStyle.RING,
 ) {
     val isEmpty: Boolean get() = sections.isEmpty()
 }
@@ -103,6 +109,14 @@ private data class TrackingFlags(
     val macros: Boolean,
     val micronutrients: Boolean,
     val macroOverTolerances: MacroOverTolerances,
+    val microOverTolerances: MicronutrientOverTolerances,
+)
+
+/** Purely presentational choices for the Home card, paired to fit the 5-flow combine overload. */
+private data class PresentationSettings(
+    val coachTone: CoachTone,
+    val weightUnit: WeightUnit,
+    val homeProgressStyle: HomeProgressStyle,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -110,8 +124,7 @@ private data class HomeSettings(
     val tracking: TrackingFlags,
     val boundaries: DayPartBoundaries,
     val shares: DayPartShares,
-    val coachTone: CoachTone,
-    val weightUnit: WeightUnit,
+    val presentation: PresentationSettings,
 )
 
 class DiaryViewModel(
@@ -136,12 +149,17 @@ class DiaryViewModel(
                             settingsRepository.trackMacros,
                             settingsRepository.trackMicronutrients,
                             settingsRepository.macroOverTolerances,
+                            settingsRepository.microOverTolerances,
                             ::TrackingFlags,
                         ),
                         settingsRepository.dayPartBoundaries,
                         settingsRepository.dayPartShares,
-                        settingsRepository.coachTone,
-                        settingsRepository.weightUnit,
+                        combine(
+                            settingsRepository.coachTone,
+                            settingsRepository.weightUnit,
+                            settingsRepository.homeProgressStyle,
+                            ::PresentationSettings,
+                        ),
                         ::HomeSettings,
                     ),
                 ) { entries, totals, goal, dayWeights, settings ->
@@ -166,10 +184,12 @@ class DiaryViewModel(
                         trackMacros = settings.tracking.macros,
                         trackMicronutrients = settings.tracking.micronutrients,
                         macroOverTolerances = settings.tracking.macroOverTolerances,
+                        microOverTolerances = settings.tracking.microOverTolerances,
                         dayPartShares = settings.shares,
                         dayPartBoundaries = settings.boundaries,
-                        coachTone = settings.coachTone,
-                        weightUnit = settings.weightUnit,
+                        coachTone = settings.presentation.coachTone,
+                        weightUnit = settings.presentation.weightUnit,
+                        homeProgressStyle = settings.presentation.homeProgressStyle,
                     )
                 }
             }.stateIn(

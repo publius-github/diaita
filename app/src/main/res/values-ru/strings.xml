@@ -46,6 +46,13 @@
     <string name="macro_over_protein">Белки: +%1$d%%</string>
     <string name="macro_over_fat">Жиры: +%1$d%%</string>
     <string name="macro_over_carbs">Углеводы: +%1$d%%</string>
+    <string name="settings_micro_over">Нормы клетчатки/сахара/соли</string>
+    <string name="settings_micro_over_desc">Дневные нормы 70/50/5 г; насколько их можно превысить, прежде чем цифра станет красной</string>
+    <string name="micro_over_value">+%1$d%% · +%2$d%% · +%3$d%%</string>
+    <string name="micro_over_dialog_hint">Цифры зелёные до дневной нормы (клетчатка 70 г, сахар 50 г, соль 5 г — ориентиры ВОЗ; норма клетчатки — потолок комфорта, сильно выше цели 25–38 г), жёлтые в пределах допуска ниже и красные сверх него. Важно: приложение считает общий сахар, так что фрукты и молоко поднимают цифру, а норма 50 г — про добавленный/свободный сахар, поэтому допуск по умолчанию щедрый; соль учитывается только из самих продуктов, без солонки.</string>
+    <string name="micro_over_fiber">Клетчатка: +%1$d%%</string>
+    <string name="micro_over_sugar">Сахар: +%1$d%%</string>
+    <string name="micro_over_salt">Соль: +%1$d%%</string>
     <string name="diary_empty">Сегодня ещё ничего не записано — нажмите +, чтобы добавить первый продукт.</string>
     <string name="first_run_goal_body">Задайте дневную цель по калориям, чтобы кольцо и полосы частей дня обрели смысл.</string>
     <string name="first_run_goal_wizard">Рассчитать за меня</string>
@@ -159,6 +166,9 @@
     <!-- Progress ring -->
     <string name="ring_progress">%1$d\n/ %2$d ккал</string>
     <string name="ring_no_goal">%1$d ккал\n(цель не задана)</string>
+    <string name="ring_percent">%1$d%%</string>
+    <string name="kcal_amount_of_goal">%1$d / %2$d ккал</string>
+    <string name="progress_no_goal">Цель не задана</string>
 
     <!-- Add food -->
     <string name="tab_foods">Продукты</string>
@@ -354,6 +364,12 @@
     <string name="theme_dark">Тёмная</string>
     <string name="settings_dynamic_color">Динамические цвета</string>
     <string name="settings_dynamic_color_desc">Цвета Material You из обоев (Android 12+)</string>
+    <string name="settings_home_progress_style">Стиль индикатора калорий</string>
+    <string name="settings_home_progress_style_desc">Как карточка дня показывает прогресс по калориям</string>
+    <string name="progress_style_ring">Классическое кольцо</string>
+    <string name="progress_style_compact_ring">Компактное кольцо</string>
+    <string name="progress_style_gauge">Полукруг</string>
+    <string name="progress_style_bar">Полоса</string>
     <string name="settings_weight_unit">Единица веса</string>
     <string name="unit_kg_full">Килограммы (кг)</string>
     <string name="unit_lb_full">Фунты (lb)</string>

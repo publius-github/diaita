@@ -10,7 +10,9 @@ import app.diaita.data.repository.ImportOutcome
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
 import app.diaita.data.settings.DayPartShares
+import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.MacroOverTolerances
+import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.ThemeMode
 import app.diaita.data.settings.WeightUnit
@@ -116,6 +118,22 @@ class SettingsViewModel(
         }
     }
 
+    val microOverTolerances: StateFlow<MicronutrientOverTolerances> =
+        settingsRepository.microOverTolerances
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MicronutrientOverTolerances())
+
+    fun setMicroOverTolerances(
+        fiberPercent: Int,
+        sugarPercent: Int,
+        saltPercent: Int,
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setMicroOverTolerances(
+                MicronutrientOverTolerances.sanitized(fiberPercent, sugarPercent, saltPercent),
+            )
+        }
+    }
+
     val coachTone: StateFlow<CoachTone> =
         settingsRepository.coachTone
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CoachTone.SNARKY)
@@ -148,6 +166,14 @@ class SettingsViewModel(
 
     fun setDynamicColor(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
+    }
+
+    val homeProgressStyle: StateFlow<HomeProgressStyle> =
+        settingsRepository.homeProgressStyle
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeProgressStyle.RING)
+
+    fun setHomeProgressStyle(style: HomeProgressStyle) {
+        viewModelScope.launch { settingsRepository.setHomeProgressStyle(style) }
     }
 
     // --- Notifications ---

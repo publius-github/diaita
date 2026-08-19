@@ -37,4 +37,30 @@ class MicronutrientsTest {
 
         assertEquals(formatWeightForDisplay(1.24), salt.displayGrams)
     }
+
+    @Test
+    fun `within the limit is green regardless of tolerance`() {
+        assertEquals(MicronutrientBand.WITHIN, micronutrientBand(Micronutrient.SUGAR, 50.0, 0))
+        assertEquals(MicronutrientBand.WITHIN, micronutrientBand(Micronutrient.SALT, 4.9, 0))
+        assertEquals(MicronutrientBand.WITHIN, micronutrientBand(Micronutrient.FIBER, 45.0, 0))
+    }
+
+    @Test
+    fun `over the limit but inside the tolerance is amber`() {
+        assertEquals(MicronutrientBand.OVER, micronutrientBand(Micronutrient.SUGAR, 74.9, 50))
+        assertEquals(MicronutrientBand.OVER, micronutrientBand(Micronutrient.SALT, 6.0, 20))
+        assertEquals(MicronutrientBand.OVER, micronutrientBand(Micronutrient.FIBER, 80.0, 15))
+    }
+
+    @Test
+    fun `past the tolerance is red`() {
+        assertEquals(MicronutrientBand.FAR_OVER, micronutrientBand(Micronutrient.SUGAR, 75.1, 50))
+        assertEquals(MicronutrientBand.FAR_OVER, micronutrientBand(Micronutrient.SALT, 6.1, 20))
+        assertEquals(MicronutrientBand.FAR_OVER, micronutrientBand(Micronutrient.FIBER, 81.0, 15))
+    }
+
+    @Test
+    fun `zero tolerance turns red immediately past the limit`() {
+        assertEquals(MicronutrientBand.FAR_OVER, micronutrientBand(Micronutrient.SALT, 5.01, 0))
+    }
 }

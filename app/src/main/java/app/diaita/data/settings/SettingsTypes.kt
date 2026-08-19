@@ -6,6 +6,13 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 /** Voice of the pace message on the Home card. OFF hides it entirely; BRUTAL takes no prisoners. */
 enum class CoachTone { OFF, GENTLE, SNARKY, BRUTAL }
 
+/**
+ * How the Home card shows the day's calorie progress. RING is the original 120dp ring with
+ * the figures inside; the other three move the figures into the card header ("X / Y kcal")
+ * so the indicator itself can shrink and the dead space left of the big ring goes away.
+ */
+enum class HomeProgressStyle { RING, COMPACT_RING, GAUGE, BAR }
+
 /** Display unit for body weight. Storage stays in kilograms regardless. */
 enum class WeightUnit {
     KG,
@@ -92,6 +99,40 @@ data class MacroOverTolerances(
                 proteinPercent = proteinPercent.coerceIn(0, MAX_PERCENT),
                 fatPercent = fatPercent.coerceIn(0, MAX_PERCENT),
                 carbsPercent = carbsPercent.coerceIn(0, MAX_PERCENT),
+            )
+    }
+}
+
+/**
+ * How far past its daily limit each of fiber/sugar/salt may run before the totals line
+ * escalates from yellow to red (within the limit it stays green). The limits themselves are
+ * fixed reference values (see [app.diaita.util.micronutrientLimitGrams]); only the slack is
+ * user-tunable. The default asymmetry is data-honesty, not taste: the stored sugar is TOTAL
+ * sugars (fruit and milk count) while the 50 g WHO figure is about FREE sugars, so sugar
+ * gets a wide +50% band before red to keep a fruit-heavy day from screaming; salt counts
+ * only what food itself carries (never the shaker) and so already understates; fiber's
+ * limit is a generous GI-comfort ceiling, so little extra slack is needed.
+ */
+data class MicronutrientOverTolerances(
+    val fiberPercent: Int = DEFAULT_FIBER_PERCENT,
+    val sugarPercent: Int = DEFAULT_SUGAR_PERCENT,
+    val saltPercent: Int = DEFAULT_SALT_PERCENT,
+) {
+    companion object {
+        const val DEFAULT_FIBER_PERCENT = 15
+        const val DEFAULT_SUGAR_PERCENT = 50
+        const val DEFAULT_SALT_PERCENT = 20
+        const val MAX_PERCENT = 100
+
+        fun sanitized(
+            fiberPercent: Int,
+            sugarPercent: Int,
+            saltPercent: Int,
+        ): MicronutrientOverTolerances =
+            MicronutrientOverTolerances(
+                fiberPercent = fiberPercent.coerceIn(0, MAX_PERCENT),
+                sugarPercent = sugarPercent.coerceIn(0, MAX_PERCENT),
+                saltPercent = saltPercent.coerceIn(0, MAX_PERCENT),
             )
     }
 }

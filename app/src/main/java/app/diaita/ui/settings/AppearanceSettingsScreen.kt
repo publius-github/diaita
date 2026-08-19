@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.ThemeMode
 import app.diaita.ui.AppViewModelProvider
 
@@ -25,7 +26,9 @@ fun AppearanceSettingsScreen(
 ) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
+    val homeProgressStyle by viewModel.homeProgressStyle.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showProgressStyleDialog by remember { mutableStateOf(false) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_appearance,
@@ -46,6 +49,13 @@ fun AppearanceSettingsScreen(
             },
         )
         HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_home_progress_style,
+            descriptionRes = R.string.settings_home_progress_style_desc,
+            value = homeProgressStyle.label(),
+            onClick = { showProgressStyleDialog = true },
+        )
+        HorizontalDivider()
     }
 
     if (showThemeDialog) {
@@ -62,6 +72,21 @@ fun AppearanceSettingsScreen(
             onDismiss = { showThemeDialog = false },
         )
     }
+
+    if (showProgressStyleDialog) {
+        ChoiceDialog(
+            titleRes = R.string.settings_home_progress_style,
+            options =
+                HomeProgressStyle.entries.map { style ->
+                    ChoiceOption(
+                        label = style.label(),
+                        selected = style == homeProgressStyle,
+                        onSelect = { viewModel.setHomeProgressStyle(style) },
+                    )
+                },
+            onDismiss = { showProgressStyleDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -71,5 +96,16 @@ private fun ThemeMode.label(): String =
             ThemeMode.SYSTEM -> R.string.theme_system
             ThemeMode.LIGHT -> R.string.theme_light
             ThemeMode.DARK -> R.string.theme_dark
+        },
+    )
+
+@Composable
+private fun HomeProgressStyle.label(): String =
+    stringResource(
+        when (this) {
+            HomeProgressStyle.RING -> R.string.progress_style_ring
+            HomeProgressStyle.COMPACT_RING -> R.string.progress_style_compact_ring
+            HomeProgressStyle.GAUGE -> R.string.progress_style_gauge
+            HomeProgressStyle.BAR -> R.string.progress_style_bar
         },
     )

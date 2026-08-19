@@ -28,6 +28,7 @@ import app.diaita.data.reminder.ReminderScheduler
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.MacroOverTolerances
+import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import kotlin.math.roundToInt
@@ -52,12 +53,14 @@ fun TrackingSettingsScreen(
     val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
     val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
     val macroOverTolerances by viewModel.macroOverTolerances.collectAsStateWithLifecycle()
+    val microOverTolerances by viewModel.microOverTolerances.collectAsStateWithLifecycle()
     val athleticBmiBands by viewModel.athleticBmiBands.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
     var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
     var showSharesDialog by remember { mutableStateOf(false) }
     var showMacroOverDialog by remember { mutableStateOf(false) }
+    var showMicroOverDialog by remember { mutableStateOf(false) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -102,6 +105,19 @@ fun TrackingSettingsScreen(
                     macroOverTolerances.carbsPercent,
                 ),
             onClick = { showMacroOverDialog = true },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_micro_over,
+            descriptionRes = R.string.settings_micro_over_desc,
+            value =
+                stringResource(
+                    R.string.micro_over_value,
+                    microOverTolerances.fiberPercent,
+                    microOverTolerances.sugarPercent,
+                    microOverTolerances.saltPercent,
+                ),
+            onClick = { showMicroOverDialog = true },
         )
         HorizontalDivider()
         ValueRow(
@@ -224,6 +240,17 @@ fun TrackingSettingsScreen(
             },
         )
     }
+
+    if (showMicroOverDialog) {
+        MicroOverDialog(
+            current = microOverTolerances,
+            onDismiss = { showMicroOverDialog = false },
+            onConfirm = { fiber, sugar, salt ->
+                viewModel.setMicroOverTolerances(fiber, sugar, salt)
+                showMicroOverDialog = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -289,6 +316,64 @@ private fun MacroOverDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(protein, fat, carbs) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * Three sliders for the slack past the fixed fiber/sugar/salt daily limits (70/50/5 g)
+ * before the totals line turns red. The hint names the honesty caveats: the app tracks
+ * TOTAL sugars while the 50 g norm is about free sugars, and salt counts only what the
+ * food itself carries — see [MicronutrientOverTolerances] for the default reasoning.
+ */
+@Composable
+private fun MicroOverDialog(
+    current: MicronutrientOverTolerances,
+    onDismiss: () -> Unit,
+    onConfirm: (fiberPercent: Int, sugarPercent: Int, saltPercent: Int) -> Unit,
+) {
+    var fiber by remember { mutableIntStateOf(current.fiberPercent) }
+    var sugar by remember { mutableIntStateOf(current.sugarPercent) }
+    var salt by remember { mutableIntStateOf(current.saltPercent) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_micro_over)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.micro_over_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.micro_over_fiber, fiber))
+                Slider(
+                    value = fiber.toFloat(),
+                    onValueChange = { fiber = it.roundToInt() },
+                    valueRange = 0f..MicronutrientOverTolerances.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.micro_over_sugar, sugar))
+                Slider(
+                    value = sugar.toFloat(),
+                    onValueChange = { sugar = it.roundToInt() },
+                    valueRange = 0f..MicronutrientOverTolerances.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.micro_over_salt, salt))
+                Slider(
+                    value = salt.toFloat(),
+                    onValueChange = { salt = it.roundToInt() },
+                    valueRange = 0f..MicronutrientOverTolerances.MAX_PERCENT.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(fiber, sugar, salt) }) {
                 Text(stringResource(R.string.save))
             }
         },

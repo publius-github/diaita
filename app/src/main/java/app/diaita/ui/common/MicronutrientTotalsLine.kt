@@ -5,8 +5,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import app.diaita.R
+import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.util.Micronutrient
+import app.diaita.util.MicronutrientBand
+import app.diaita.util.micronutrientBand
 import app.diaita.util.micronutrientTotals
 
 /**
@@ -19,6 +25,10 @@ import app.diaita.util.micronutrientTotals
  * logged (eating nothing really is 0 g); and an explicit "no data" when the day has entries but
  * none of them carries these values — quick-add entries never do, nor do foods cached from
  * OpenFoodFacts before the columns existed.
+ *
+ * Each value is colored against its daily limit (green within, amber inside the user's
+ * overshoot tolerance, red beyond — same three-zone language as the macro bars); "green"
+ * is the scheme primary, matching the macro goal-reached check.
  */
 @Composable
 fun MicronutrientTotalsLine(
@@ -26,6 +36,7 @@ fun MicronutrientTotalsLine(
     sugarGrams: Double?,
     saltGrams: Double?,
     hasEntries: Boolean,
+    overTolerances: MicronutrientOverTolerances,
     modifier: Modifier = Modifier,
 ) {
     val totals = micronutrientTotals(fiberGrams, sugarGrams, saltGrams)
@@ -38,21 +49,39 @@ fun MicronutrientTotalsLine(
         )
         return
     }
-    val parts =
-        totals.ifEmpty { micronutrientTotals(0.0, 0.0, 0.0) }.map { total ->
-            stringResource(
-                when (total.nutrient) {
-                    Micronutrient.FIBER -> R.string.micro_fiber_value
-                    Micronutrient.SUGAR -> R.string.micro_sugar_value
-                    Micronutrient.SALT -> R.string.micro_salt_value
-                },
-                total.displayGrams,
-            )
+    val line =
+        buildAnnotatedString {
+            totals.ifEmpty { micronutrientTotals(0.0, 0.0, 0.0) }.forEachIndexed { index, total ->
+                if (index > 0) append("   ")
+                val tolerancePercent =
+                    when (total.nutrient) {
+                        Micronutrient.FIBER -> overTolerances.fiberPercent
+                        Micronutrient.SUGAR -> overTolerances.sugarPercent
+                        Micronutrient.SALT -> overTolerances.saltPercent
+                    }
+                val color =
+                    when (micronutrientBand(total.nutrient, total.grams, tolerancePercent)) {
+                        MicronutrientBand.WITHIN -> MaterialTheme.colorScheme.primary
+                        MicronutrientBand.OVER -> MaterialTheme.colorScheme.tertiary
+                        MicronutrientBand.FAR_OVER -> MaterialTheme.colorScheme.error
+                    }
+                withStyle(SpanStyle(color = color)) {
+                    append(
+                        stringResource(
+                            when (total.nutrient) {
+                                Micronutrient.FIBER -> R.string.micro_fiber_value
+                                Micronutrient.SUGAR -> R.string.micro_sugar_value
+                                Micronutrient.SALT -> R.string.micro_salt_value
+                            },
+                            total.displayGrams,
+                        ),
+                    )
+                }
+            }
         }
     Text(
-        parts.joinToString("   "),
+        line,
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier,
     )
 }
