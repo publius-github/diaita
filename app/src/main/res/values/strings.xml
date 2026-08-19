@@ -67,8 +67,14 @@
     <string name="day_part_day">Day</string>
     <string name="day_part_evening">Evening</string>
     <string name="day_part_kcal">%1$d / %2$d</string>
+    <string name="day_part_kcal_carry">%1$d / %2$d%3$+d</string>
     <string name="day_part_left">%1$d left</string>
-    <string name="day_part_carry_note">Unspent %1$d kcal carried over to %2$s</string>
+    <string name="settings_day_part_over">Day-part overshoot</string>
+    <string name="settings_day_part_over_desc">How far past a morning/day/evening target before it turns amber, then red</string>
+    <string name="day_part_over_value">+%1$d%% / +%2$d%%</string>
+    <string name="day_part_over_dialog_hint">A segment stays green up to the first threshold past its target, warns in amber up to the second, and turns red beyond it.</string>
+    <string name="day_part_over_amber">Amber from: +%1$d%%</string>
+    <string name="day_part_over_red">Red from: +%1$d%%</string>
     <string name="date_yesterday">Yesterday</string>
     <string name="previous_day">Previous day</string>
     <string name="next_day">Next day</string>

@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.reminder.ReminderScheduler
 import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
@@ -61,6 +62,8 @@ fun TrackingSettingsScreen(
     var showSharesDialog by remember { mutableStateOf(false) }
     var showMacroOverDialog by remember { mutableStateOf(false) }
     var showMicroOverDialog by remember { mutableStateOf(false) }
+    var showDayPartOverDialog by remember { mutableStateOf(false) }
+    val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -145,6 +148,18 @@ fun TrackingSettingsScreen(
             descriptionRes = R.string.settings_day_end_desc,
             minutes = dayPartBoundaries.dayEndMinutes,
             onClick = { boundaryTarget = BoundaryTarget.DAY_END },
+        )
+        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_day_part_over,
+            descriptionRes = R.string.settings_day_part_over_desc,
+            value =
+                stringResource(
+                    R.string.day_part_over_value,
+                    dayPartOverThresholds.amberPercent,
+                    dayPartOverThresholds.redPercent,
+                ),
+            onClick = { showDayPartOverDialog = true },
         )
         HorizontalDivider()
         ValueRow(
@@ -237,6 +252,17 @@ fun TrackingSettingsScreen(
             onConfirm = { protein, fat, carbs ->
                 viewModel.setMacroOverTolerances(protein, fat, carbs)
                 showMacroOverDialog = false
+            },
+        )
+    }
+
+    if (showDayPartOverDialog) {
+        DayPartOverDialog(
+            current = dayPartOverThresholds,
+            onDismiss = { showDayPartOverDialog = false },
+            onConfirm = { amber, red ->
+                viewModel.setDayPartOverThresholds(amber, red)
+                showDayPartOverDialog = false
             },
         )
     }
@@ -374,6 +400,56 @@ private fun MicroOverDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(fiber, sugar, salt) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * Two sliders for the morning/day/evening overshoot bands: green up to the first threshold
+ * past a segment's target, amber up to the second, red beyond. Saving keeps red >= amber.
+ */
+@Composable
+private fun DayPartOverDialog(
+    current: DayPartOverThresholds,
+    onDismiss: () -> Unit,
+    onConfirm: (amberPercent: Int, redPercent: Int) -> Unit,
+) {
+    var amber by remember { mutableIntStateOf(current.amberPercent) }
+    var red by remember { mutableIntStateOf(current.redPercent) }
+    val sanitized = DayPartOverThresholds.sanitized(amber, red)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_day_part_over)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.day_part_over_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.day_part_over_amber, sanitized.amberPercent))
+                Slider(
+                    value = sanitized.amberPercent.toFloat(),
+                    onValueChange = { amber = it.roundToInt() },
+                    valueRange = 0f..DayPartOverThresholds.MAX_PERCENT.toFloat(),
+                )
+                Text(stringResource(R.string.day_part_over_red, sanitized.redPercent))
+                Slider(
+                    value = sanitized.redPercent.toFloat(),
+                    onValueChange = { red = it.roundToInt() },
+                    valueRange = 0f..DayPartOverThresholds.MAX_PERCENT.toFloat(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(sanitized.amberPercent, sanitized.redPercent) }) {
                 Text(stringResource(R.string.save))
             }
         },

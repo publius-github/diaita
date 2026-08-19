@@ -4,10 +4,12 @@ import app.diaita.data.db.dao.DiaryEntryWithFood
 import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.util.NutrientMath
 import java.time.Instant
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 data class DiarySection(
     val slot: MealSlot,
@@ -94,10 +96,13 @@ fun dayPartOf(
     }
 
 /**
- * A day part's calorie budget for the balance bar: the sub-target to eat against, and how
- * much of it was carried in from earlier finished parts (0 for most parts, most of the time).
+ * A day part's calorie budget for the balance bar: the plain [DayPartShares] slice ([base]),
+ * the signed remainder carried in from earlier finished parts ([carriedIn], positive for a
+ * deficit, negative for an overshoot), and the effective [target] = base + carry floored
+ * at zero so a big earlier overshoot can't promise negative food.
  */
 data class DayPartBudget(
+    val base: Int,
     val target: Int,
     val carriedIn: Int,
 )
@@ -116,10 +121,12 @@ fun currentDayPart(
 /**
  * Per-part calorie budgets for the balance bar. Each part starts from its [DayPartShares]
  * slice of the daily goal; once a part's time window is over (its [DayPartBoundaries] end
- * vs [nowMinutes]), the unspent remainder of its target carries forward into the next part.
- * The carry is deliberately asymmetric: only a deficit rolls forward — overeating in a
- * finished part never shrinks a later target (the day total already reports that), because
- * a shrunken target would paint a part red before anything was even eaten in it.
+ * vs [nowMinutes]), the signed remainder of its target carries forward into the next part —
+ * a deficit raises the next target, an overshoot shrinks it (floored at zero), so the bar
+ * never promises more food than the day has left. The carry math runs on the un-floored
+ * remainder, so an overshoot bigger than the next part's whole slice keeps flowing onward.
+ * [applyCarry] is off for past days: a finished day is a factual record, and rolling its
+ * deficits into the evening would repaint a merely light day as an evening failure.
  */
 fun buildDayPartBudgets(
     goalCalories: Int,
@@ -127,19 +134,49 @@ fun buildDayPartBudgets(
     consumed: Map<DayPart, Double>,
     nowMinutes: Int,
     boundaries: DayPartBoundaries = DayPartBoundaries(),
+    applyCarry: Boolean = true,
 ): Map<DayPart, DayPartBudget> {
     var carry = 0.0
     return DayPart.entries.associateWith { part ->
-        val carriedIn = carry
-        val target = goalCalories * shares.shareOf(part) + carriedIn
+        val base = goalCalories * shares.shareOf(part).toDouble()
+        val carriedIn = if (applyCarry) carry else 0.0
+        val rawTarget = base + carriedIn
         val partOver =
             when (part) {
                 DayPart.MORNING -> nowMinutes >= boundaries.morningEndMinutes
                 DayPart.DAY -> nowMinutes >= boundaries.dayEndMinutes
                 DayPart.EVENING -> false
             }
-        carry = if (partOver) (target - (consumed[part] ?: 0.0)).coerceAtLeast(0.0) else 0.0
-        DayPartBudget(target = target.toInt(), carriedIn = carriedIn.toInt())
+        carry = if (partOver) rawTarget - (consumed[part] ?: 0.0) else 0.0
+        DayPartBudget(
+            base = base.roundToInt(),
+            target = rawTarget.coerceAtLeast(0.0).roundToInt(),
+            carriedIn = carriedIn.roundToInt(),
+        )
+    }
+}
+
+/** How hard a day-part segment overshot its target, banded by [DayPartOverThresholds]. */
+enum class DayPartOverBand { UNDER, SMALL, MEDIUM, LARGE }
+
+/**
+ * UNDER at or below the target; past it the overshoot percent picks the band: within
+ * [DayPartOverThresholds.amberPercent] it is SMALL (still rendered green — noise, not a
+ * signal), within [DayPartOverThresholds.redPercent] MEDIUM (amber), beyond LARGE (red).
+ * A zero target with anything consumed is LARGE — there was no room to begin with.
+ */
+fun dayPartOverBand(
+    consumed: Int,
+    target: Int,
+    thresholds: DayPartOverThresholds,
+): DayPartOverBand {
+    if (consumed <= target) return DayPartOverBand.UNDER
+    if (target <= 0) return DayPartOverBand.LARGE
+    val overPercent = (consumed - target) * 100.0 / target
+    return when {
+        overPercent <= thresholds.amberPercent -> DayPartOverBand.SMALL
+        overPercent <= thresholds.redPercent -> DayPartOverBand.MEDIUM
+        else -> DayPartOverBand.LARGE
     }
 }
 

@@ -84,7 +84,7 @@ fun CompactProgressRing(
         Text(
             stringResource(R.string.ring_percent, percentOf(consumedCalories, goalCalories)),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleMedium,
             color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
         )
     }
@@ -137,7 +137,7 @@ fun ProgressGauge(
         Text(
             stringResource(R.string.ring_percent, percentOf(consumedCalories, goalCalories)),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.titleMedium,
             color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
         )
     }

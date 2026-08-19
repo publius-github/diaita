@@ -5,6 +5,7 @@ import app.diaita.data.db.entities.DiaryEntry
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.FoodSource
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -165,12 +166,59 @@ class DiaryRowGroupingTest {
     }
 
     @Test
-    fun `overeating in a finished part never shrinks a later target`() {
+    fun `overshoot in a finished morning shrinks the day target`() {
         val budgets = budgets(consumed = mapOf(DayPart.MORNING to 450.0), nowMinutes = 13 * 60)
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(250, budgets.target(DayPart.DAY))
+        assertEquals(-150, budgets.getValue(DayPart.DAY).carriedIn)
+        assertEquals(300, budgets.target(DayPart.EVENING))
+    }
+
+    @Test
+    fun `overshoot bigger than the next slice floors it at zero and keeps flowing`() {
+        val budgets =
+            budgets(
+                consumed = mapOf(DayPart.MORNING to 800.0, DayPart.DAY to 0.0),
+                nowMinutes = 18 * 60,
+            )
+        assertEquals(300, budgets.target(DayPart.MORNING))
+        assertEquals(0, budgets.target(DayPart.DAY))
+        assertEquals(-500, budgets.getValue(DayPart.DAY).carriedIn)
+        // Only the un-eaten remainder (-100) of the day's raw budget flows on, not the full -500.
+        assertEquals(200, budgets.target(DayPart.EVENING))
+        assertEquals(-100, budgets.getValue(DayPart.EVENING).carriedIn)
+    }
+
+    @Test
+    fun `past days show plain shares without any carry`() {
+        val budgets =
+            buildDayPartBudgets(
+                goalCalories = 1000,
+                shares = DayPartShares(),
+                consumed = mapOf(DayPart.MORNING to 100.0, DayPart.DAY to 900.0),
+                nowMinutes = 24 * 60,
+                applyCarry = false,
+            )
         assertEquals(300, budgets.target(DayPart.MORNING))
         assertEquals(400, budgets.target(DayPart.DAY))
         assertEquals(300, budgets.target(DayPart.EVENING))
-        assertEquals(0, budgets.getValue(DayPart.DAY).carriedIn)
+        assertEquals(0, budgets.getValue(DayPart.EVENING).carriedIn)
+    }
+
+    @Test
+    fun `overshoot bands follow the thresholds`() {
+        val thresholds = DayPartOverThresholds(amberPercent = 10, redPercent = 25)
+        assertEquals(DayPartOverBand.UNDER, dayPartOverBand(consumed = 400, target = 400, thresholds = thresholds))
+        assertEquals(DayPartOverBand.SMALL, dayPartOverBand(consumed = 440, target = 400, thresholds = thresholds))
+        assertEquals(DayPartOverBand.MEDIUM, dayPartOverBand(consumed = 500, target = 400, thresholds = thresholds))
+        assertEquals(DayPartOverBand.LARGE, dayPartOverBand(consumed = 501, target = 400, thresholds = thresholds))
+    }
+
+    @Test
+    fun `anything eaten against a zero target is a large overshoot`() {
+        val thresholds = DayPartOverThresholds()
+        assertEquals(DayPartOverBand.UNDER, dayPartOverBand(consumed = 0, target = 0, thresholds = thresholds))
+        assertEquals(DayPartOverBand.LARGE, dayPartOverBand(consumed = 50, target = 0, thresholds = thresholds))
     }
 
     @Test

@@ -10,6 +10,7 @@ import app.diaita.data.repository.GoalRepository
 import app.diaita.data.repository.WeightRepository
 import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartBoundaries
+import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.MacroOverTolerances
@@ -87,6 +88,8 @@ data class DiaryUiState(
     val macroOverTolerances: MacroOverTolerances = MacroOverTolerances(),
     /** Per-nutrient slack past the fiber/sugar/salt limits before the totals line turns red. */
     val microOverTolerances: MicronutrientOverTolerances = MicronutrientOverTolerances(),
+    /** Overshoot bands (green/amber/red) for the morning/day/evening segments. */
+    val dayPartOverThresholds: DayPartOverThresholds = DayPartOverThresholds(),
     val dayPartShares: DayPartShares = DayPartShares(),
     val dayPartBoundaries: DayPartBoundaries = DayPartBoundaries(),
     val coachTone: CoachTone = CoachTone.SNARKY,
@@ -110,6 +113,7 @@ private data class TrackingFlags(
     val micronutrients: Boolean,
     val macroOverTolerances: MacroOverTolerances,
     val microOverTolerances: MicronutrientOverTolerances,
+    val dayPartOverThresholds: DayPartOverThresholds,
 )
 
 /** Purely presentational choices for the Home card, paired to fit the 5-flow combine overload. */
@@ -150,6 +154,7 @@ class DiaryViewModel(
                             settingsRepository.trackMicronutrients,
                             settingsRepository.macroOverTolerances,
                             settingsRepository.microOverTolerances,
+                            settingsRepository.dayPartOverThresholds,
                             ::TrackingFlags,
                         ),
                         settingsRepository.dayPartBoundaries,
@@ -185,6 +190,7 @@ class DiaryViewModel(
                         trackMicronutrients = settings.tracking.micronutrients,
                         macroOverTolerances = settings.tracking.macroOverTolerances,
                         microOverTolerances = settings.tracking.microOverTolerances,
+                        dayPartOverThresholds = settings.tracking.dayPartOverThresholds,
                         dayPartShares = settings.shares,
                         dayPartBoundaries = settings.boundaries,
                         coachTone = settings.presentation.coachTone,

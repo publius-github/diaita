@@ -67,6 +67,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.settings.CoachTone
+import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.ui.AppViewModelProvider
@@ -89,6 +90,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
+import kotlin.math.roundToInt
 
 @Composable
 fun DiaryScreen(
@@ -535,10 +537,6 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                // The original ring is taller than the text block, so it anchors to the top
-                // like it always did; the compact indicators sit centered against the text.
-                verticalAlignment =
-                    if (style == HomeProgressStyle.RING) Alignment.Top else Alignment.CenterVertically,
             ) {
                 // Weighted so the nutrient lines wrap inside their own space instead of
                 // squeezing the ring: with full nutrient names they need two lines on
@@ -632,6 +630,8 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 }
                 // A past day is fully over: every part's window has closed, and there is no
                 // "current" part to emphasize or coach about.
+                // No carry on past days: a finished day is a factual record, and rolling its
+                // deficits forward would repaint a merely light day as an evening failure.
                 val dayPartBudgets =
                     buildDayPartBudgets(
                         goalCalories = uiState.goalCalories,
@@ -639,6 +639,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                         consumed = uiState.dayPartCalories,
                         nowMinutes = if (uiState.isToday) nowMinutes else 24 * 60,
                         boundaries = uiState.dayPartBoundaries,
+                        applyCarry = uiState.isToday,
                     )
                 val currentPart =
                     if (uiState.isToday) currentDayPart(nowMinutes, uiState.dayPartBoundaries) else null
@@ -648,16 +649,8 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     shares = uiState.dayPartShares,
                     currentPart = currentPart,
                     dayRemaining = uiState.goalCalories - uiState.totalCalories.toInt(),
+                    overThresholds = uiState.dayPartOverThresholds,
                 )
-                val carriedIn = currentPart?.let { dayPartBudgets[it]?.carriedIn } ?: 0
-                if (currentPart != null && carriedIn > 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        stringResource(R.string.day_part_carry_note, carriedIn, currentPart.label()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
                 if (uiState.isToday && uiState.coachTone != CoachTone.OFF) {
                     Spacer(modifier = Modifier.height(8.dp))
                     PaceMessage(
@@ -881,15 +874,17 @@ private fun DayPartBalanceBar(
     shares: DayPartShares,
     currentPart: DayPart?,
     dayRemaining: Int,
+    overThresholds: DayPartOverThresholds,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         DayPart.entries.forEach { part ->
             DayPartSegment(
                 part = part,
                 consumed = dayPartCalories[part] ?: 0.0,
-                target = dayPartBudgets[part]?.target ?: 0,
+                budget = dayPartBudgets[part] ?: DayPartBudget(0, 0, 0),
                 isCurrent = part == currentPart,
                 dayRemaining = dayRemaining,
+                overThresholds = overThresholds,
                 modifier = Modifier.weight(shares.shareOf(part)),
             )
         }
@@ -900,12 +895,25 @@ private fun DayPartBalanceBar(
 private fun DayPartSegment(
     part: DayPart,
     consumed: Double,
-    target: Int,
+    budget: DayPartBudget,
     isCurrent: Boolean,
     dayRemaining: Int,
+    overThresholds: DayPartOverThresholds,
     modifier: Modifier = Modifier,
 ) {
-    val isOver = target > 0 && consumed > target
+    val target = budget.target
+    val consumedInt = consumed.roundToInt()
+    val isOver = consumedInt > target
+    // A small overshoot stays green (noise, not a signal); the user-configurable thresholds
+    // pick where it turns amber and where red — red is no longer reserved for the day total
+    // (user re-decision 2026-08-19).
+    val band = dayPartOverBand(consumedInt, target, overThresholds)
+    val barColor =
+        when (band) {
+            DayPartOverBand.UNDER, DayPartOverBand.SMALL -> MaterialTheme.colorScheme.primary
+            DayPartOverBand.MEDIUM -> MaterialTheme.colorScheme.tertiary
+            DayPartOverBand.LARGE -> MaterialTheme.colorScheme.error
+        }
     val progress = if (target > 0) (consumed / target).toFloat().coerceIn(0f, 1f) else 0f
     Column(modifier = modifier) {
         LinearProgressIndicator(
@@ -914,9 +922,7 @@ private fun DayPartSegment(
                 Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-            // Amber, not error red: a single overshot day part is recoverable within the
-            // same day, so it warns rather than declares failure (red stays for the day total).
-            color = if (isOver) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+            color = barColor,
             trackColor = progressTrackColor(),
         )
         // Label and figures are stacked, not side-by-side: a narrow (30%-width) segment can't
@@ -932,15 +938,18 @@ private fun DayPartSegment(
         )
         // The current part answers "how much can I still eat now?" directly; finished and
         // upcoming parts (and an exceeded current one) keep the factual consumed/target pair.
-        // The promise is capped by what's left of the DAY: a part's local quota survives an
-        // earlier part's overshoot by design (see buildDayPartBudgets), but "N left" must
-        // never claim there is room to eat when the day total is already blown.
-        val effectiveLeft = minOf(target - consumed.toInt(), dayRemaining)
+        // A non-zero carry is shown inline as "consumed / base±carry" so the inflated or
+        // shrunken target explains itself right where it appears (the separate note line
+        // under the bar is gone). "N left" stays capped by what's left of the whole day.
+        val effectiveLeft = minOf(target - consumedInt, dayRemaining)
         val figures =
-            if (isCurrent && !isOver && effectiveLeft > 0) {
-                stringResource(R.string.day_part_left, effectiveLeft)
-            } else {
-                stringResource(R.string.day_part_kcal, consumed.toInt(), target)
+            when {
+                isCurrent && !isOver && effectiveLeft > 0 ->
+                    stringResource(R.string.day_part_left, effectiveLeft)
+                budget.carriedIn != 0 ->
+                    stringResource(R.string.day_part_kcal_carry, consumedInt, budget.base, budget.carriedIn)
+                else ->
+                    stringResource(R.string.day_part_kcal, consumedInt, target)
             }
         Text(
             figures,
@@ -949,10 +958,10 @@ private fun DayPartSegment(
             maxLines = 1,
             softWrap = false,
             color =
-                if (isOver) {
-                    MaterialTheme.colorScheme.tertiary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                when (band) {
+                    DayPartOverBand.UNDER, DayPartOverBand.SMALL -> MaterialTheme.colorScheme.onSurfaceVariant
+                    DayPartOverBand.MEDIUM -> MaterialTheme.colorScheme.tertiary
+                    DayPartOverBand.LARGE -> MaterialTheme.colorScheme.error
                 },
         )
     }

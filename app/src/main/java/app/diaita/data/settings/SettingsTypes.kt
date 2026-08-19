@@ -138,6 +138,34 @@ data class MicronutrientOverTolerances(
 }
 
 /**
+ * How much a morning/day/evening segment may overshoot its target before escalating:
+ * up to [amberPercent] past the target it still reads green (a small overshoot is noise,
+ * not a signal), up to [redPercent] it warns in amber, beyond that it goes red.
+ */
+data class DayPartOverThresholds(
+    val amberPercent: Int = DEFAULT_AMBER_PERCENT,
+    val redPercent: Int = DEFAULT_RED_PERCENT,
+) {
+    companion object {
+        const val DEFAULT_AMBER_PERCENT = 10
+        const val DEFAULT_RED_PERCENT = 25
+        const val MAX_PERCENT = 100
+
+        /** Clamps both to 0..[MAX_PERCENT] and keeps red at or above amber. */
+        fun sanitized(
+            amberPercent: Int,
+            redPercent: Int,
+        ): DayPartOverThresholds {
+            val amber = amberPercent.coerceIn(0, MAX_PERCENT)
+            return DayPartOverThresholds(
+                amberPercent = amber,
+                redPercent = redPercent.coerceIn(amber, MAX_PERCENT),
+            )
+        }
+    }
+}
+
+/**
  * Reference shares of the daily calorie budget per day part. Evening is derived so the
  * three always sum to 100. Defaults follow the 30/40/30 dietitian guideline.
  */
