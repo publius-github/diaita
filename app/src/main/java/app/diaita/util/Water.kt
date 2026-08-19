@@ -1,20 +1,30 @@
 package app.diaita.util
 
+import app.diaita.data.settings.WaterTargetSettings
 import kotlin.math.roundToInt
 
 /**
- * Daily water target from the goal-wizard body weight: the common ~30 ml/kg hydration
- * guideline, rounded to 50 ml so the figure reads like a target and not a measurement.
- * Falls back to a flat 2 l when the wizard never ran — the bar must still have a scale.
+ * Daily drinking target from the goal-wizard body weight: [mlPerKg] (the ~30 ml/kg
+ * hydration guideline by default) minus [foodSharePercent], the part of the daily need that
+ * arrives with food and metabolism rather than from a glass — the water bar counts taps
+ * only, so that share must not sit in its target. Rounded to 50 ml so the figure reads like
+ * a target and not a measurement, and floored at [MIN_WATER_TARGET_ML] so extreme settings
+ * can't leave the bar without a scale. Falls back to a flat 2 l of total need when the
+ * wizard never ran.
  */
-fun waterTargetMl(weightKg: Double?): Int =
-    weightKg
-        ?.takeIf { it > 0 }
-        ?.let { ((it * WATER_ML_PER_KG / 50.0).roundToInt() * 50) }
-        ?: DEFAULT_WATER_TARGET_ML
+fun waterTargetMl(
+    weightKg: Double?,
+    mlPerKg: Int = WaterTargetSettings.DEFAULT_ML_PER_KG,
+    foodSharePercent: Int = 0,
+): Int {
+    val totalNeedMl = weightKg?.takeIf { it > 0 }?.times(mlPerKg) ?: DEFAULT_WATER_TARGET_ML.toDouble()
+    val drinkNeedMl = totalNeedMl * (1 - foodSharePercent.coerceIn(0, 100) / 100.0)
+    return ((drinkNeedMl / 50.0).roundToInt() * 50).coerceAtLeast(MIN_WATER_TARGET_ML)
+}
 
-const val WATER_ML_PER_KG = 30.0
+/** Total daily need assumed without a wizard weight — before the food share comes off it. */
 const val DEFAULT_WATER_TARGET_ML = 2000
+const val MIN_WATER_TARGET_ML = 250
 
 /** Color zone of the water bar; drinking under the target never warns, only real excess does. */
 enum class WaterBand { WITHIN, OVER_AMBER, OVER_RED }

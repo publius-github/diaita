@@ -19,6 +19,7 @@ import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WaterOverThresholds
+import app.diaita.data.settings.WaterTargetSettings
 import app.diaita.data.settings.WeightUnit
 import app.diaita.util.DEFAULT_WATER_TARGET_ML
 import app.diaita.util.DateUtils
@@ -154,6 +155,7 @@ private data class WaterSettings(
     val track: Boolean,
     val glassMl: Int,
     val overThresholds: WaterOverThresholds,
+    val target: WaterTargetSettings,
 )
 
 /** The Home-screen slice of user settings, bundled to fit the 5-flow combine overload. */
@@ -218,6 +220,7 @@ class DiaryViewModel(
                             settingsRepository.trackWater,
                             settingsRepository.waterGlassMl,
                             settingsRepository.waterOverThresholds,
+                            settingsRepository.waterTargetSettings,
                             ::WaterSettings,
                         ),
                         ::HomeSettings,
@@ -244,7 +247,12 @@ class DiaryViewModel(
                         todayWeightKg = dayWeights.firstOrNull()?.weightKg,
                         waterTotalMl = waterEntries.sumOf { it.amountMl },
                         waterEntries = waterEntries,
-                        waterTargetMl = waterTargetMl(settings.presentation.wizardWeightKg),
+                        waterTargetMl =
+                            waterTargetMl(
+                                weightKg = settings.presentation.wizardWeightKg,
+                                mlPerKg = settings.water.target.mlPerKg,
+                                foodSharePercent = settings.water.target.foodSharePercent,
+                            ),
                         trackWater = settings.water.track,
                         waterGlassMl = settings.water.glassMl,
                         waterOverThresholds = settings.water.overThresholds,

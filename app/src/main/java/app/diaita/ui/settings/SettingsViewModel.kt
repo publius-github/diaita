@@ -17,9 +17,11 @@ import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.ThemeMode
 import app.diaita.data.settings.WaterOverThresholds
+import app.diaita.data.settings.WaterTargetSettings
 import app.diaita.data.settings.WeightUnit
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -73,6 +75,27 @@ class SettingsViewModel(
     fun setWaterGlassMl(ml: Int) {
         viewModelScope.launch {
             settingsRepository.setWaterGlassMl(ml.coerceIn(SettingsRepository.WATER_GLASS_RANGE_ML))
+        }
+    }
+
+    val waterTargetSettings: StateFlow<WaterTargetSettings> =
+        settingsRepository.waterTargetSettings
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WaterTargetSettings())
+
+    /** Wizard body weight the target preview in the dialog multiplies; null until the wizard ran. */
+    val wizardWeightKg: StateFlow<Double?> =
+        settingsRepository.wizardInputs
+            .map { it?.weightKg }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setWaterTargetSettings(
+        mlPerKg: Int,
+        foodSharePercent: Int,
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setWaterTargetSettings(
+                WaterTargetSettings.sanitized(mlPerKg, foodSharePercent),
+            )
         }
     }
 

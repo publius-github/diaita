@@ -101,6 +101,26 @@ class SettingsRepository(
         context.settingsDataStore.edit { prefs -> prefs[waterGlassMlKey] = ml }
     }
 
+    private val waterMlPerKgKey = intPreferencesKey("water_ml_per_kg")
+    private val waterFoodSharePercentKey = intPreferencesKey("water_food_share_percent")
+
+    /** How the daily water target is computed from body weight; see [WaterTargetSettings]. */
+    val waterTargetSettings: Flow<WaterTargetSettings> =
+        prefs.map { prefs ->
+            WaterTargetSettings(
+                mlPerKg = prefs[waterMlPerKgKey] ?: WaterTargetSettings.DEFAULT_ML_PER_KG,
+                foodSharePercent =
+                    prefs[waterFoodSharePercentKey] ?: WaterTargetSettings.DEFAULT_FOOD_SHARE_PERCENT,
+            )
+        }
+
+    suspend fun setWaterTargetSettings(settings: WaterTargetSettings) {
+        context.settingsDataStore.edit { prefs ->
+            prefs[waterMlPerKgKey] = settings.mlPerKg
+            prefs[waterFoodSharePercentKey] = settings.foodSharePercent
+        }
+    }
+
     private val waterOverAmberPercentKey = intPreferencesKey("water_over_amber_percent")
     private val waterOverRedPercentKey = intPreferencesKey("water_over_red_percent")
 

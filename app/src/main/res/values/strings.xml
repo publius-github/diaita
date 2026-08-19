@@ -445,6 +445,14 @@
     <string name="settings_water_glass">Water per tap</string>
     <string name="settings_water_glass_desc">How much one tap of the Log water button adds</string>
     <string name="water_ml_value">%1$d ml</string>
+    <string name="settings_water_target">Water target</string>
+    <string name="settings_water_target_desc">How the daily target is derived from body weight, minus the share that comes with food</string>
+    <string name="water_target_value">%1$d ml/kg - %2$d%%</string>
+    <string name="water_target_dialog_hint">The bar counts only what you drink. Part of the daily need arrives with food and metabolism, so that share comes off the target.</string>
+    <string name="water_target_per_kg">Per kg of body weight: %1$d ml</string>
+    <string name="water_target_food_share">Comes with food: %1$d%%</string>
+    <string name="water_target_preview">At %1$d kg: drink %2$d ml a day</string>
+    <string name="water_target_preview_no_weight">Without a wizard weight: drink %1$d ml a day</string>
     <string name="settings_water_over">Water overshoot</string>
     <string name="settings_water_over_desc">How far past the daily target before the bar turns amber and then red</string>
     <string name="water_over_value">+%1$d%% · +%2$d%%</string>

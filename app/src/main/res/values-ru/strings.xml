@@ -445,6 +445,14 @@
     <string name="settings_water_glass">Вода за нажатие</string>
     <string name="settings_water_glass_desc">Сколько добавляет одно нажатие кнопки «Записать воду»</string>
     <string name="water_ml_value">%1$d мл</string>
+    <string name="settings_water_target">Норма воды</string>
+    <string name="settings_water_target_desc">Как дневная норма считается от веса, за вычетом доли, которая приходит с едой</string>
+    <string name="water_target_value">%1$d мл/кг - %2$d%%</string>
+    <string name="water_target_dialog_hint">Шкала считает только выпитое. Часть дневной потребности приходит с едой и обменом веществ, поэтому эта доля вычитается из нормы.</string>
+    <string name="water_target_per_kg">На кг веса: %1$d мл</string>
+    <string name="water_target_food_share">Приходит с едой: %1$d%%</string>
+    <string name="water_target_preview">При %1$d кг: выпивать %2$d мл в день</string>
+    <string name="water_target_preview_no_weight">Без веса из мастера: выпивать %1$d мл в день</string>
     <string name="settings_water_over">Перебор воды</string>
     <string name="settings_water_over_desc">Насколько можно превысить дневную норму, прежде чем шкала станет жёлтой и затем красной</string>
     <string name="water_over_value">+%1$d%% · +%2$d%%</string>

@@ -138,6 +138,34 @@ data class MicronutrientOverTolerances(
 }
 
 /**
+ * How the daily water target is derived from body weight: [mlPerKg] of the common
+ * ml-per-kg hydration guideline, then [foodSharePercent] taken off it. The guideline figure
+ * is total daily water, and a fifth or so of it arrives with food and metabolism — the bar
+ * only counts what the user actually drinks, so that share must come off the target.
+ */
+data class WaterTargetSettings(
+    val mlPerKg: Int = DEFAULT_ML_PER_KG,
+    val foodSharePercent: Int = DEFAULT_FOOD_SHARE_PERCENT,
+) {
+    companion object {
+        const val DEFAULT_ML_PER_KG = 30
+        const val DEFAULT_FOOD_SHARE_PERCENT = 20
+        val ML_PER_KG_RANGE = 15..60
+        val FOOD_SHARE_RANGE = 0..50
+
+        /** Clamps slider input to the ranges the dialog offers. */
+        fun sanitized(
+            mlPerKg: Int,
+            foodSharePercent: Int,
+        ): WaterTargetSettings =
+            WaterTargetSettings(
+                mlPerKg = mlPerKg.coerceIn(ML_PER_KG_RANGE),
+                foodSharePercent = foodSharePercent.coerceIn(FOOD_SHARE_RANGE),
+            )
+    }
+}
+
+/**
  * How far past the daily water target the blue bar may run before it warns: within
  * [amberPercent] of overshoot drinking extra is fine and the bar stays blue, past it the
  * bar turns amber, and past [redPercent] red. Wide defaults on purpose — the ~30 ml/kg

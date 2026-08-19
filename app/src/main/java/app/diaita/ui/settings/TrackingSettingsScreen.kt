@@ -32,8 +32,10 @@ import app.diaita.data.settings.MacroOverTolerances
 import app.diaita.data.settings.MicronutrientOverTolerances
 import app.diaita.data.settings.SettingsRepository
 import app.diaita.data.settings.WaterOverThresholds
+import app.diaita.data.settings.WaterTargetSettings
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.util.waterTargetMl
 import kotlin.math.roundToInt
 
 /** Which time-of-day boundary the picker dialog is currently editing. */
@@ -66,11 +68,14 @@ fun TrackingSettingsScreen(
     var showMicroOverDialog by remember { mutableStateOf(false) }
     var showDayPartOverDialog by remember { mutableStateOf(false) }
     var showWaterGlassDialog by remember { mutableStateOf(false) }
+    var showWaterTargetDialog by remember { mutableStateOf(false) }
     var showWaterOverDialog by remember { mutableStateOf(false) }
     val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
     val trackWater by viewModel.trackWater.collectAsStateWithLifecycle()
     val waterGlassMl by viewModel.waterGlassMl.collectAsStateWithLifecycle()
     val waterOverThresholds by viewModel.waterOverThresholds.collectAsStateWithLifecycle()
+    val waterTargetSettings by viewModel.waterTargetSettings.collectAsStateWithLifecycle()
+    val wizardWeightKg by viewModel.wizardWeightKg.collectAsStateWithLifecycle()
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
@@ -110,6 +115,18 @@ fun TrackingSettingsScreen(
                 descriptionRes = R.string.settings_water_glass_desc,
                 value = stringResource(R.string.water_ml_value, waterGlassMl),
                 onClick = { showWaterGlassDialog = true },
+            )
+            HorizontalDivider()
+            ValueRow(
+                titleRes = R.string.settings_water_target,
+                descriptionRes = R.string.settings_water_target_desc,
+                value =
+                    stringResource(
+                        R.string.water_target_value,
+                        waterTargetSettings.mlPerKg,
+                        waterTargetSettings.foodSharePercent,
+                    ),
+                onClick = { showWaterTargetDialog = true },
             )
             HorizontalDivider()
             ValueRow(
@@ -298,6 +315,18 @@ fun TrackingSettingsScreen(
         )
     }
 
+    if (showWaterTargetDialog) {
+        WaterTargetDialog(
+            current = waterTargetSettings,
+            wizardWeightKg = wizardWeightKg,
+            onDismiss = { showWaterTargetDialog = false },
+            onConfirm = { mlPerKg, foodSharePercent ->
+                viewModel.setWaterTargetSettings(mlPerKg, foodSharePercent)
+                showWaterTargetDialog = false
+            },
+        )
+    }
+
     if (showWaterOverDialog) {
         WaterOverDialog(
             current = waterOverThresholds,
@@ -453,6 +482,69 @@ private fun MicroOverDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(fiber, sugar, salt) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * Two sliders behind the daily water target: ml per kg of body weight, and the share of the
+ * daily need that arrives with food rather than from a glass. The preview line spells the
+ * arithmetic out on the user's own weight, because neither slider means much on its own.
+ */
+@Composable
+private fun WaterTargetDialog(
+    current: WaterTargetSettings,
+    wizardWeightKg: Double?,
+    onDismiss: () -> Unit,
+    onConfirm: (mlPerKg: Int, foodSharePercent: Int) -> Unit,
+) {
+    var mlPerKg by remember { mutableIntStateOf(current.mlPerKg) }
+    var foodShare by remember { mutableIntStateOf(current.foodSharePercent) }
+    val perKgRange = WaterTargetSettings.ML_PER_KG_RANGE
+    val shareRange = WaterTargetSettings.FOOD_SHARE_RANGE
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_water_target)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(R.string.water_target_dialog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.water_target_per_kg, mlPerKg))
+                Slider(
+                    value = mlPerKg.toFloat(),
+                    onValueChange = { mlPerKg = it.roundToInt() },
+                    valueRange = perKgRange.first.toFloat()..perKgRange.last.toFloat(),
+                )
+                Text(stringResource(R.string.water_target_food_share, foodShare))
+                Slider(
+                    value = foodShare.toFloat(),
+                    onValueChange = { foodShare = it.roundToInt() },
+                    valueRange = shareRange.first.toFloat()..shareRange.last.toFloat(),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val targetMl = waterTargetMl(wizardWeightKg, mlPerKg, foodShare)
+                Text(
+                    if (wizardWeightKg != null) {
+                        stringResource(R.string.water_target_preview, wizardWeightKg.roundToInt(), targetMl)
+                    } else {
+                        stringResource(R.string.water_target_preview_no_weight, targetMl)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(mlPerKg, foodShare) }) {
                 Text(stringResource(R.string.save))
             }
         },

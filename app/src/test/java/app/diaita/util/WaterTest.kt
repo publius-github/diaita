@@ -18,6 +18,30 @@ class WaterTest {
     }
 
     @Test
+    fun `ml per kg is configurable`() {
+        assertEquals(3200, waterTargetMl(80.0, mlPerKg = 40))
+        assertEquals(1600, waterTargetMl(80.0, mlPerKg = 20))
+    }
+
+    @Test
+    fun `the food share comes off the target`() {
+        // The 30 ml per kg guideline is total daily water; the bar only counts what is drunk.
+        assertEquals(2300, waterTargetMl(96.0, mlPerKg = 30, foodSharePercent = 20))
+        assertEquals(2900, waterTargetMl(96.0, mlPerKg = 30, foodSharePercent = 0))
+        assertEquals(1600, waterTargetMl(80.0, mlPerKg = 40, foodSharePercent = 50))
+    }
+
+    @Test
+    fun `the food share applies to the no-weight fallback too`() {
+        assertEquals(1600, waterTargetMl(null, foodSharePercent = 20))
+    }
+
+    @Test
+    fun `target never drops below the floor`() {
+        assertEquals(MIN_WATER_TARGET_ML, waterTargetMl(20.0, mlPerKg = 15, foodSharePercent = 50))
+    }
+
+    @Test
     fun `band stays within up to the amber slack inclusive`() {
         assertEquals(WaterBand.WITHIN, waterBand(0, 2000, 50, 100))
         assertEquals(WaterBand.WITHIN, waterBand(2000, 2000, 50, 100))
