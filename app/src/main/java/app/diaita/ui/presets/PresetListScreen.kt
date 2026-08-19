@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -124,6 +123,40 @@ fun PresetListScreen(
                     text = { Text(stringResource(R.string.tab_custom_presets)) },
                 )
             }
+            // Search plus Add sit under the tabs, not at the bottom: at the bottom the
+            // keyboard pushed the whole screen up every time the field took focus.
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.preset_search_hint)) },
+                    trailingIcon =
+                        if (searchQuery.isNotEmpty()) {
+                            {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Filled.Close,
+                                        contentDescription = stringResource(R.string.clear_search),
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                )
+                Button(onClick = onAddPresetClick) {
+                    Text(stringResource(R.string.add))
+                }
+            }
             if (shownPresets.isEmpty()) {
                 Box(
                     modifier =
@@ -181,43 +214,6 @@ fun PresetListScreen(
                             )
                         }
                     }
-                }
-            }
-            // Bottom bar in place of the FAB (it floated over the delete icons of the last
-            // rows): live-filter search on the left, the same filled green button as the
-            // Home action row in the bottom-right corner. imePadding lifts it above the
-            // keyboard while typing (edge-to-edge activity).
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .imePadding()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    placeholder = { Text(stringResource(R.string.preset_search_hint)) },
-                    trailingIcon =
-                        if (searchQuery.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        Icons.Filled.Close,
-                                        contentDescription = stringResource(R.string.clear_search),
-                                    )
-                                }
-                            }
-                        } else {
-                            null
-                        },
-                )
-                Button(onClick = onAddPresetClick) {
-                    Text(stringResource(R.string.new_preset))
                 }
             }
         }
