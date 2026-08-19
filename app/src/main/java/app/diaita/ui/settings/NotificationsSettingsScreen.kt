@@ -130,6 +130,7 @@ fun NotificationsSettingsScreen(
             )
             HorizontalDivider()
         }
+        SettingsGroupHeader(R.string.settings_group_log_reminders)
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_reminder)) },
             supportingContent = { Text(stringResource(R.string.settings_reminder_desc)) },
@@ -145,7 +146,6 @@ fun NotificationsSettingsScreen(
                 onClick = { timeTarget = ReminderTimeTarget.FOOD },
             )
         }
-        HorizontalDivider()
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_weight_reminder)) },
             supportingContent = { Text(stringResource(R.string.settings_weight_reminder_desc)) },
@@ -161,7 +161,10 @@ fun NotificationsSettingsScreen(
                 onClick = { timeTarget = ReminderTimeTarget.WEIGHT },
             )
         }
-        HorizontalDivider()
+
+        // These two fire off the day-part boundaries rather than a time of their own, which
+        // is why they are a group apart — their schedule lives in Tracking > Day parts.
+        SettingsGroupHeader(R.string.settings_group_day_reminders)
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_day_part_reminder)) },
             supportingContent = { Text(stringResource(R.string.settings_day_part_reminder_desc)) },
@@ -169,7 +172,6 @@ fun NotificationsSettingsScreen(
                 Switch(checked = dayPartRemindersEnabled, onCheckedChange = ::onDayPartRemindersToggled)
             },
         )
-        HorizontalDivider()
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_evening_reminder)) },
             supportingContent = { Text(stringResource(R.string.settings_evening_reminder_desc)) },
@@ -188,7 +190,6 @@ fun NotificationsSettingsScreen(
                 )
             },
         )
-        HorizontalDivider()
     }
 
     timeTarget?.let { target ->

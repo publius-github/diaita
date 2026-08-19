@@ -33,6 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.diaita.R
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 
 /** Scaffold shared by every settings sub-screen: top bar with back arrow, scrollable column. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,10 +67,31 @@ internal fun SettingsSubScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = SectionGap),
             content = content,
         )
     }
+}
+
+/**
+ * Header above a group of related settings. Grouping is what carries structure on these
+ * screens, so rows inside a group are not divided further — the next header is the divider.
+ */
+@Composable
+internal fun SettingsGroupHeader(titleRes: Int) {
+    Text(
+        stringResource(titleRes),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier =
+            Modifier.padding(
+                start = ScreenPadding,
+                end = ScreenPadding,
+                top = SectionGap,
+                bottom = LabelGap,
+            ),
+    )
 }
 
 /** A settings row with the current value on the right; tapping opens its editor dialog. */

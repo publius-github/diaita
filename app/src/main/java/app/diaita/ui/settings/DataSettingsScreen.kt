@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +46,7 @@ fun DataSettingsScreen(
         onBack = onBack,
         modifier = modifier,
     ) {
+        SettingsGroupHeader(R.string.settings_group_food_search)
         ListItem(
             headlineContent = { Text(stringResource(R.string.search_off_checkbox)) },
             supportingContent = { Text(stringResource(R.string.settings_off_desc)) },
@@ -54,21 +54,20 @@ fun DataSettingsScreen(
                 Switch(checked = openFoodFactsEnabled, onCheckedChange = viewModel::setOpenFoodFactsEnabled)
             },
         )
-        HorizontalDivider()
         ValueRow(
             titleRes = R.string.settings_recent_foods,
             descriptionRes = R.string.settings_recent_foods_desc,
             value = recentFoodsCount.toString(),
             onClick = { showRecentCountDialog = true },
         )
-        HorizontalDivider()
+
+        SettingsGroupHeader(R.string.settings_group_history)
         ValueRow(
             titleRes = R.string.settings_retention,
             descriptionRes = R.string.settings_retention_desc,
             value = retentionLabel(retentionDays),
             onClick = { showRetentionDialog = true },
         )
-        HorizontalDivider()
         ListItem(
             headlineContent = { Text(stringResource(R.string.backup_title)) },
             supportingContent = { Text(stringResource(R.string.settings_backup_desc)) },
@@ -77,7 +76,6 @@ fun DataSettingsScreen(
             },
             modifier = Modifier.clickable(onClick = onBackupClick),
         )
-        HorizontalDivider()
     }
 
     if (showRecentCountDialog) {

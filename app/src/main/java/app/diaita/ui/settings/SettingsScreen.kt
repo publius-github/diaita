@@ -2,15 +2,12 @@ package app.diaita.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import app.diaita.R
-import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.ScreenPadding
 
 /**
@@ -49,7 +45,7 @@ fun SettingsScreen(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = ScreenPadding),
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        SettingsGroupHeader(R.string.settings_group_goals)
         CategoryRow(
             titleRes = R.string.settings_goals,
             descriptionRes = R.string.settings_goals_desc,
@@ -60,6 +56,8 @@ fun SettingsScreen(
             descriptionRes = R.string.settings_wizard_desc,
             onClick = onWizardClick,
         )
+
+        SettingsGroupHeader(R.string.settings_group_app)
         CategoryRow(
             titleRes = R.string.settings_section_appearance,
             descriptionRes = R.string.settings_appearance_desc,
@@ -102,5 +100,4 @@ private fun CategoryRow(
         },
         modifier = Modifier.clickable(onClick = onClick),
     )
-    HorizontalDivider()
 }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -24,7 +23,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.reminder.ReminderScheduler
-import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.MacroOverTolerances
@@ -42,7 +40,7 @@ import kotlin.math.roundToInt
 private enum class BoundaryTarget { MORNING_END, DAY_END }
 
 /** Which single-choice setting the radio dialog is currently editing. */
-private enum class ChoiceTarget { WEIGHT_UNIT, COACH_TONE }
+private enum class ChoiceTarget { WEIGHT_UNIT, }
 
 @Composable
 fun TrackingSettingsScreen(
@@ -50,38 +48,40 @@ fun TrackingSettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    // Declared in the order the groups appear on screen.
     val trackMacros by viewModel.trackMacros.collectAsStateWithLifecycle()
-    val trackMicronutrients by viewModel.trackMicronutrients.collectAsStateWithLifecycle()
-    val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
-    val dayPartShares by viewModel.dayPartShares.collectAsStateWithLifecycle()
-    val coachTone by viewModel.coachTone.collectAsStateWithLifecycle()
-    val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
-    val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
     val macroOverTolerances by viewModel.macroOverTolerances.collectAsStateWithLifecycle()
+    val trackMicronutrients by viewModel.trackMicronutrients.collectAsStateWithLifecycle()
     val microOverTolerances by viewModel.microOverTolerances.collectAsStateWithLifecycle()
-    val athleticBmiBands by viewModel.athleticBmiBands.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
-    var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
-    var showSharesDialog by remember { mutableStateOf(false) }
-    var showMacroOverDialog by remember { mutableStateOf(false) }
-    var showMicroOverDialog by remember { mutableStateOf(false) }
-    var showDayPartOverDialog by remember { mutableStateOf(false) }
-    var showWaterGlassDialog by remember { mutableStateOf(false) }
-    var showWaterTargetDialog by remember { mutableStateOf(false) }
-    var showWaterOverDialog by remember { mutableStateOf(false) }
-    val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
     val trackWater by viewModel.trackWater.collectAsStateWithLifecycle()
+    val waterTargetSettings by viewModel.waterTargetSettings.collectAsStateWithLifecycle()
     val waterGlassMl by viewModel.waterGlassMl.collectAsStateWithLifecycle()
     val waterOverThresholds by viewModel.waterOverThresholds.collectAsStateWithLifecycle()
-    val waterTargetSettings by viewModel.waterTargetSettings.collectAsStateWithLifecycle()
     val wizardWeightKg by viewModel.wizardWeightKg.collectAsStateWithLifecycle()
+    val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
+    val dayPartShares by viewModel.dayPartShares.collectAsStateWithLifecycle()
+    val dayPartOverThresholds by viewModel.dayPartOverThresholds.collectAsStateWithLifecycle()
+    val dayPartRemindersEnabled by viewModel.dayPartRemindersEnabled.collectAsStateWithLifecycle()
+    val weightUnit by viewModel.weightUnit.collectAsStateWithLifecycle()
+    val athleticBmiBands by viewModel.athleticBmiBands.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    var showMacroOverDialog by remember { mutableStateOf(false) }
+    var showMicroOverDialog by remember { mutableStateOf(false) }
+    var showWaterTargetDialog by remember { mutableStateOf(false) }
+    var showWaterGlassDialog by remember { mutableStateOf(false) }
+    var showWaterOverDialog by remember { mutableStateOf(false) }
+    var showSharesDialog by remember { mutableStateOf(false) }
+    var showDayPartOverDialog by remember { mutableStateOf(false) }
+    var boundaryTarget by remember { mutableStateOf<BoundaryTarget?>(null) }
+    var choiceTarget by remember { mutableStateOf<ChoiceTarget?>(null) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_tracking,
         onBack = onBack,
         modifier = modifier,
     ) {
+        SettingsGroupHeader(R.string.settings_group_macros)
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_track_macros)) },
             supportingContent = { Text(stringResource(R.string.settings_track_macros_desc)) },
@@ -89,7 +89,22 @@ fun TrackingSettingsScreen(
                 Switch(checked = trackMacros, onCheckedChange = viewModel::setTrackMacros)
             },
         )
-        HorizontalDivider()
+        // The tolerance rows only mean something while their tracking is on, so they follow
+        // their own switch and disappear with it — same rule as the water rows.
+        if (trackMacros) {
+            ValueRow(
+                titleRes = R.string.settings_macro_over,
+                descriptionRes = R.string.settings_macro_over_desc,
+                value =
+                    stringResource(
+                        R.string.macro_over_value,
+                        macroOverTolerances.proteinPercent,
+                        macroOverTolerances.fatPercent,
+                        macroOverTolerances.carbsPercent,
+                    ),
+                onClick = { showMacroOverDialog = true },
+            )
+        }
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_track_micros)) },
             supportingContent = { Text(stringResource(R.string.settings_track_micros_desc)) },
@@ -100,7 +115,22 @@ fun TrackingSettingsScreen(
                 )
             },
         )
-        HorizontalDivider()
+        if (trackMicronutrients) {
+            ValueRow(
+                titleRes = R.string.settings_micro_over,
+                descriptionRes = R.string.settings_micro_over_desc,
+                value =
+                    stringResource(
+                        R.string.micro_over_value,
+                        microOverTolerances.fiberPercent,
+                        microOverTolerances.sugarPercent,
+                        microOverTolerances.saltPercent,
+                    ),
+                onClick = { showMicroOverDialog = true },
+            )
+        }
+
+        SettingsGroupHeader(R.string.settings_group_water)
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_track_water)) },
             supportingContent = { Text(stringResource(R.string.settings_track_water_desc)) },
@@ -108,15 +138,7 @@ fun TrackingSettingsScreen(
                 Switch(checked = trackWater, onCheckedChange = viewModel::setTrackWater)
             },
         )
-        HorizontalDivider()
         if (trackWater) {
-            ValueRow(
-                titleRes = R.string.settings_water_glass,
-                descriptionRes = R.string.settings_water_glass_desc,
-                value = stringResource(R.string.water_ml_value, waterGlassMl),
-                onClick = { showWaterGlassDialog = true },
-            )
-            HorizontalDivider()
             ValueRow(
                 titleRes = R.string.settings_water_target,
                 descriptionRes = R.string.settings_water_target_desc,
@@ -128,7 +150,12 @@ fun TrackingSettingsScreen(
                     ),
                 onClick = { showWaterTargetDialog = true },
             )
-            HorizontalDivider()
+            ValueRow(
+                titleRes = R.string.settings_water_glass,
+                descriptionRes = R.string.settings_water_glass_desc,
+                value = stringResource(R.string.water_ml_value, waterGlassMl),
+                onClick = { showWaterGlassDialog = true },
+            )
             ValueRow(
                 titleRes = R.string.settings_water_over,
                 descriptionRes = R.string.settings_water_over_desc,
@@ -140,76 +167,21 @@ fun TrackingSettingsScreen(
                     ),
                 onClick = { showWaterOverDialog = true },
             )
-            HorizontalDivider()
         }
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_athletic_bmi)) },
-            supportingContent = { Text(stringResource(R.string.settings_athletic_bmi_desc)) },
-            trailingContent = {
-                Switch(checked = athleticBmiBands, onCheckedChange = viewModel::setAthleticBmiBands)
-            },
-        )
-        HorizontalDivider()
-        ValueRow(
-            titleRes = R.string.settings_macro_over,
-            descriptionRes = R.string.settings_macro_over_desc,
-            value =
-                stringResource(
-                    R.string.macro_over_value,
-                    macroOverTolerances.proteinPercent,
-                    macroOverTolerances.fatPercent,
-                    macroOverTolerances.carbsPercent,
-                ),
-            onClick = { showMacroOverDialog = true },
-        )
-        HorizontalDivider()
-        ValueRow(
-            titleRes = R.string.settings_micro_over,
-            descriptionRes = R.string.settings_micro_over_desc,
-            value =
-                stringResource(
-                    R.string.micro_over_value,
-                    microOverTolerances.fiberPercent,
-                    microOverTolerances.sugarPercent,
-                    microOverTolerances.saltPercent,
-                ),
-            onClick = { showMicroOverDialog = true },
-        )
-        HorizontalDivider()
-        ValueRow(
-            titleRes = R.string.settings_weight_unit,
-            value = weightUnit.fullLabel(),
-            onClick = { choiceTarget = ChoiceTarget.WEIGHT_UNIT },
-        )
-        HorizontalDivider()
-        ValueRow(
-            titleRes = R.string.settings_coach,
-            descriptionRes = R.string.settings_coach_desc,
-            value = coachTone.label(),
-            onClick = { choiceTarget = ChoiceTarget.COACH_TONE },
-        )
-        HorizontalDivider()
+
+        SettingsGroupHeader(R.string.settings_group_day_parts)
         TimeRow(
             titleRes = R.string.settings_morning_end,
             descriptionRes = R.string.settings_morning_end_desc,
             minutes = dayPartBoundaries.morningEndMinutes,
             onClick = { boundaryTarget = BoundaryTarget.MORNING_END },
         )
-        HorizontalDivider()
         TimeRow(
             titleRes = R.string.settings_day_end,
             descriptionRes = R.string.settings_day_end_desc,
             minutes = dayPartBoundaries.dayEndMinutes,
             onClick = { boundaryTarget = BoundaryTarget.DAY_END },
         )
-        HorizontalDivider()
-        ValueRow(
-            titleRes = R.string.settings_day_part_over,
-            descriptionRes = R.string.settings_day_part_over_desc,
-            value = stringResource(R.string.day_part_over_value, dayPartOverThresholds.amberPercent),
-            onClick = { showDayPartOverDialog = true },
-        )
-        HorizontalDivider()
         ValueRow(
             titleRes = R.string.settings_day_part_shares,
             value =
@@ -221,7 +193,26 @@ fun TrackingSettingsScreen(
                 ),
             onClick = { showSharesDialog = true },
         )
-        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_day_part_over,
+            descriptionRes = R.string.settings_day_part_over_desc,
+            value = stringResource(R.string.day_part_over_value, dayPartOverThresholds.amberPercent),
+            onClick = { showDayPartOverDialog = true },
+        )
+
+        SettingsGroupHeader(R.string.settings_group_body)
+        ValueRow(
+            titleRes = R.string.settings_weight_unit,
+            value = weightUnit.fullLabel(),
+            onClick = { choiceTarget = ChoiceTarget.WEIGHT_UNIT },
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_athletic_bmi)) },
+            supportingContent = { Text(stringResource(R.string.settings_athletic_bmi_desc)) },
+            trailingContent = {
+                Switch(checked = athleticBmiBands, onCheckedChange = viewModel::setAthleticBmiBands)
+            },
+        )
     }
 
     boundaryTarget?.let { target ->
@@ -262,19 +253,6 @@ fun TrackingSettingsScreen(
                             label = unit.fullLabel(),
                             selected = unit == weightUnit,
                             onSelect = { viewModel.setWeightUnit(unit) },
-                        )
-                    },
-                onDismiss = { choiceTarget = null },
-            )
-        ChoiceTarget.COACH_TONE ->
-            ChoiceDialog(
-                titleRes = R.string.settings_coach,
-                options =
-                    CoachTone.entries.map { tone ->
-                        ChoiceOption(
-                            label = tone.label(),
-                            selected = tone == coachTone,
-                            onSelect = { viewModel.setCoachTone(tone) },
                         )
                     },
                 onDismiss = { choiceTarget = null },
@@ -364,17 +342,6 @@ fun TrackingSettingsScreen(
 @Composable
 private fun WeightUnit.fullLabel(): String =
     stringResource(if (this == WeightUnit.KG) R.string.unit_kg_full else R.string.unit_lb_full)
-
-@Composable
-private fun CoachTone.label(): String =
-    stringResource(
-        when (this) {
-            CoachTone.OFF -> R.string.coach_off
-            CoachTone.GENTLE -> R.string.coach_gentle
-            CoachTone.SNARKY -> R.string.coach_snarky
-            CoachTone.BRUTAL -> R.string.coach_brutal
-        },
-    )
 
 /**
  * Three sliders for the per-macro overshoot tolerance. The defaults are asymmetric on

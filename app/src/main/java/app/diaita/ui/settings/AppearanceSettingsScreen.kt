@@ -1,6 +1,5 @@
 package app.diaita.ui.settings
 
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -14,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.settings.CoachTone
 import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.data.settings.ThemeMode
 import app.diaita.ui.AppViewModelProvider
@@ -27,20 +27,22 @@ fun AppearanceSettingsScreen(
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val homeProgressStyle by viewModel.homeProgressStyle.collectAsStateWithLifecycle()
+    val coachTone by viewModel.coachTone.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
     var showProgressStyleDialog by remember { mutableStateOf(false) }
+    var showCoachDialog by remember { mutableStateOf(false) }
 
     SettingsSubScreen(
         titleRes = R.string.settings_section_appearance,
         onBack = onBack,
         modifier = modifier,
     ) {
+        SettingsGroupHeader(R.string.settings_group_theme)
         ValueRow(
             titleRes = R.string.settings_theme,
             value = themeMode.label(),
             onClick = { showThemeDialog = true },
         )
-        HorizontalDivider()
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
             supportingContent = { Text(stringResource(R.string.settings_dynamic_color_desc)) },
@@ -48,14 +50,37 @@ fun AppearanceSettingsScreen(
                 Switch(checked = dynamicColor, onCheckedChange = viewModel::setDynamicColor)
             },
         )
-        HorizontalDivider()
+
+        // Both of these decide what the Home card shows, so they sit together here rather
+        // than one screen apart (the coach used to live under Tracking).
+        SettingsGroupHeader(R.string.settings_group_home)
         ValueRow(
             titleRes = R.string.settings_home_progress_style,
             descriptionRes = R.string.settings_home_progress_style_desc,
             value = homeProgressStyle.label(),
             onClick = { showProgressStyleDialog = true },
         )
-        HorizontalDivider()
+        ValueRow(
+            titleRes = R.string.settings_coach,
+            descriptionRes = R.string.settings_coach_desc,
+            value = coachTone.label(),
+            onClick = { showCoachDialog = true },
+        )
+    }
+
+    if (showCoachDialog) {
+        ChoiceDialog(
+            titleRes = R.string.settings_coach,
+            options =
+                CoachTone.entries.map { tone ->
+                    ChoiceOption(
+                        label = tone.label(),
+                        selected = tone == coachTone,
+                        onSelect = { viewModel.setCoachTone(tone) },
+                    )
+                },
+            onDismiss = { showCoachDialog = false },
+        )
     }
 
     if (showThemeDialog) {
@@ -107,5 +132,16 @@ private fun HomeProgressStyle.label(): String =
             HomeProgressStyle.COMPACT_RING -> R.string.progress_style_compact_ring
             HomeProgressStyle.GAUGE -> R.string.progress_style_gauge
             HomeProgressStyle.BAR -> R.string.progress_style_bar
+        },
+    )
+
+@Composable
+private fun CoachTone.label(): String =
+    stringResource(
+        when (this) {
+            CoachTone.OFF -> R.string.coach_off
+            CoachTone.GENTLE -> R.string.coach_gentle
+            CoachTone.SNARKY -> R.string.coach_snarky
+            CoachTone.BRUTAL -> R.string.coach_brutal
         },
     )
