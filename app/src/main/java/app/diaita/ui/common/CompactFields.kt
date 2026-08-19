@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -33,10 +34,17 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.ui.theme.LabelGap
 
-/** Height of every text field in the app: the standard Material button height. */
-private val FieldHeight = 40.dp
+/** Search boxes: the standard Material button height, so a field and a button line up. */
+private val SearchFieldHeight = 40.dp
 
-/** Trailing buttons are sized down to fit inside [FieldHeight]; the field itself stays tappable. */
+/**
+ * Form fields carry their label inside the box, which needs a little more room than a search
+ * box — a floor rather than a fixed height so the label can never be clipped. Still well under
+ * Material's own 56dp.
+ */
+private val FormFieldMinHeight = 48.dp
+
+/** Trailing buttons are sized down to fit inside [SearchFieldHeight]; the field itself stays tappable. */
 private val TrailingButtonSize = 32.dp
 private val IconSize = 18.dp
 
@@ -45,13 +53,14 @@ private val IconSize = 18.dp
  * boxes and form inputs are the same object with different trimmings. Material's own
  * `OutlinedTextField` is 56dp tall with padding sized for a floating label — next to a 40dp
  * button, and stacked ten deep in a form, it reads as a wall of boxes. This wraps
- * [BasicTextField] in the same outlined decoration with the vertical padding taken out.
+ * [BasicTextField] in the same outlined decoration with most of that padding taken out.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DecoratedField(
     value: String,
     onValueChange: (String) -> Unit,
+    label: String?,
     placeholder: String?,
     modifier: Modifier,
     keyboardOptions: KeyboardOptions,
@@ -69,8 +78,15 @@ private fun DecoratedField(
         onValueChange = onValueChange,
         modifier =
             modifier
-                .height(FieldHeight)
-                .let { if (focusRequester != null) it.focusRequester(focusRequester) else it },
+                // A labeled field only gets a floor: the floating label decides the rest, and a
+                // fixed height would crop it. A search box has no label, so it can be exact.
+                .then(
+                    if (label != null) {
+                        Modifier.heightIn(min = FormFieldMinHeight)
+                    } else {
+                        Modifier.height(SearchFieldHeight)
+                    },
+                ).let { if (focusRequester != null) it.focusRequester(focusRequester) else it },
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -86,6 +102,10 @@ private fun DecoratedField(
             visualTransformation = VisualTransformation.None,
             interactionSource = interactionSource,
             isError = isError,
+            label =
+                label?.let {
+                    { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                },
             placeholder =
                 placeholder?.let {
                     { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) }
@@ -93,8 +113,14 @@ private fun DecoratedField(
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             colors = colors,
-            // Zero vertical padding: the fixed height above is what centers the text now.
-            contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
+            // Trimmed padding is what makes the box compact; with a label the decoration adds
+            // back only what the label itself needs.
+            contentPadding =
+                if (label != null) {
+                    PaddingValues(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp)
+                } else {
+                    PaddingValues(start = 8.dp, end = 8.dp)
+                },
             container = {
                 OutlinedTextFieldDefaults.Container(
                     enabled = true,
@@ -126,6 +152,7 @@ fun CompactSearchField(
     DecoratedField(
         value = value,
         onValueChange = onValueChange,
+        label = null,
         placeholder = placeholder,
         modifier = modifier,
         keyboardOptions = keyboardOptions,
@@ -158,10 +185,10 @@ fun CompactSearchField(
 }
 
 /**
- * The form input: same box as [CompactSearchField], with its [label] sitting above instead of
- * floating inside. Above, not inside, because a compact field has no room for a floating label
- * and a placeholder would vanish the moment the field is filled — in a form of ten numbers,
- * "12.5" without its name is useless.
+ * The form input: the same box as [CompactSearchField], a touch taller so the [label] floats
+ * inside it the way Material does it — outside the box the labels read as loose text between
+ * the fields, and a placeholder would vanish the moment the field is filled (in a form of ten
+ * numbers, "12.5" without its name is useless).
  */
 @Composable
 fun CompactTextField(
@@ -174,21 +201,14 @@ fun CompactTextField(
     isError: Boolean = false,
     /** Helper or error line under the box, in place of Material's supporting-text slot. */
     supportingText: String? = null,
-    /** Applied to the input itself — the [modifier] lands on the label + box + helper column. */
+    /** Applied to the input itself — the [modifier] lands on the box + helper-line column. */
     focusRequester: FocusRequester? = null,
 ) {
     Column(modifier = modifier) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(modifier = Modifier.height(LabelGap))
         DecoratedField(
             value = value,
             onValueChange = onValueChange,
+            label = label,
             placeholder = null,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = keyboardOptions,
