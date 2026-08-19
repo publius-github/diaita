@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,7 +47,6 @@ import app.diaita.data.repository.PresetSummary
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactRowCard
 import app.diaita.ui.common.CompactSearchField
-import app.diaita.ui.common.CompactSearchFieldHeight
 
 private const val TAB_DISHES = 0
 private const val TAB_CUSTOM = 1
@@ -130,7 +128,7 @@ fun PresetListScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -140,10 +138,7 @@ fun PresetListScreen(
                     placeholder = stringResource(R.string.preset_search_hint),
                     modifier = Modifier.weight(1f),
                 )
-                Button(
-                    onClick = onAddPresetClick,
-                    modifier = Modifier.height(CompactSearchFieldHeight),
-                ) {
+                Button(onClick = onAddPresetClick) {
                     Text(stringResource(R.string.add))
                 }
             }
