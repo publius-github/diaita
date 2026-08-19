@@ -24,29 +24,69 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 
+/** How the day's running total relates to the goal and maintenance lines. */
+enum class CalorieOverBand { WITHIN, OVER_GOAL, OVER_MAINTENANCE }
+
+/**
+ * Zone for the Home indicators (ring/gauge/bar and the headline): over the goal but still
+ * under maintenance is a warning (the day no longer works toward the plan but doesn't move
+ * weight the wrong way), past maintenance is the real red. Without a usable maintenance
+ * value above the goal (wizard never run, or a surplus/maintain plan) any overshoot goes
+ * straight to [OVER_MAINTENANCE] — the historical two-state red.
+ */
+fun calorieOverBand(
+    consumedCalories: Double,
+    goalCalories: Int,
+    maintenanceCalories: Int?,
+): CalorieOverBand {
+    if (consumedCalories <= goalCalories) return CalorieOverBand.WITHIN
+    val maintenance = maintenanceCalories?.takeIf { it > goalCalories }
+    return if (maintenance != null && consumedCalories <= maintenance) {
+        CalorieOverBand.OVER_GOAL
+    } else {
+        CalorieOverBand.OVER_MAINTENANCE
+    }
+}
+
+@Composable
+internal fun CalorieOverBand.indicatorColor(): Color =
+    when (this) {
+        CalorieOverBand.WITHIN -> MaterialTheme.colorScheme.primary
+        CalorieOverBand.OVER_GOAL -> MaterialTheme.colorScheme.tertiary
+        CalorieOverBand.OVER_MAINTENANCE -> MaterialTheme.colorScheme.error
+    }
+
+@Composable
+private fun CalorieOverBand.textColor(): Color =
+    when (this) {
+        CalorieOverBand.WITHIN -> Color.Unspecified
+        CalorieOverBand.OVER_GOAL -> MaterialTheme.colorScheme.tertiary
+        CalorieOverBand.OVER_MAINTENANCE -> MaterialTheme.colorScheme.error
+    }
+
 @Composable
 fun MacroProgressRing(
     consumedCalories: Double,
     goalCalories: Int?,
+    maintenanceCalories: Int?,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.size(120.dp), contentAlignment = Alignment.Center) {
         if (goalCalories != null && goalCalories > 0) {
-            val isOverGoal = consumedCalories > goalCalories
+            val band = calorieOverBand(consumedCalories, goalCalories, maintenanceCalories)
             val progress = (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f)
-            val ringColor = if (isOverGoal) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             CircularProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxSize(),
                 strokeWidth = 10.dp,
-                color = ringColor,
+                color = band.indicatorColor(),
                 trackColor = progressTrackColor(),
             )
             Text(
                 stringResource(R.string.ring_progress, consumedCalories.toInt(), goalCalories),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
+                color = band.textColor(),
             )
         } else {
             Text(
@@ -68,24 +108,24 @@ fun MacroProgressRing(
 fun CompactProgressRing(
     consumedCalories: Double,
     goalCalories: Int,
+    maintenanceCalories: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val isOverGoal = consumedCalories > goalCalories
+    val band = calorieOverBand(consumedCalories, goalCalories, maintenanceCalories)
     val progress = (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f)
-    val ringColor = if (isOverGoal) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     Box(modifier = modifier.size(76.dp), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxSize(),
             strokeWidth = 8.dp,
-            color = ringColor,
+            color = band.indicatorColor(),
             trackColor = progressTrackColor(),
         )
         Text(
             stringResource(R.string.ring_percent, percentOf(consumedCalories, goalCalories)),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
-            color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
+            color = band.textColor(),
         )
     }
 }
@@ -98,11 +138,12 @@ fun CompactProgressRing(
 fun ProgressGauge(
     consumedCalories: Double,
     goalCalories: Int,
+    maintenanceCalories: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val isOverGoal = consumedCalories > goalCalories
+    val band = calorieOverBand(consumedCalories, goalCalories, maintenanceCalories)
     val progress = (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f)
-    val arcColor = if (isOverGoal) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val arcColor = band.indicatorColor()
     val trackColor = progressTrackColor()
     Box(
         modifier = modifier.width(GAUGE_WIDTH).height(GAUGE_HEIGHT),
@@ -138,7 +179,7 @@ fun ProgressGauge(
             stringResource(R.string.ring_percent, percentOf(consumedCalories, goalCalories)),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
-            color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
+            color = band.textColor(),
         )
     }
 }
@@ -152,14 +193,15 @@ fun ProgressGauge(
 fun CalorieProgressBar(
     consumedCalories: Double,
     goalCalories: Int,
+    maintenanceCalories: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val isOverGoal = consumedCalories > goalCalories
+    val band = calorieOverBand(consumedCalories, goalCalories, maintenanceCalories)
     val progress = (consumedCalories / goalCalories).toFloat().coerceIn(0f, 1f)
     LinearProgressIndicator(
         progress = { progress },
         modifier = modifier.fillMaxWidth().height(10.dp),
-        color = if (isOverGoal) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        color = band.indicatorColor(),
         trackColor = progressTrackColor(),
     )
 }

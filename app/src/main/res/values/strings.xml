@@ -70,11 +70,10 @@
     <string name="day_part_kcal_carry">%1$d / %2$d%3$+d</string>
     <string name="day_part_left">%1$d left</string>
     <string name="settings_day_part_over">Day-part overshoot</string>
-    <string name="settings_day_part_over_desc">How far past a morning/day/evening target before it turns amber, then red</string>
-    <string name="day_part_over_value">+%1$d%% / +%2$d%%</string>
-    <string name="day_part_over_dialog_hint">A segment stays green up to the first threshold past its target, warns in amber up to the second, and turns red beyond it.</string>
+    <string name="settings_day_part_over_desc">How far past a morning/day/evening target before it turns amber; red only when the whole day is over</string>
+    <string name="day_part_over_value">+%1$d%%</string>
+    <string name="day_part_over_dialog_hint">A segment stays green up to this slack past its target and warns in amber beyond it. It turns red only when the day total is over the goal too — red means this part\'s excess is part of a blown day.</string>
     <string name="day_part_over_amber">Amber from: +%1$d%%</string>
-    <string name="day_part_over_red">Red from: +%1$d%%</string>
     <string name="date_yesterday">Yesterday</string>
     <string name="previous_day">Previous day</string>
     <string name="next_day">Next day</string>

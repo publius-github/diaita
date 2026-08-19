@@ -153,12 +153,7 @@ fun TrackingSettingsScreen(
         ValueRow(
             titleRes = R.string.settings_day_part_over,
             descriptionRes = R.string.settings_day_part_over_desc,
-            value =
-                stringResource(
-                    R.string.day_part_over_value,
-                    dayPartOverThresholds.amberPercent,
-                    dayPartOverThresholds.redPercent,
-                ),
+            value = stringResource(R.string.day_part_over_value, dayPartOverThresholds.amberPercent),
             onClick = { showDayPartOverDialog = true },
         )
         HorizontalDivider()
@@ -260,8 +255,8 @@ fun TrackingSettingsScreen(
         DayPartOverDialog(
             current = dayPartOverThresholds,
             onDismiss = { showDayPartOverDialog = false },
-            onConfirm = { amber, red ->
-                viewModel.setDayPartOverThresholds(amber, red)
+            onConfirm = { amber ->
+                viewModel.setDayPartOverThresholds(amber)
                 showDayPartOverDialog = false
             },
         )
@@ -410,18 +405,16 @@ private fun MicroOverDialog(
 }
 
 /**
- * Two sliders for the morning/day/evening overshoot bands: green up to the first threshold
- * past a segment's target, amber up to the second, red beyond. Saving keeps red >= amber.
+ * One slider for the amber slack past a morning/day/evening target. Red is not a threshold
+ * of its own: a segment goes red only when the day total is over too (see [dayPartOverBand]).
  */
 @Composable
 private fun DayPartOverDialog(
     current: DayPartOverThresholds,
     onDismiss: () -> Unit,
-    onConfirm: (amberPercent: Int, redPercent: Int) -> Unit,
+    onConfirm: (amberPercent: Int) -> Unit,
 ) {
     var amber by remember { mutableIntStateOf(current.amberPercent) }
-    var red by remember { mutableIntStateOf(current.redPercent) }
-    val sanitized = DayPartOverThresholds.sanitized(amber, red)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -434,22 +427,16 @@ private fun DayPartOverDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(stringResource(R.string.day_part_over_amber, sanitized.amberPercent))
+                Text(stringResource(R.string.day_part_over_amber, amber))
                 Slider(
-                    value = sanitized.amberPercent.toFloat(),
+                    value = amber.toFloat(),
                     onValueChange = { amber = it.roundToInt() },
-                    valueRange = 0f..DayPartOverThresholds.MAX_PERCENT.toFloat(),
-                )
-                Text(stringResource(R.string.day_part_over_red, sanitized.redPercent))
-                Slider(
-                    value = sanitized.redPercent.toFloat(),
-                    onValueChange = { red = it.roundToInt() },
                     valueRange = 0f..DayPartOverThresholds.MAX_PERCENT.toFloat(),
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(sanitized.amberPercent, sanitized.redPercent) }) {
+            TextButton(onClick = { onConfirm(amber) }) {
                 Text(stringResource(R.string.save))
             }
         },

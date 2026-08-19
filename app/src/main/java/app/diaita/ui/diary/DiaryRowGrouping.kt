@@ -160,23 +160,25 @@ fun buildDayPartBudgets(
 enum class DayPartOverBand { UNDER, SMALL, MEDIUM, LARGE }
 
 /**
- * UNDER at or below the target; past it the overshoot percent picks the band: within
- * [DayPartOverThresholds.amberPercent] it is SMALL (still rendered green — noise, not a
- * signal), within [DayPartOverThresholds.redPercent] MEDIUM (amber), beyond LARGE (red).
- * A zero target with anything consumed is LARGE — there was no room to begin with.
+ * UNDER at or below the target. Past it, within [DayPartOverThresholds.amberPercent] the
+ * overshoot is SMALL and still renders green — noise, not a signal. Beyond the slack the
+ * band depends on the whole day: MEDIUM (amber) while the day total is still within the
+ * goal — a lone part overshoot is recoverable; LARGE (red) once [dayOver] — this part's
+ * excess is part of a genuinely blown day. A zero target with anything consumed counts as
+ * past the slack (there was no room to begin with).
  */
 fun dayPartOverBand(
     consumed: Int,
     target: Int,
     thresholds: DayPartOverThresholds,
+    dayOver: Boolean,
 ): DayPartOverBand {
     if (consumed <= target) return DayPartOverBand.UNDER
-    if (target <= 0) return DayPartOverBand.LARGE
-    val overPercent = (consumed - target) * 100.0 / target
+    val overPercent = if (target <= 0) Double.MAX_VALUE else (consumed - target) * 100.0 / target
     return when {
         overPercent <= thresholds.amberPercent -> DayPartOverBand.SMALL
-        overPercent <= thresholds.redPercent -> DayPartOverBand.MEDIUM
-        else -> DayPartOverBand.LARGE
+        dayOver -> DayPartOverBand.LARGE
+        else -> DayPartOverBand.MEDIUM
     }
 }
 

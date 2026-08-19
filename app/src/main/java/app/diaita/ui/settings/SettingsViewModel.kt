@@ -123,13 +123,10 @@ class SettingsViewModel(
         settingsRepository.dayPartOverThresholds
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DayPartOverThresholds())
 
-    fun setDayPartOverThresholds(
-        amberPercent: Int,
-        redPercent: Int,
-    ) {
+    fun setDayPartOverThresholds(amberPercent: Int) {
         viewModelScope.launch {
             settingsRepository.setDayPartOverThresholds(
-                DayPartOverThresholds.sanitized(amberPercent, redPercent),
+                DayPartOverThresholds.sanitized(amberPercent),
             )
         }
     }

@@ -206,19 +206,46 @@ class DiaryRowGroupingTest {
     }
 
     @Test
-    fun `overshoot bands follow the thresholds`() {
-        val thresholds = DayPartOverThresholds(amberPercent = 10, redPercent = 25)
-        assertEquals(DayPartOverBand.UNDER, dayPartOverBand(consumed = 400, target = 400, thresholds = thresholds))
-        assertEquals(DayPartOverBand.SMALL, dayPartOverBand(consumed = 440, target = 400, thresholds = thresholds))
-        assertEquals(DayPartOverBand.MEDIUM, dayPartOverBand(consumed = 500, target = 400, thresholds = thresholds))
-        assertEquals(DayPartOverBand.LARGE, dayPartOverBand(consumed = 501, target = 400, thresholds = thresholds))
+    fun `overshoot within the slack stays green even on a blown day`() {
+        val thresholds = DayPartOverThresholds(amberPercent = 10)
+        assertEquals(
+            DayPartOverBand.UNDER,
+            dayPartOverBand(consumed = 400, target = 400, thresholds = thresholds, dayOver = true),
+        )
+        assertEquals(
+            DayPartOverBand.SMALL,
+            dayPartOverBand(consumed = 440, target = 400, thresholds = thresholds, dayOver = true),
+        )
     }
 
     @Test
-    fun `anything eaten against a zero target is a large overshoot`() {
+    fun `past the slack it is amber while the day is fine and red once the day is over`() {
+        val thresholds = DayPartOverThresholds(amberPercent = 10)
+        assertEquals(
+            DayPartOverBand.MEDIUM,
+            dayPartOverBand(consumed = 500, target = 400, thresholds = thresholds, dayOver = false),
+        )
+        assertEquals(
+            DayPartOverBand.LARGE,
+            dayPartOverBand(consumed = 500, target = 400, thresholds = thresholds, dayOver = true),
+        )
+    }
+
+    @Test
+    fun `anything eaten against a zero target counts as past the slack`() {
         val thresholds = DayPartOverThresholds()
-        assertEquals(DayPartOverBand.UNDER, dayPartOverBand(consumed = 0, target = 0, thresholds = thresholds))
-        assertEquals(DayPartOverBand.LARGE, dayPartOverBand(consumed = 50, target = 0, thresholds = thresholds))
+        assertEquals(
+            DayPartOverBand.UNDER,
+            dayPartOverBand(consumed = 0, target = 0, thresholds = thresholds, dayOver = false),
+        )
+        assertEquals(
+            DayPartOverBand.MEDIUM,
+            dayPartOverBand(consumed = 50, target = 0, thresholds = thresholds, dayOver = false),
+        )
+        assertEquals(
+            DayPartOverBand.LARGE,
+            dayPartOverBand(consumed = 50, target = 0, thresholds = thresholds, dayOver = true),
+        )
     }
 
     @Test

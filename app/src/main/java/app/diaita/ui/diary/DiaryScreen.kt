@@ -71,6 +71,7 @@ import app.diaita.data.settings.DayPartOverThresholds
 import app.diaita.data.settings.DayPartShares
 import app.diaita.data.settings.HomeProgressStyle
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CalorieOverBand
 import app.diaita.ui.common.CalorieProgressBar
 import app.diaita.ui.common.CompactProgressRing
 import app.diaita.ui.common.FoodRowCard
@@ -80,6 +81,7 @@ import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.MicronutrientTotalsLine
 import app.diaita.ui.common.ProgressGauge
 import app.diaita.ui.common.QuantitySheet
+import app.diaita.ui.common.calorieOverBand
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
@@ -521,10 +523,14 @@ private fun DiaryDatePickerDialog(
 
 @Composable
 private fun DailyTotalsCard(uiState: DiaryUiState) {
-    val isOverGoal =
-        uiState.goalCalories != null &&
-            uiState.goalCalories > 0 &&
-            uiState.totalCalories > uiState.goalCalories
+    // Over goal but under maintenance is amber, past maintenance red — same zone the
+    // ring/gauge/bar colors with, so the headline and the indicator never disagree.
+    val calorieBand =
+        if (uiState.goalCalories != null && uiState.goalCalories > 0) {
+            calorieOverBand(uiState.totalCalories, uiState.goalCalories, uiState.maintenanceCalories)
+        } else {
+            CalorieOverBand.WITHIN
+        }
     val hasMacroGoals =
         listOfNotNull(uiState.goalProteinG, uiState.goalFatG, uiState.goalCarbsG)
             .any { it > 0 }
@@ -556,7 +562,12 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                             stringResource(R.string.kcal_amount, uiState.totalCalories.toInt())
                         },
                         style = MaterialTheme.typography.headlineSmall,
-                        color = if (isOverGoal) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        color =
+                            when (calorieBand) {
+                                CalorieOverBand.WITHIN -> Color.Unspecified
+                                CalorieOverBand.OVER_GOAL -> MaterialTheme.colorScheme.tertiary
+                                CalorieOverBand.OVER_MAINTENANCE -> MaterialTheme.colorScheme.error
+                            },
                     )
                     // With macro goals set, the gram figures live next to the P/F/C bars
                     // below (consumed/target); the header line only covers the no-goals case
@@ -588,6 +599,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                         MacroProgressRing(
                             consumedCalories = uiState.totalCalories,
                             goalCalories = uiState.goalCalories,
+                            maintenanceCalories = uiState.maintenanceCalories,
                         )
                     // "No self-hiding UI": without a goal the indicator slot still says why
                     // it is empty instead of silently vanishing (BAR shows it here too, in
@@ -602,11 +614,13 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                         CompactProgressRing(
                             consumedCalories = uiState.totalCalories,
                             goalCalories = uiState.goalCalories,
+                            maintenanceCalories = uiState.maintenanceCalories,
                         )
                     style == HomeProgressStyle.GAUGE ->
                         ProgressGauge(
                             consumedCalories = uiState.totalCalories,
                             goalCalories = uiState.goalCalories,
+                            maintenanceCalories = uiState.maintenanceCalories,
                         )
                 }
             }
@@ -615,6 +629,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 CalorieProgressBar(
                     consumedCalories = uiState.totalCalories,
                     goalCalories = uiState.goalCalories,
+                    maintenanceCalories = uiState.maintenanceCalories,
                 )
             }
             if (uiState.goalCalories != null && uiState.goalCalories > 0) {
@@ -904,10 +919,10 @@ private fun DayPartSegment(
     val target = budget.target
     val consumedInt = consumed.roundToInt()
     val isOver = consumedInt > target
-    // A small overshoot stays green (noise, not a signal); the user-configurable thresholds
-    // pick where it turns amber and where red — red is no longer reserved for the day total
-    // (user re-decision 2026-08-19).
-    val band = dayPartOverBand(consumedInt, target, overThresholds)
+    // A small overshoot stays green (noise, not a signal); past the configurable slack the
+    // segment warns in amber, and turns red only when the day total is over too — red marks
+    // a part whose excess belongs to a genuinely blown day, not a lone recoverable slip.
+    val band = dayPartOverBand(consumedInt, target, overThresholds, dayOver = dayRemaining < 0)
     val barColor =
         when (band) {
             DayPartOverBand.UNDER, DayPartOverBand.SMALL -> MaterialTheme.colorScheme.primary

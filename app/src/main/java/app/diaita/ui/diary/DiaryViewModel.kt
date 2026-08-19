@@ -76,6 +76,8 @@ data class DiaryUiState(
     val totalSugar: Double? = null,
     val totalSalt: Double? = null,
     val goalCalories: Int? = null,
+    /** TDEE stored by the goal wizard; splits "over goal" into amber (under it) and red (past it). */
+    val maintenanceCalories: Int? = null,
     val goalProteinG: Int? = null,
     val goalFatG: Int? = null,
     val goalCarbsG: Int? = null,
@@ -182,6 +184,7 @@ class DiaryViewModel(
                         totalSugar = totals.totalSugar,
                         totalSalt = totals.totalSalt,
                         goalCalories = goal?.calorieTarget,
+                        maintenanceCalories = goal?.maintenanceCalories,
                         goalProteinG = goal?.proteinTargetG,
                         goalFatG = goal?.fatTargetG,
                         goalCarbsG = goal?.carbsTargetG,

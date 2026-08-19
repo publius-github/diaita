@@ -432,23 +432,19 @@ class SettingsRepository(
     }
 
     private val dayPartOverAmberPercentKey = intPreferencesKey("day_part_over_amber_percent")
-    private val dayPartOverRedPercentKey = intPreferencesKey("day_part_over_red_percent")
 
-    /** Overshoot bands for the morning/day/evening segments; see [DayPartOverThresholds]. */
+    /** Overshoot slack for the morning/day/evening segments; see [DayPartOverThresholds]. */
     val dayPartOverThresholds: Flow<DayPartOverThresholds> =
         prefs.map { prefs ->
             DayPartOverThresholds(
                 amberPercent =
                     prefs[dayPartOverAmberPercentKey] ?: DayPartOverThresholds.DEFAULT_AMBER_PERCENT,
-                redPercent =
-                    prefs[dayPartOverRedPercentKey] ?: DayPartOverThresholds.DEFAULT_RED_PERCENT,
             )
         }
 
     suspend fun setDayPartOverThresholds(thresholds: DayPartOverThresholds) {
         context.settingsDataStore.edit { prefs ->
             prefs[dayPartOverAmberPercentKey] = thresholds.amberPercent
-            prefs[dayPartOverRedPercentKey] = thresholds.redPercent
         }
     }
 

@@ -70,11 +70,10 @@
     <string name="day_part_kcal_carry">%1$d / %2$d%3$+d</string>
     <string name="day_part_left">осталось %1$d</string>
     <string name="settings_day_part_over">Перебор части дня</string>
-    <string name="settings_day_part_over_desc">Насколько можно превысить цель утра/дня/вечера, прежде чем сегмент станет жёлтым, а затем красным</string>
-    <string name="day_part_over_value">+%1$d%% / +%2$d%%</string>
-    <string name="day_part_over_dialog_hint">До первого порога сверх цели сегмент остаётся зелёным, до второго предупреждает жёлтым, дальше становится красным.</string>
+    <string name="settings_day_part_over_desc">Насколько можно превысить цель утра/дня/вечера, прежде чем сегмент станет жёлтым; красный - только при переборе всего дня</string>
+    <string name="day_part_over_value">+%1$d%%</string>
+    <string name="day_part_over_dialog_hint">В пределах этого допуска сверх цели сегмент остаётся зелёным, дальше предупреждает жёлтым. Красным он становится только когда превышена и цель всего дня - красный значит, что перебор этой части входит в перебор дня.</string>
     <string name="day_part_over_amber">Жёлтый с: +%1$d%%</string>
-    <string name="day_part_over_red">Красный с: +%1$d%%</string>
     <string name="date_yesterday">Вчера</string>
     <string name="previous_day">Предыдущий день</string>
     <string name="next_day">Следующий день</string>

@@ -138,30 +138,20 @@ data class MicronutrientOverTolerances(
 }
 
 /**
- * How much a morning/day/evening segment may overshoot its target before escalating:
- * up to [amberPercent] past the target it still reads green (a small overshoot is noise,
- * not a signal), up to [redPercent] it warns in amber, beyond that it goes red.
+ * How much a morning/day/evening segment may overshoot its target before it stops reading
+ * green (a small overshoot is noise, not a signal). Past this slack the segment warns in
+ * amber; it escalates to red only when the DAY total is over too — a lone part overshoot
+ * is recoverable, red means this part's excess is part of a blown day.
  */
 data class DayPartOverThresholds(
     val amberPercent: Int = DEFAULT_AMBER_PERCENT,
-    val redPercent: Int = DEFAULT_RED_PERCENT,
 ) {
     companion object {
         const val DEFAULT_AMBER_PERCENT = 10
-        const val DEFAULT_RED_PERCENT = 25
         const val MAX_PERCENT = 100
 
-        /** Clamps both to 0..[MAX_PERCENT] and keeps red at or above amber. */
-        fun sanitized(
-            amberPercent: Int,
-            redPercent: Int,
-        ): DayPartOverThresholds {
-            val amber = amberPercent.coerceIn(0, MAX_PERCENT)
-            return DayPartOverThresholds(
-                amberPercent = amber,
-                redPercent = redPercent.coerceIn(amber, MAX_PERCENT),
-            )
-        }
+        fun sanitized(amberPercent: Int): DayPartOverThresholds =
+            DayPartOverThresholds(amberPercent = amberPercent.coerceIn(0, MAX_PERCENT))
     }
 }
 
