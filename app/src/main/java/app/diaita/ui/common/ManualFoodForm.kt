@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.ui.theme.ItemGap
@@ -152,16 +150,15 @@ fun ManualFoodForm(
             )
             Spacer(modifier = Modifier.height(LabelGap))
         }
-        OutlinedTextField(
+        CompactTextField(
             value = name,
             onValueChange = {
                 name = it
                 hasError = false
             },
-            label = { Text(stringResource(R.string.name_label)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            label = stringResource(R.string.name_label),
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
         Spacer(modifier = Modifier.height(ItemGap))
         MacroField(
@@ -200,7 +197,7 @@ fun ManualFoodForm(
             labelRes = R.string.carbs_per_100,
         )
         Spacer(modifier = Modifier.height(ItemGap))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
             MacroField(
                 value = fiberText,
                 onValueChange = {
@@ -236,7 +233,7 @@ fun ManualFoodForm(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(LabelGap))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
             MacroField(
                 value = servingText,
                 onValueChange = {
@@ -319,17 +316,16 @@ private fun MacroField(
     imeAction: ImeAction = ImeAction.Next,
     onDone: (() -> Unit)? = null,
 ) {
-    OutlinedTextField(
+    CompactTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(stringResource(labelRes)) },
-        singleLine = true,
+        label = stringResource(labelRes),
+        modifier = modifier.fillMaxWidth(),
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,
                 imeAction = imeAction,
             ),
         keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
-        modifier = modifier.fillMaxWidth(),
     )
 }

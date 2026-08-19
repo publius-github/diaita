@@ -25,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.settings.MacroSplit
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.common.label
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.LabelGap
@@ -155,11 +155,10 @@ private fun AboutYouStep(
         )
     }
     Spacer(modifier = Modifier.height(ItemGap))
-    OutlinedTextField(
+    CompactTextField(
         value = state.ageText,
         onValueChange = viewModel::onAgeChanged,
-        label = { Text(stringResource(R.string.calc_age)) },
-        singleLine = true,
+        label = stringResource(R.string.calc_age),
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -171,11 +170,10 @@ private fun AboutYouStep(
     if (state.useImperialHeight) {
         // Pound users think in feet and inches; the math still runs on centimeters.
         Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
-            OutlinedTextField(
+            CompactTextField(
                 value = state.heightFeetText,
                 onValueChange = viewModel::onHeightFeetChanged,
-                label = { Text(stringResource(R.string.calc_height_feet)) },
-                singleLine = true,
+                label = stringResource(R.string.calc_height_feet),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -183,11 +181,10 @@ private fun AboutYouStep(
                     ),
                 modifier = Modifier.weight(1f),
             )
-            OutlinedTextField(
+            CompactTextField(
                 value = state.heightInchesText,
                 onValueChange = viewModel::onHeightInchesChanged,
-                label = { Text(stringResource(R.string.calc_height_inches)) },
-                singleLine = true,
+                label = stringResource(R.string.calc_height_inches),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
@@ -197,11 +194,10 @@ private fun AboutYouStep(
             )
         }
     } else {
-        OutlinedTextField(
+        CompactTextField(
             value = state.heightText,
             onValueChange = viewModel::onHeightChanged,
-            label = { Text(stringResource(R.string.calc_height)) },
-            singleLine = true,
+            label = stringResource(R.string.calc_height),
             keyboardOptions =
                 KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
@@ -211,11 +207,10 @@ private fun AboutYouStep(
         )
     }
     Spacer(modifier = Modifier.height(ItemGap))
-    OutlinedTextField(
+    CompactTextField(
         value = state.weightText,
         onValueChange = viewModel::onWeightChanged,
-        label = { Text(stringResource(R.string.calc_weight_label, state.weightUnit.label())) },
-        singleLine = true,
+        label = stringResource(R.string.calc_weight_label, state.weightUnit.label()),
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,

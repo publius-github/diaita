@@ -6,7 +6,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -15,9 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,21 +43,20 @@ fun LogWeightDialog(
         title = { Text(stringResource(R.string.log_weight)) },
         text = {
             Column {
-                OutlinedTextField(
+                CompactTextField(
                     value = weightText,
                     onValueChange = {
                         weightText = it
                         hasError = false
                     },
-                    label = { Text(stringResource(R.string.weight_input_label, weightUnit.label())) },
-                    singleLine = true,
+                    label = stringResource(R.string.weight_input_label, weightUnit.label()),
                     keyboardOptions =
                         KeyboardOptions(
                             keyboardType = KeyboardType.Decimal,
                             imeAction = ImeAction.Done,
                         ),
                     keyboardActions = KeyboardActions(onDone = { confirm() }),
-                    modifier = Modifier.focusRequester(focusRequester),
+                    focusRequester = focusRequester,
                 )
                 if (hasError) {
                     Text(stringResource(R.string.weight_error), color = MaterialTheme.colorScheme.error)

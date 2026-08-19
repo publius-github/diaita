@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -357,11 +358,23 @@ fun FoodSearchContent(
     modifier: Modifier = Modifier,
     /** Calorie-only quick logging; only the Add-food screen offers it (null hides the button). */
     onQuickAdd: (() -> Unit)? = null,
+    /**
+     * Fires when the manual-entry / edit form takes the pane over or gives it back, so the host
+     * screen can drop chrome that makes no sense over a form (the Add-food tabs).
+     */
+    onFormOpenChanged: (Boolean) -> Unit = {},
 ) {
     var showManualEntry by rememberSaveable { mutableStateOf(false) }
     // Set only when manual entry is opened from an unknown scan, so a plain "Add manually"
     // never silently inherits the barcode of an earlier failed scan.
     var manualEntryBarcode by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val formOpen = showManualEntry || state.foodBeingEdited != null
+    DisposableEffect(formOpen) {
+        onFormOpenChanged(formOpen)
+        // Leaving the screen with the form up must not leave the host thinking it is still there.
+        onDispose { if (formOpen) onFormOpenChanged(false) }
+    }
 
     // Editing takes over the whole pane, same as manual entry — it's the same form, prefilled.
     state.foodBeingEdited?.let { food ->

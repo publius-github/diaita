@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.MealSlotPicker
@@ -115,13 +115,12 @@ fun PresetEditScreen(
                         .fillMaxSize()
                         .padding(ScreenPadding),
             ) {
-                OutlinedTextField(
+                CompactTextField(
                     value = state.name,
                     onValueChange = viewModel::onNameChanged,
-                    label = { Text(stringResource(R.string.preset_name_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    label = stringResource(R.string.preset_name_label),
                     modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 )
                 Spacer(modifier = Modifier.height(SectionGap))
                 Text(stringResource(R.string.preset_meal_label), style = MaterialTheme.typography.titleSmall)
@@ -234,28 +233,24 @@ private fun CookedWeightField(
 ) {
     val cookedWeight = state.cookedWeightText.normalizedDecimalOrNull()?.takeIf { it > 0 }
     val totalCalories = state.draftItems.sumOf { NutrientMath.caloriesFor(it.food, it.quantityGrams) }
-    OutlinedTextField(
+    CompactTextField(
         value = state.cookedWeightText,
         onValueChange = onValueChange,
-        label = { Text(stringResource(R.string.cooked_weight_label)) },
-        singleLine = true,
-        isError = state.hasCookedWeightError,
-        supportingText = {
-            Text(
-                when {
-                    state.hasCookedWeightError -> stringResource(R.string.cooked_weight_error)
-                    cookedWeight != null && state.draftItems.isNotEmpty() ->
-                        stringResource(R.string.kcal_per_100g, (totalCalories / cookedWeight * 100).toInt())
-                    else -> stringResource(R.string.cooked_weight_helper)
-                },
-            )
-        },
+        label = stringResource(R.string.cooked_weight_label),
+        modifier = Modifier.fillMaxWidth(),
         keyboardOptions =
             KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,
                 imeAction = ImeAction.Done,
             ),
-        modifier = Modifier.fillMaxWidth(),
+        isError = state.hasCookedWeightError,
+        supportingText =
+            when {
+                state.hasCookedWeightError -> stringResource(R.string.cooked_weight_error)
+                cookedWeight != null && state.draftItems.isNotEmpty() ->
+                    stringResource(R.string.kcal_per_100g, (totalCalories / cookedWeight * 100).toInt())
+                else -> stringResource(R.string.cooked_weight_helper)
+            },
     )
 }
 

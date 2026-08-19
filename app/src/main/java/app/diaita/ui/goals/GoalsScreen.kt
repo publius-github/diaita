@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -37,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.common.label
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.ScreenPadding
@@ -105,11 +105,10 @@ fun GoalsScreen(
                 }
                 Spacer(modifier = Modifier.height(ItemGap))
             }
-            OutlinedTextField(
+            CompactTextField(
                 value = state.calorieTarget,
                 onValueChange = viewModel::onCalorieTargetChanged,
-                label = { Text(stringResource(R.string.calories_label)) },
-                singleLine = true,
+                label = stringResource(R.string.calories_label),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -125,11 +124,10 @@ fun GoalsScreen(
                 Text(stringResource(R.string.quick_split))
             }
             Spacer(modifier = Modifier.height(SectionGap))
-            OutlinedTextField(
+            CompactTextField(
                 value = state.proteinTarget,
                 onValueChange = viewModel::onProteinTargetChanged,
-                label = { Text(stringResource(R.string.protein_g)) },
-                singleLine = true,
+                label = stringResource(R.string.protein_g),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -138,11 +136,10 @@ fun GoalsScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(ItemGap))
-            OutlinedTextField(
+            CompactTextField(
                 value = state.fatTarget,
                 onValueChange = viewModel::onFatTargetChanged,
-                label = { Text(stringResource(R.string.fat_g)) },
-                singleLine = true,
+                label = stringResource(R.string.fat_g),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -151,11 +148,10 @@ fun GoalsScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(ItemGap))
-            OutlinedTextField(
+            CompactTextField(
                 value = state.carbsTarget,
                 onValueChange = viewModel::onCarbsTargetChanged,
-                label = { Text(stringResource(R.string.carbs_g)) },
-                singleLine = true,
+                label = stringResource(R.string.carbs_g),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -164,11 +160,10 @@ fun GoalsScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(ItemGap))
-            OutlinedTextField(
+            CompactTextField(
                 value = state.weightTarget,
                 onValueChange = viewModel::onWeightTargetChanged,
-                label = { Text(stringResource(R.string.weight_target_label, state.weightUnit.label())) },
-                singleLine = true,
+                label = stringResource(R.string.weight_target_label, state.weightUnit.label()),
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,

@@ -16,7 +16,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.repository.PresetSummary
+import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.SectionGap
 import app.diaita.util.formatGramsForInput
@@ -89,22 +89,18 @@ fun DishPortionSheet(
                 )
             }
             Spacer(modifier = Modifier.height(ItemGap))
-            OutlinedTextField(
+            CompactTextField(
                 value = portionText,
                 onValueChange = { portionText = it },
-                label = { Text(stringResource(R.string.dish_portion_label)) },
-                singleLine = true,
+                label = stringResource(R.string.dish_portion_label),
                 isError = eatenGrams == null,
-                supportingText = {
+                supportingText =
                     eatenGrams?.let {
-                        Text(
-                            stringResource(
-                                R.string.kcal_estimate,
-                                (dish.totalCalories * it / cookedWeight).toInt(),
-                            ),
+                        stringResource(
+                            R.string.kcal_estimate,
+                            (dish.totalCalories * it / cookedWeight).toInt(),
                         )
-                    }
-                },
+                    },
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,

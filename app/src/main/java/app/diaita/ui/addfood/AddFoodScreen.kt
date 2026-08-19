@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -30,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactSearchField
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.QuickAddDialog
@@ -54,6 +60,7 @@ fun AddFoodScreen(
     val dayPartBoundaries by viewModel.dayPartBoundaries.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
     val launchScan = rememberFoodBarcodeScanner(viewModel.foodSearch::onBarcodeScanned)
+    var foodFormOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.justLogged) {
         if (uiState.justLogged) {
@@ -105,17 +112,22 @@ fun AddFoodScreen(
                     .padding(innerPadding)
                     .fillMaxSize(),
         ) {
-            TabRow(selectedTabIndex = uiState.selectedTab.ordinal) {
-                Tab(
-                    selected = uiState.selectedTab == AddFoodTab.FOODS,
-                    onClick = { viewModel.onTabSelected(AddFoodTab.FOODS) },
-                    text = { Text(stringResource(R.string.tab_foods)) },
-                )
-                Tab(
-                    selected = uiState.selectedTab == AddFoodTab.PRESETS,
-                    onClick = { viewModel.onTabSelected(AddFoodTab.PRESETS) },
-                    text = { Text(stringResource(R.string.tab_presets)) },
-                )
+            // The manual-entry / edit form takes over the whole pane and offers only Save or
+            // Back, so the tabs would be dead weight (and switching away mid-edit loses the
+            // draft) — they stay hidden while it is up.
+            if (!foodFormOpen) {
+                TabRow(selectedTabIndex = uiState.selectedTab.ordinal) {
+                    Tab(
+                        selected = uiState.selectedTab == AddFoodTab.FOODS,
+                        onClick = { viewModel.onTabSelected(AddFoodTab.FOODS) },
+                        text = { Text(stringResource(R.string.tab_foods)) },
+                    )
+                    Tab(
+                        selected = uiState.selectedTab == AddFoodTab.PRESETS,
+                        onClick = { viewModel.onTabSelected(AddFoodTab.PRESETS) },
+                        text = { Text(stringResource(R.string.tab_presets)) },
+                    )
+                }
             }
 
             when (uiState.selectedTab) {
@@ -135,6 +147,7 @@ fun AddFoodScreen(
                         onDeleteFood = viewModel.foodSearch::deleteEditedFood,
                         modifier = Modifier.padding(ScreenPadding),
                         onQuickAdd = viewModel::showQuickAdd,
+                        onFormOpenChanged = { foodFormOpen = it },
                     )
                 AddFoodTab.PRESETS -> PresetsTab(onLogged = onDone, logDate = viewModel.logDate)
             }
@@ -177,6 +190,14 @@ private fun PresetsTab(
     val justLogged by presetViewModel.justLogged.collectAsStateWithLifecycle()
     val dishPendingPortion by presetViewModel.dishPendingPortion.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val query = searchQuery.trim()
+    val shownPresets =
+        if (query.isEmpty()) {
+            presets
+        } else {
+            presets.filter { it.preset.name.contains(query, ignoreCase = true) }
+        }
 
     LaunchedEffect(justLogged) {
         if (justLogged) {
@@ -196,32 +217,49 @@ private fun PresetsTab(
         )
     }
 
-    if (presets.isEmpty()) {
-        Box(
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Same filter bar as the standalone Presets screen — a long preset list needs
+        // narrowing wherever it is shown.
+        CompactSearchField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = stringResource(R.string.preset_search_hint),
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(ScreenPadding),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(stringResource(R.string.no_presets_addfood))
-        }
-    } else {
-        LazyColumn(
-            modifier =
-                Modifier
-                    .padding(ScreenPadding)
-                    .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(ItemGap),
-        ) {
-            presetLogList(
-                presets = presets,
-                onLogPreset = { presetId ->
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    presetViewModel.logPreset(presetId, logDate)
-                },
-                onLogDish = presetViewModel::requestDishPortion,
-            )
+                    .fillMaxWidth()
+                    .padding(start = ScreenPadding, end = ScreenPadding, top = ScreenPadding),
+        )
+        if (shownPresets.isEmpty()) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(ScreenPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    stringResource(
+                        if (query.isEmpty()) R.string.no_presets_addfood else R.string.preset_search_no_matches,
+                    ),
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier =
+                    Modifier
+                        .padding(ScreenPadding)
+                        .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(ItemGap),
+            ) {
+                presetLogList(
+                    presets = shownPresets,
+                    onLogPreset = { presetId ->
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        presetViewModel.logPreset(presetId, logDate)
+                    },
+                    onLogDish = presetViewModel::requestDishPortion,
+                )
+            }
         }
     }
 }

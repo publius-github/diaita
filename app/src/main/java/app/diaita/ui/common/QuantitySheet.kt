@@ -17,7 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -149,29 +148,25 @@ fun QuantitySheet(
                 }
                 Spacer(modifier = Modifier.height(ItemGap))
             }
-            OutlinedTextField(
+            CompactTextField(
                 value = quantityText,
                 onValueChange = { quantityText = it },
-                label = { Text(quantityFieldLabel(unit)) },
-                singleLine = true,
+                label = quantityFieldLabel(unit),
                 isError = grams == null,
-                supportingText = {
+                supportingText =
                     grams?.let {
-                        Text(
-                            listOfNotNull(
-                                stringResource(
-                                    R.string.kcal_estimate,
-                                    NutrientMath.caloriesFor(food, it).toInt(),
-                                ),
-                                if (unit != QuantityUnit.GRAMS) {
-                                    stringResource(R.string.grams_equivalent, formatGramsForInput(it))
-                                } else {
-                                    null
-                                },
-                            ).joinToString(" · "),
-                        )
-                    }
-                },
+                        listOfNotNull(
+                            stringResource(
+                                R.string.kcal_estimate,
+                                NutrientMath.caloriesFor(food, it).toInt(),
+                            ),
+                            if (unit != QuantityUnit.GRAMS) {
+                                stringResource(R.string.grams_equivalent, formatGramsForInput(it))
+                            } else {
+                                null
+                            },
+                        ).joinToString(" · ")
+                    },
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
