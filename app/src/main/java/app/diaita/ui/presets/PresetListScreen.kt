@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -47,6 +46,8 @@ import app.diaita.data.repository.PresetSummary
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactRowCard
 import app.diaita.ui.common.CompactSearchField
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
 
 private const val TAB_DISHES = 0
 private const val TAB_CUSTOM = 1
@@ -128,9 +129,9 @@ fun PresetListScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                        .padding(start = ScreenPadding, end = ScreenPadding, top = ScreenPadding),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(ItemGap),
             ) {
                 CompactSearchField(
                     value = searchQuery,
@@ -148,7 +149,7 @@ fun PresetListScreen(
                         Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .padding(16.dp),
+                            .padding(ScreenPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -168,8 +169,8 @@ fun PresetListScreen(
                         Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(ScreenPadding),
+                    verticalArrangement = Arrangement.spacedBy(ItemGap),
                 ) {
                     val sections = groupPresetsBySlot(shownPresets)
                     // Seeded dishes carry no meal slot, so a dishes-only list would show a

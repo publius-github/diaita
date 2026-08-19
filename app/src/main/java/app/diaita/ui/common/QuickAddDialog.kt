@@ -21,9 +21,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.ui.theme.ItemGap
 import app.diaita.util.normalizedDecimalOrNull
 
 /**
@@ -70,7 +70,7 @@ fun QuickAddDialog(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 OutlinedTextField(
                     value = nameText,
                     onValueChange = { nameText = it },
@@ -80,7 +80,7 @@ fun QuickAddDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (showMealSlotPicker) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(ItemGap))
                     MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
                 }
             }

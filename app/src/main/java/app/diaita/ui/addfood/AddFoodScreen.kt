@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -39,6 +38,8 @@ import app.diaita.ui.common.rememberFoodBarcodeScanner
 import app.diaita.ui.presets.DishPortionSheet
 import app.diaita.ui.presets.PresetViewModel
 import app.diaita.ui.presets.presetLogList
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
 import app.diaita.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,7 +133,7 @@ fun AddFoodScreen(
                         onSourceFilterChanged = viewModel.foodSearch::onSourceFilterChanged,
                         onLoadMore = viewModel.foodSearch::loadMoreFromOff,
                         onDeleteFood = viewModel.foodSearch::deleteEditedFood,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(ScreenPadding),
                         onQuickAdd = viewModel::showQuickAdd,
                     )
                 AddFoodTab.PRESETS -> PresetsTab(onLogged = onDone, logDate = viewModel.logDate)
@@ -200,7 +201,7 @@ private fun PresetsTab(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
             contentAlignment = Alignment.Center,
         ) {
             Text(stringResource(R.string.no_presets_addfood))
@@ -209,9 +210,9 @@ private fun PresetsTab(
         LazyColumn(
             modifier =
                 Modifier
-                    .padding(16.dp)
+                    .padding(ScreenPadding)
                     .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(ItemGap),
         ) {
             presetLogList(
                 presets = presets,

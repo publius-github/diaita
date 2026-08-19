@@ -97,6 +97,10 @@ import app.diaita.ui.common.calorieOverBand
 import app.diaita.ui.common.friendlyDateLabel
 import app.diaita.ui.common.label
 import app.diaita.ui.common.progressTrackColor
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.BmiBand
 import app.diaita.util.DateUtils
 import app.diaita.util.WaterBand
@@ -213,7 +217,7 @@ fun DiaryScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                    .padding(start = ScreenPadding, end = ScreenPadding, top = ScreenPadding),
         ) {
             DateNavigationRow(
                 date = uiState.date,
@@ -223,16 +227,18 @@ fun DiaryScreen(
                 onDateClick = { showDatePicker = true },
                 onCopyFromClick = { showCopySourcePicker = true },
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             DailyTotalsCard(uiState)
             if (uiState.loaded && uiState.goalCalories == null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SectionGap))
                 SetGoalBanner(onOpenGoals = onOpenGoals, onOpenWizard = onOpenWizard)
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            // The action row is its own block: the same gap above it as below, so it doesn't
+            // look glued to the card.
+            Spacer(modifier = Modifier.height(SectionGap))
             // FlowRow, not Row: three labeled buttons don't fit one line on narrow screens
             // in Russian — overflow must wrap, not clip.
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
                 OutlinedButton(onClick = { showWeightDialog = true }) {
                     Text(stringResource(R.string.log_weight))
                 }
@@ -250,14 +256,14 @@ fun DiaryScreen(
                     Text(stringResource(R.string.log_food))
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             if (uiState.isEmpty) {
                 Text(
                     stringResource(R.string.diary_empty),
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Spacer(modifier = Modifier.height(SectionGap))
+                Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
                     OutlinedButton(onClick = viewModel::copyYesterday) {
                         Text(stringResource(R.string.repeat_yesterday))
                     }
@@ -267,7 +273,7 @@ fun DiaryScreen(
                 }
                 // Water logged on a day without food still needs its list row to stay editable.
                 if (uiState.trackWater && uiState.waterEntries.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(SectionGap))
                     WaterRowCard(
                         entries = uiState.waterEntries,
                         totalMl = uiState.waterTotalMl,
@@ -279,9 +285,9 @@ fun DiaryScreen(
                     uiState.sections.size > 1 ||
                         uiState.sections.firstOrNull()?.slot != MealSlot.UNSPECIFIED
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(ItemGap),
                     // small clearance so the last card doesn't sit flush on the nav bar
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                    contentPadding = PaddingValues(bottom = ScreenPadding),
                 ) {
                     uiState.sections.forEach { section ->
                         if (showHeaders) {
@@ -290,7 +296,7 @@ fun DiaryScreen(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
-                                            .padding(top = 4.dp)
+                                            .padding(top = LabelGap)
                                             .animateItem(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
@@ -335,7 +341,7 @@ fun DiaryScreen(
                                     // Water belongs to no meal, so it gets the same breathing
                                     // room a meal header puts between two sections instead of
                                     // reading as one more dinner item.
-                                    modifier = Modifier.padding(top = 16.dp),
+                                    modifier = Modifier.padding(top = SectionGap),
                                 )
                             }
                         }
@@ -457,7 +463,7 @@ private fun SetGoalBanner(
         Column(
             modifier =
                 Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenPadding, vertical = ItemGap)
                     .fillMaxWidth(),
         ) {
             Text(
@@ -507,7 +513,7 @@ private fun DateNavigationRow(
                 Modifier
                     .weight(1f)
                     .clickable(onClick = onDateClick)
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = ItemGap),
         )
         IconButton(onClick = onCopyFromClick) {
             Icon(Icons.Filled.ContentCopy, contentDescription = stringResource(R.string.copy_from_day))
@@ -538,14 +544,14 @@ private fun CopyMealChoiceDialog(
                     stringResource(R.string.copy_choose_scope),
                     style = MaterialTheme.typography.bodySmall,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 MealSlotPicker(
                     selected = selectedSlot ?: MealSlot.UNSPECIFIED,
                     onSelected = { slot ->
                         selectedSlot = if (slot == selectedSlot) null else slot
                     },
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(LabelGap))
                 Text(
                     stringResource(
                         if (selectedSlot == null) R.string.copy_scope_whole_day else R.string.copy_scope_one_meal,
@@ -634,7 +640,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
     val hasCalorieGoal = uiState.goalCalories != null && uiState.goalCalories > 0
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(ScreenPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -721,7 +727,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 }
             }
             if (style == HomeProgressStyle.BAR && hasCalorieGoal) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(CardBlockGap))
                 CalorieProgressBar(
                     consumedCalories = uiState.totalCalories,
                     goalCalories = uiState.goalCalories,
@@ -729,7 +735,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 )
             }
             if (uiState.goalCalories != null && uiState.goalCalories > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(CardBlockGap))
                 // Ticks once a minute so the budgets shift on their own when a day-part
                 // boundary passes while the screen sits open — recomposition otherwise
                 // only happens on a data change.
@@ -772,7 +778,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                 }
             }
             if (hasMacroGoals && uiState.trackMacros) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(CardBlockGap))
                 // No spacers between the bars: each row is already as tall as one text line
                 // (16sp labels), so stacking them flush gives the same vertical rhythm as
                 // consecutive lines in the pace message — the user found 6dp gaps too airy.
@@ -802,7 +808,7 @@ private fun DailyTotalsCard(uiState: DiaryUiState) {
                     )
                 }
             } else if (uiState.trackWater) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(CardBlockGap))
                 WaterBar(
                     totalMl = uiState.waterTotalMl,
                     targetMl = uiState.waterTargetMl,
@@ -919,7 +925,7 @@ private fun WaterEntriesDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 entries.forEach { entry ->
                     Row(
                         modifier =
@@ -985,6 +991,12 @@ private fun WaterEditDialog(
         },
     )
 }
+
+/**
+ * Gap between the blocks stacked inside the summary card (indicator, day-part bar, macro bars).
+ * Tighter than [SectionGap] on purpose: inside one card the blocks belong together.
+ */
+private val CardBlockGap = 12.dp
 
 /** Water is outside the Material scheme on purpose — no theme slot reads as "water". */
 private val WaterBlue = Color(0xFF42A5F5)

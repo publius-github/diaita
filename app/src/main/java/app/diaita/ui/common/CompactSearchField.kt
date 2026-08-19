@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,15 +30,17 @@ import app.diaita.R
 /** Height of the field: the standard Material button height, so the two line up exactly. */
 private val FieldHeight = 40.dp
 
-/** The clear (x) button is sized down to fit inside [FieldHeight]; the field itself stays tappable. */
-private val ClearButtonSize = 32.dp
-private val ClearIconSize = 18.dp
+/** The trailing button is sized down to fit inside [FieldHeight]; the field itself stays tappable. */
+private val TrailingButtonSize = 32.dp
+private val IconSize = 18.dp
 
 /**
- * A single-line filter field the height of the Material button beside it. A plain
- * `OutlinedTextField` cannot do this — its 56dp minimum plus label-sized padding towers over a
- * 40dp button and makes the two read as unrelated controls — so this wraps [BasicTextField] in
- * the same outlined decoration with the vertical padding taken out.
+ * The one search/filter field in the app — the presets list, the food search, anywhere else a
+ * query narrows a list — so they all look and measure the same. A plain `OutlinedTextField`
+ * cannot: its 56dp minimum plus label-sized padding towers over a 40dp button beside it and the
+ * two read as unrelated controls, so this wraps [BasicTextField] in the same outlined decoration
+ * with the vertical padding taken out. A non-empty query always offers the clear (x); [trailing]
+ * (a progress spinner, say) takes the slot over while it is showing.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +49,9 @@ fun CompactSearchField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val colors = OutlinedTextFieldDefaults.colors()
@@ -55,6 +63,8 @@ fun CompactSearchField(
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         interactionSource = interactionSource,
     ) { innerTextField ->
         OutlinedTextFieldDefaults.DecorationBox(
@@ -67,26 +77,35 @@ fun CompactSearchField(
             placeholder = {
                 Text(placeholder, maxLines = 1, overflow = TextOverflow.Ellipsis)
             },
+            leadingIcon = {
+                Icon(
+                    Icons.Filled.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(IconSize),
+                )
+            },
             trailingIcon =
-                if (value.isNotEmpty()) {
-                    {
-                        IconButton(
-                            onClick = { onValueChange("") },
-                            modifier = Modifier.size(ClearButtonSize),
-                        ) {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = stringResource(R.string.clear_search),
-                                modifier = Modifier.size(ClearIconSize),
-                            )
+                when {
+                    trailing != null -> trailing
+                    value.isNotEmpty() -> {
+                        {
+                            IconButton(
+                                onClick = { onValueChange("") },
+                                modifier = Modifier.size(TrailingButtonSize),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = stringResource(R.string.clear_search),
+                                    modifier = Modifier.size(IconSize),
+                                )
+                            }
                         }
                     }
-                } else {
-                    null
+                    else -> null
                 },
             colors = colors,
             // Zero vertical padding: the fixed height above is what centers the text now.
-            contentPadding = PaddingValues(start = 12.dp, end = 8.dp),
+            contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
             container = {
                 OutlinedTextFieldDefaults.Container(
                     enabled = true,

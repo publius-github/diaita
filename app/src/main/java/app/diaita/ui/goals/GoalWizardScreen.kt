@@ -46,6 +46,10 @@ import app.diaita.R
 import app.diaita.data.settings.MacroSplit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.label
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.ExerciseLevel
 import app.diaita.util.WeightPlan
 import app.diaita.util.WorkActivity
@@ -89,14 +93,14 @@ fun GoalWizardScreen(
                     .padding(innerPadding)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
         ) {
             Text(
                 stringResource(R.string.wizard_step, state.step + 1, GoalWizardViewModel.LAST_STEP + 1),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             when (state.step) {
                 0 -> AboutYouStep(state, viewModel)
                 1 -> WorkStep(state, viewModel)
@@ -104,7 +108,7 @@ fun GoalWizardScreen(
                 3 -> PlanStep(state, viewModel)
                 else -> ResultStep(state, viewModel)
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,7 +119,8 @@ fun GoalWizardScreen(
                         Text(stringResource(R.string.back))
                     }
                 } else {
-                    Spacer(modifier = Modifier.height(0.dp))
+                    // Empty slot so SpaceBetween still parks Next on the right without Back.
+                    Spacer(modifier = Modifier)
                 }
                 if (state.step < GoalWizardViewModel.LAST_STEP) {
                     Button(
@@ -135,7 +140,7 @@ private fun AboutYouStep(
     viewModel: GoalWizardViewModel,
 ) {
     Text(stringResource(R.string.wizard_about_you), style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     FlowRow {
         FilterChip(
             selected = state.male,
@@ -149,7 +154,7 @@ private fun AboutYouStep(
             label = { Text(stringResource(R.string.calc_sex_female)) },
         )
     }
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     OutlinedTextField(
         value = state.ageText,
         onValueChange = viewModel::onAgeChanged,
@@ -162,10 +167,10 @@ private fun AboutYouStep(
             ),
         modifier = Modifier.fillMaxWidth(),
     )
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     if (state.useImperialHeight) {
         // Pound users think in feet and inches; the math still runs on centimeters.
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
             OutlinedTextField(
                 value = state.heightFeetText,
                 onValueChange = viewModel::onHeightFeetChanged,
@@ -205,7 +210,7 @@ private fun AboutYouStep(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     OutlinedTextField(
         value = state.weightText,
         onValueChange = viewModel::onWeightChanged,
@@ -226,7 +231,7 @@ private fun WorkStep(
     viewModel: GoalWizardViewModel,
 ) {
     Text(stringResource(R.string.wizard_work_title), style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(modifier = Modifier.height(LabelGap))
     WorkActivity.entries.forEach { work ->
         WizardOption(
             selected = state.work == work,
@@ -243,7 +248,7 @@ private fun ExerciseStep(
     viewModel: GoalWizardViewModel,
 ) {
     Text(stringResource(R.string.wizard_exercise_title), style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(modifier = Modifier.height(LabelGap))
     ExerciseLevel.entries.forEach { exercise ->
         WizardOption(
             selected = state.exercise == exercise,
@@ -260,7 +265,7 @@ private fun PlanStep(
     viewModel: GoalWizardViewModel,
 ) {
     Text(stringResource(R.string.wizard_plan_title), style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(modifier = Modifier.height(LabelGap))
     WeightPlan.entries.forEach { plan ->
         WizardOption(
             selected = state.plan == plan,
@@ -296,15 +301,15 @@ private fun ResultStep(
 ) {
     val result = state.result ?: return
     Text(stringResource(R.string.wizard_result_title), style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(ScreenPadding)) {
             ResultRow(stringResource(R.string.wizard_bmr_label), result.bmr)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             ResultRow(stringResource(R.string.wizard_tdee_label), result.tdee)
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(
                 stringResource(R.string.wizard_target_label),
                 style = MaterialTheme.typography.labelMedium,
@@ -315,7 +320,7 @@ private fun ResultStep(
                 color = MaterialTheme.colorScheme.primary,
             )
             if (result.raisedToMinimum) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(LabelGap))
                 Text(
                     stringResource(R.string.wizard_min_raised),
                     style = MaterialTheme.typography.bodySmall,
@@ -326,7 +331,7 @@ private fun ResultStep(
     }
     state.currentGoalCalories?.let { current ->
         if (current != result.targetCalories) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(
                 stringResource(R.string.wizard_replaces_goal, current, result.targetCalories),
                 style = MaterialTheme.typography.bodySmall,
@@ -334,18 +339,18 @@ private fun ResultStep(
             )
         }
     }
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     Text(
         stringResource(R.string.wizard_macro_split_title),
         style = MaterialTheme.typography.labelMedium,
     )
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(modifier = Modifier.height(LabelGap))
     MacroSplitPicker(selected = state.macroSplit, onSelected = viewModel::onMacroSplitSelected)
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(SectionGap))
     Button(onClick = viewModel::applyAsGoal, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.wizard_apply))
     }
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(ItemGap))
     Text(
         stringResource(R.string.wizard_note),
         style = MaterialTheme.typography.bodySmall,

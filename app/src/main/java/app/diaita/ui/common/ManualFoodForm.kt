@@ -28,6 +28,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.FoodItem
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.normalizedDecimalOrNull
 
 /** Everything the manual-entry/edit form captures about a food; nulls mean "not provided". */
@@ -147,7 +150,7 @@ fun ManualFoodForm(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(LabelGap))
         }
         OutlinedTextField(
             value = name,
@@ -160,7 +163,7 @@ fun ManualFoodForm(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         MacroField(
             value = caloriesText,
             onValueChange = {
@@ -169,7 +172,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.calories_per_100,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         MacroField(
             value = proteinText,
             onValueChange = {
@@ -178,7 +181,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.protein_per_100,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         MacroField(
             value = fatText,
             onValueChange = {
@@ -187,7 +190,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.fat_per_100,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         MacroField(
             value = carbsText,
             onValueChange = {
@@ -196,7 +199,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.carbs_per_100,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MacroField(
                 value = fiberText,
@@ -226,13 +229,13 @@ fun ManualFoodForm(
                 modifier = Modifier.weight(1f),
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Text(
             stringResource(R.string.unit_conversions_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(LabelGap))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MacroField(
                 value = servingText,
@@ -265,19 +268,19 @@ fun ManualFoodForm(
             )
         }
         if (hasError) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(stringResource(R.string.manual_error), color = MaterialTheme.colorScheme.error)
         }
         if (deleteBlocked) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(stringResource(R.string.delete_food_blocked), color = MaterialTheme.colorScheme.error)
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Button(onClick = ::submit, modifier = Modifier.fillMaxWidth()) {
             Text(saveLabel)
         }
         onDelete?.let { delete ->
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(LabelGap))
             TextButton(onClick = delete, modifier = Modifier.fillMaxWidth()) {
                 Text(
                     stringResource(R.string.delete_food_from_catalog),

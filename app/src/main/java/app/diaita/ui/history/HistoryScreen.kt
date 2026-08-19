@@ -54,6 +54,10 @@ import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.LogWeightDialog
 import app.diaita.ui.common.label
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.BmiBand
 import app.diaita.util.bmi
 import app.diaita.util.bmiBand
@@ -81,7 +85,7 @@ fun HistoryScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(ScreenPadding),
     ) {
         Text(
             stringResource(R.string.history_title_days, uiState.rangeDays),
@@ -101,7 +105,7 @@ fun HistoryScreen(
                 color = MaterialTheme.colorScheme.tertiary,
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(LabelGap))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -128,9 +132,9 @@ fun HistoryScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Text(stringResource(R.string.calories_title), style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         if (!uiState.hasAnyCalories) {
             Text(stringResource(R.string.history_empty))
         } else {
@@ -216,12 +220,12 @@ fun HistoryScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         HorizontalDivider()
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
 
         Text(stringResource(R.string.weight_title), style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         if (uiState.weights.isEmpty()) {
             Text(stringResource(R.string.weight_empty), style = MaterialTheme.typography.bodySmall)
         } else {
@@ -251,7 +255,7 @@ fun HistoryScreen(
             )
             // 16dp mirrors the gap above the selection line (a bodySmall line centered in the
             // 48dp row), so both summary blocks sit at the same offset from their charts.
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -304,17 +308,17 @@ fun HistoryScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         OutlinedButton(onClick = { showWeightDialog = true }) {
             Text(stringResource(R.string.log_weight))
         }
 
         if (uiState.monthlyAverages.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(stringResource(R.string.monthly_averages), style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             // Scrolls inside its own capped slot: one row lands per month, and the charts above
             // must not shrink as the list grows over the years.
             LazyColumn(modifier = Modifier.heightIn(max = 120.dp)) {

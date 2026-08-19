@@ -33,12 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.label
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.formatWeightForDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,11 +84,11 @@ fun GoalsScreen(
                     .padding(innerPadding)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
         ) {
             if (state.suggestRecalc) {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = ScreenPadding, vertical = ItemGap)) {
                         Text(
                             stringResource(
                                 R.string.recalc_suggestion,
@@ -101,7 +103,7 @@ fun GoalsScreen(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
             }
             OutlinedTextField(
                 value = state.calorieTarget,
@@ -118,11 +120,11 @@ fun GoalsScreen(
             TextButton(onClick = onOpenWizard) {
                 Text(stringResource(R.string.calc_open))
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedButton(onClick = viewModel::applyQuickSplit, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.quick_split))
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             OutlinedTextField(
                 value = state.proteinTarget,
                 onValueChange = viewModel::onProteinTargetChanged,
@@ -135,7 +137,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedTextField(
                 value = state.fatTarget,
                 onValueChange = viewModel::onFatTargetChanged,
@@ -148,7 +150,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedTextField(
                 value = state.carbsTarget,
                 onValueChange = viewModel::onCarbsTargetChanged,
@@ -161,7 +163,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedTextField(
                 value = state.weightTarget,
                 onValueChange = viewModel::onWeightTargetChanged,
@@ -175,10 +177,10 @@ fun GoalsScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             if (state.hasError) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.goal_error), color = MaterialTheme.colorScheme.error)
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Button(onClick = viewModel::saveGoal, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.save_goal))
             }

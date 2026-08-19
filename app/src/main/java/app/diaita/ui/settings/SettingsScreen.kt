@@ -18,8 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import app.diaita.R
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
 
 /**
  * Settings root: a short list of categories, each opening its own sub-screen — the toggles
@@ -41,14 +42,14 @@ fun SettingsScreen(
             modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(vertical = 16.dp),
+                .padding(vertical = ScreenPadding),
     ) {
         Text(
             stringResource(R.string.settings_title),
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = ScreenPadding),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         CategoryRow(
             titleRes = R.string.settings_goals,
             descriptionRes = R.string.settings_goals_desc,

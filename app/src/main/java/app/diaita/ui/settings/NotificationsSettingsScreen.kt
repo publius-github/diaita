@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -30,6 +29,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.reminder.ReminderScheduler
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
 
 /** Which reminder's time the picker dialog is currently editing. */
 private enum class ReminderTimeTarget { FOOD, WEIGHT }
@@ -125,7 +126,7 @@ fun NotificationsSettingsScreen(
                 stringResource(R.string.notifications_permission_missing),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = ScreenPadding, vertical = ItemGap),
             )
             HorizontalDivider()
         }

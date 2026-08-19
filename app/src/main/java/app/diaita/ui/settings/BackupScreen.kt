@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -44,6 +43,10 @@ import app.diaita.data.backup.AutoBackupWorker
 import app.diaita.data.backup.RestoreOutcome
 import app.diaita.data.repository.ImportOutcome
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.LabelGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -210,18 +213,18 @@ fun BackupScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
         ) {
             if (working) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SectionGap))
             }
             Text(
                 stringResource(R.string.backup_full_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(LabelGap))
             // The "last backed up" nag: quiet fact when recent, warning color once stale.
             val lastBackupText =
                 lastBackupAt?.let { at ->
@@ -247,7 +250,7 @@ fun BackupScreen(
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Button(
                 onClick = {
                     backupLauncher.launch("diaita-backup-${LocalDate.now()}.db")
@@ -257,7 +260,7 @@ fun BackupScreen(
             ) {
                 Text(stringResource(R.string.backup_export_db))
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedButton(
                 onClick = { restoreLauncher.launch(arrayOf("application/octet-stream", "*/*")) },
                 enabled = !working,
@@ -265,7 +268,7 @@ fun BackupScreen(
             ) {
                 Text(stringResource(R.string.backup_restore))
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Text(
                 stringResource(
                     if (autoBackupUri != null) R.string.auto_backup_on else R.string.auto_backup_hint,
@@ -273,7 +276,7 @@ fun BackupScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             if (autoBackupUri == null) {
                 OutlinedButton(
                     onClick = { autoBackupFolderLauncher.launch(null) },
@@ -294,13 +297,13 @@ fun BackupScreen(
                     Text(stringResource(R.string.auto_backup_disable))
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Text(
                 stringResource(R.string.backup_csv_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedButton(
                 onClick = { csvLauncher.launch("diaita-export-${LocalDate.now()}.csv") },
                 enabled = !working,
@@ -308,7 +311,7 @@ fun BackupScreen(
             ) {
                 Text(stringResource(R.string.export_csv))
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedButton(
                 onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*")) },
                 enabled = !working,

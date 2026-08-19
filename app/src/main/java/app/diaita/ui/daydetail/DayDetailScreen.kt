@@ -36,7 +36,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -47,6 +46,9 @@ import app.diaita.ui.common.MicronutrientTotalsLine
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.label
 import app.diaita.ui.diary.DiaryRow
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.DateUtils
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -129,10 +131,10 @@ fun DayDetailScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(ScreenPadding)) {
                     Text(
                         stringResource(R.string.kcal_amount, uiState.totalCalories.toInt()),
                         style = MaterialTheme.typography.headlineSmall,
@@ -160,14 +162,14 @@ fun DayDetailScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             if (uiState.sections.isEmpty()) {
                 Text(stringResource(R.string.day_detail_empty), style = MaterialTheme.typography.bodyMedium)
             } else {
                 val showHeaders =
                     uiState.sections.size > 1 ||
                         uiState.sections.firstOrNull()?.slot != MealSlot.UNSPECIFIED
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(ItemGap)) {
                     uiState.sections.forEach { section ->
                         if (showHeaders) {
                             item(key = "header_${section.slot}") {

@@ -46,6 +46,9 @@ import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.QuantitySheet
 import app.diaita.ui.common.QuickAddDialog
 import app.diaita.ui.common.rememberFoodBarcodeScanner
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.NutrientMath
 import app.diaita.util.normalizedDecimalOrNull
 
@@ -110,7 +113,7 @@ fun PresetEditScreen(
                     Modifier
                         .padding(innerPadding)
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(ScreenPadding),
             ) {
                 OutlinedTextField(
                     value = state.name,
@@ -120,16 +123,16 @@ fun PresetEditScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SectionGap))
                 Text(stringResource(R.string.preset_meal_label), style = MaterialTheme.typography.titleSmall)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 MealSlotPicker(
                     selected = state.mealSlot,
                     onSelected = viewModel::onMealSlotChanged,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SectionGap))
                 CookedWeightField(state, viewModel::onCookedWeightChanged)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SectionGap))
                 Text(stringResource(R.string.items_in_preset), style = MaterialTheme.typography.titleSmall)
                 if (state.draftItems.isEmpty()) {
                     Text(
@@ -137,10 +140,10 @@ fun PresetEditScreen(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(ItemGap),
                 ) {
                     itemsIndexed(state.draftItems) { index, draftItem ->
                         // The same shared card as a diary row, so both lists render (and
@@ -158,7 +161,7 @@ fun PresetEditScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 OutlinedButton(
                     onClick = { showFoodPicker = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -168,10 +171,10 @@ fun PresetEditScreen(
                     Text(stringResource(R.string.add_food))
                 }
                 if (state.hasError) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(ItemGap))
                     Text(stringResource(R.string.preset_error), color = MaterialTheme.colorScheme.error)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Button(onClick = viewModel::savePreset, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.save_preset))
                 }
@@ -311,7 +314,7 @@ private fun FoodPicker(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(ScreenPadding),
             onQuickAdd = viewModel::showQuickAdd,
         )
     }

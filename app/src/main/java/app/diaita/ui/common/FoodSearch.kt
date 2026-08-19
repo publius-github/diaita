@@ -16,7 +16,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AssistChip
@@ -26,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +45,7 @@ import app.diaita.data.repository.DiaryRepository
 import app.diaita.data.repository.FoodRepository
 import app.diaita.data.repository.OffSearchOutcome
 import app.diaita.data.settings.SettingsRepository
+import app.diaita.ui.theme.ItemGap
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.CoroutineScope
@@ -57,6 +56,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Matches the icon size inside [CompactSearchField], so the slot doesn't resize mid-search. */
+private val SearchSpinnerSize = 18.dp
 
 enum class ScanError { NOT_FOUND, NETWORK }
 
@@ -396,28 +398,29 @@ fun FoodSearchContent(
     val keyboard = LocalSoftwareKeyboardController.current
 
     Column(modifier = modifier.fillMaxSize()) {
-        OutlinedTextField(
+        // No autofocus on purpose: most logs come from the recent-food chips below, so the
+        // keyboard must not pop up until the user actually taps the search field.
+        CompactSearchField(
             value = state.searchQuery,
             onValueChange = onSearchQueryChanged,
-            label = { Text(stringResource(R.string.search_foods)) },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            trailingIcon = {
-                if (state.offSearching) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                    )
-                }
-            },
+            placeholder = stringResource(R.string.search_foods),
+            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
-            // No autofocus on purpose: most logs come from the recent-food chips below, so the
-            // keyboard must not pop up until the user actually taps the search field.
-            modifier = Modifier.fillMaxWidth(),
+            trailing =
+                if (state.offSearching) {
+                    {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(SearchSpinnerSize),
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                } else {
+                    null
+                },
         )
         if (state.searchQuery.isBlank() && state.favoriteFoods.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(stringResource(R.string.favorite_foods), style = MaterialTheme.typography.bodySmall)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.favoriteFoods, key = { it.id }) { food ->
@@ -432,7 +435,7 @@ fun FoodSearchContent(
             }
         }
         if (state.searchQuery.isBlank() && state.recentFoods.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             Text(stringResource(R.string.recent_foods), style = MaterialTheme.typography.bodySmall)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.recentFoods, key = { it.id }) { food ->
@@ -444,7 +447,7 @@ fun FoodSearchContent(
             }
         }
         if (state.searchQuery.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(SourceFilter.entries) { filter ->
                     FilterChip(
@@ -524,7 +527,7 @@ fun FoodSearchContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -566,7 +569,7 @@ fun FoodSearchContent(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

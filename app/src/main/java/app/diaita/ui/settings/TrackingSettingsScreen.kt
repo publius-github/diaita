@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
@@ -35,6 +34,7 @@ import app.diaita.data.settings.WaterOverThresholds
 import app.diaita.data.settings.WaterTargetSettings
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.theme.ItemGap
 import app.diaita.util.waterTargetMl
 import kotlin.math.roundToInt
 
@@ -401,7 +401,7 @@ private fun MacroOverDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.macro_over_protein, protein))
                 Slider(
                     value = protein.toFloat(),
@@ -459,7 +459,7 @@ private fun MicroOverDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.micro_over_fiber, fiber))
                 Slider(
                     value = fiber.toFloat(),
@@ -518,7 +518,7 @@ private fun WaterTargetDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.water_target_per_kg, mlPerKg))
                 Slider(
                     value = mlPerKg.toFloat(),
@@ -531,7 +531,7 @@ private fun WaterTargetDialog(
                     onValueChange = { foodShare = it.roundToInt() },
                     valueRange = shareRange.first.toFloat()..shareRange.last.toFloat(),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 val targetMl = waterTargetMl(wizardWeightKg, mlPerKg, foodShare)
                 Text(
                     if (wizardWeightKg != null) {
@@ -577,7 +577,7 @@ private fun WaterOverDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.water_over_amber, amber))
                 Slider(
                     value = amber.toFloat(),
@@ -659,7 +659,7 @@ private fun DayPartOverDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(stringResource(R.string.day_part_over_amber, amber))
                 Slider(
                     value = amber.toFloat(),
@@ -707,7 +707,7 @@ private fun DayPartSharesDialog(
                     onValueChange = { day = it.roundToInt() },
                     valueRange = 10f..80f,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 Text(
                     stringResource(R.string.share_evening, sanitized.eveningPercent),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

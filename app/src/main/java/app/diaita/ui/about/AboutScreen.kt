@@ -36,6 +36,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.ui.theme.GreenPrimary
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 
 /** Basic app info for now; the place to grow release notes, licenses and links later. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +90,7 @@ private fun AboutContent(
             modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+                .padding(start = ScreenPadding, end = ScreenPadding, bottom = ScreenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // The adaptive-icon foreground carries the launcher safe-zone padding, so drawn 1:1 the
@@ -106,7 +109,7 @@ private fun AboutContent(
                 modifier = Modifier.requiredSize(156.dp),
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineMedium,
@@ -116,29 +119,29 @@ private fun AboutContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.about_etymology),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.about_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.about_privacy),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         // Attribution formally required by the Open Database License OFF data ships under.
         // Reference sections read as documentation, so they align left unlike the intro.
         Text(
@@ -146,20 +149,20 @@ private fun AboutContent(
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Text(
             stringResource(R.string.about_off_attribution),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.about_oss_title),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         OSS_LIBRARIES.forEach { library ->
             Text(
                 library,

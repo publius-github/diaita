@@ -22,13 +22,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
 import app.diaita.data.settings.WeightUnit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.goals.GoalWizardScreen
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.ScreenPadding
+import app.diaita.ui.theme.SectionGap
 
 /**
  * First-run flow shown instead of the main nav graph: a welcome step (privacy pitch +
@@ -68,7 +70,7 @@ private fun WelcomeStep(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(ScreenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -77,21 +79,21 @@ private fun WelcomeStep(
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         Text(
             stringResource(R.string.onboarding_welcome_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Text(
             stringResource(R.string.onboarding_units_label),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(modifier = Modifier.height(ItemGap))
+        Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
             FilterChip(
                 selected = weightUnit == WeightUnit.KG,
                 onClick = { viewModel.setWeightUnit(WeightUnit.KG) },
@@ -103,11 +105,11 @@ private fun WelcomeStep(
                 label = { Text(stringResource(R.string.unit_lb_full)) },
             )
         }
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(SectionGap))
         Button(onClick = onSetUpGoal, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.onboarding_set_goal))
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(ItemGap))
         TextButton(onClick = onSkip) {
             Text(stringResource(R.string.onboarding_skip))
         }

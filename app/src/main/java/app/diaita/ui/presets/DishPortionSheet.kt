@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.repository.PresetSummary
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.formatGramsForInput
 import app.diaita.util.normalizedDecimalOrNull
 
@@ -75,8 +77,8 @@ fun DishPortionSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(modifier = Modifier.height(ItemGap))
+            Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
                 AssistChip(
                     onClick = { portionText = "100" },
                     label = { Text(stringResource(R.string.hundred_grams_chip)) },
@@ -86,7 +88,7 @@ fun DishPortionSheet(
                     label = { Text(stringResource(R.string.whole_dish_chip)) },
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             OutlinedTextField(
                 value = portionText,
                 onValueChange = { portionText = it },
@@ -111,10 +113,10 @@ fun DishPortionSheet(
                 keyboardActions = KeyboardActions(onDone = { confirm() }),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                horizontalArrangement = Arrangement.spacedBy(ItemGap, Alignment.End),
             ) {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 Button(onClick = { confirm() }, enabled = eatenGrams != null) {

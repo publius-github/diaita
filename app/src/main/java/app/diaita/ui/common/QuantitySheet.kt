@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.SectionGap
 import app.diaita.util.NutrientMath
 import app.diaita.util.formatGramsForInput
 import app.diaita.util.normalizedDecimalOrNull
@@ -108,9 +110,9 @@ fun QuantitySheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(ItemGap))
             if (availableUnits.size > 1) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
                     availableUnits.forEach { candidate ->
                         FilterChip(
                             selected = unit == candidate,
@@ -130,10 +132,10 @@ fun QuantitySheet(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
             }
             if (unit == QuantityUnit.GRAMS) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
                     AssistChip(
                         onClick = { quantityText = "100" },
                         label = { Text(stringResource(R.string.hundred_grams_chip)) },
@@ -145,7 +147,7 @@ fun QuantitySheet(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
             }
             OutlinedTextField(
                 value = quantityText,
@@ -182,13 +184,13 @@ fun QuantitySheet(
                         .focusRequester(focusRequester),
             )
             if (showMealSlotPicker) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(ItemGap))
                 MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(SectionGap))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                horizontalArrangement = Arrangement.spacedBy(ItemGap, Alignment.End),
             ) {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
                 Button(onClick = { confirm() }, enabled = grams != null) { Text(confirmLabel) }
