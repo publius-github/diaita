@@ -6,17 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -48,6 +47,8 @@ import app.diaita.data.db.entities.MealSlot
 import app.diaita.data.repository.PresetSummary
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactRowCard
+import app.diaita.ui.common.CompactSearchField
+import app.diaita.ui.common.CompactSearchFieldHeight
 
 private const val TAB_DISHES = 0
 private const val TAB_CUSTOM = 1
@@ -133,27 +134,16 @@ fun PresetListScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedTextField(
+                CompactSearchField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
+                    placeholder = stringResource(R.string.preset_search_hint),
                     modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    placeholder = { Text(stringResource(R.string.preset_search_hint)) },
-                    trailingIcon =
-                        if (searchQuery.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        Icons.Filled.Close,
-                                        contentDescription = stringResource(R.string.clear_search),
-                                    )
-                                }
-                            }
-                        } else {
-                            null
-                        },
                 )
-                Button(onClick = onAddPresetClick) {
+                Button(
+                    onClick = onAddPresetClick,
+                    modifier = Modifier.height(CompactSearchFieldHeight),
+                ) {
                     Text(stringResource(R.string.add))
                 }
             }
