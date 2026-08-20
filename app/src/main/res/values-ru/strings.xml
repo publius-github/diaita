@@ -316,7 +316,7 @@
     <string name="wizard_note">Макронутриенты заполняются по выбранному выше соотношению — всё можно уточнить позже в Настройки → Дневная цель. Расчёт по формуле Миффлина-Сан Жеора и не является медицинской рекомендацией.</string>
     <string name="wizard_macro_split_title">Соотношение Б/Ж/У, % калорий</string>
     <string name="wizard_macro_split_chip">%1$d/%2$d/%3$d</string>
-    <string name="recalc_suggestion">Ваш вес изменился с последнего расчёта (%1$s → %2$s %3$s). Пересчитать цель?</string>
+    <string name="recalc_suggestion">Вес изменился с последнего расчёта (%1$s → %2$s %3$s).</string>
     <string name="recalc_action">Пересчитать</string>
 
     <!-- Settings -->

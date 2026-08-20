@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.db.entities.FoodItem
 import app.diaita.data.db.entities.MealSlot
+import app.diaita.ui.theme.FieldGap
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.SectionGap
 import app.diaita.util.NutrientMath
@@ -146,7 +147,7 @@ fun QuantitySheet(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(ItemGap))
+                Spacer(modifier = Modifier.height(FieldGap))
             }
             CompactTextField(
                 value = quantityText,
@@ -179,7 +180,7 @@ fun QuantitySheet(
                         .focusRequester(focusRequester),
             )
             if (showMealSlotPicker) {
-                Spacer(modifier = Modifier.height(ItemGap))
+                Spacer(modifier = Modifier.height(FieldGap))
                 MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
             }
             Spacer(modifier = Modifier.height(SectionGap))

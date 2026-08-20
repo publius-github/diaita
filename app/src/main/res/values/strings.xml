@@ -316,7 +316,7 @@
     <string name="wizard_macro_split_chip">%1$d/%2$d/%3$d</string>
     <string name="calc_height_feet">Height (ft)</string>
     <string name="calc_height_inches">Inches</string>
-    <string name="recalc_suggestion">Your weight changed since the last calculation (%1$s → %2$s %3$s). Recalculate the goal?</string>
+    <string name="recalc_suggestion">Weight changed since the last calculation (%1$s → %2$s %3$s).</string>
     <string name="recalc_action">Recalculate</string>
 
     <!-- Settings -->

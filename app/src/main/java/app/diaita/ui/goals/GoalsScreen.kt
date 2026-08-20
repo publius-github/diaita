@@ -1,11 +1,14 @@
 package app.diaita.ui.goals
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -38,6 +42,7 @@ import app.diaita.R
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.common.label
+import app.diaita.ui.theme.FieldGap
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.ScreenPadding
 import app.diaita.ui.theme.SectionGap
@@ -88,7 +93,18 @@ fun GoalsScreen(
         ) {
             if (state.suggestRecalc) {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(horizontal = ScreenPadding, vertical = ItemGap)) {
+                    // Message and action side by side: stacked, the button's own 40dp of
+                    // height showed up as empty space under a two-line sentence.
+                    Row(
+                        modifier =
+                            Modifier.padding(
+                                start = ScreenPadding,
+                                end = ItemGap,
+                                top = ItemGap,
+                                bottom = ItemGap,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
                             stringResource(
                                 R.string.recalc_suggestion,
@@ -97,13 +113,18 @@ fun GoalsScreen(
                                 state.weightUnit.label(),
                             ),
                             style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = onOpenWizard) {
+                        Spacer(modifier = Modifier.width(ItemGap))
+                        TextButton(
+                            onClick = onOpenWizard,
+                            contentPadding = PaddingValues(horizontal = ItemGap),
+                        ) {
                             Text(stringResource(R.string.recalc_action))
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(ItemGap))
+                Spacer(modifier = Modifier.height(SectionGap))
             }
             CompactTextField(
                 value = state.calorieTarget,
@@ -135,7 +156,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(ItemGap))
+            Spacer(modifier = Modifier.height(FieldGap))
             CompactTextField(
                 value = state.fatTarget,
                 onValueChange = viewModel::onFatTargetChanged,
@@ -147,7 +168,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(ItemGap))
+            Spacer(modifier = Modifier.height(FieldGap))
             CompactTextField(
                 value = state.carbsTarget,
                 onValueChange = viewModel::onCarbsTargetChanged,
@@ -159,7 +180,7 @@ fun GoalsScreen(
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(ItemGap))
+            Spacer(modifier = Modifier.height(FieldGap))
             CompactTextField(
                 value = state.weightTarget,
                 onValueChange = viewModel::onWeightTargetChanged,

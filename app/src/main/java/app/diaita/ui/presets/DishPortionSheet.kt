@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import app.diaita.R
 import app.diaita.data.repository.PresetSummary
 import app.diaita.ui.common.CompactTextField
+import app.diaita.ui.theme.FieldGap
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.SectionGap
 import app.diaita.util.formatGramsForInput
@@ -88,7 +89,7 @@ fun DishPortionSheet(
                     label = { Text(stringResource(R.string.whole_dish_chip)) },
                 )
             }
-            Spacer(modifier = Modifier.height(ItemGap))
+            Spacer(modifier = Modifier.height(FieldGap))
             CompactTextField(
                 value = portionText,
                 onValueChange = { portionText = it },

@@ -237,23 +237,35 @@ fun DiaryScreen(
             // look glued to the card.
             Spacer(modifier = Modifier.height(SectionGap))
             // FlowRow, not Row: three labeled buttons don't fit one line on narrow screens
-            // in Russian — overflow must wrap, not clip.
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
-                OutlinedButton(onClick = { showWeightDialog = true }) {
-                    Text(stringResource(R.string.log_weight))
+            // in Russian — overflow must wrap, not clip. Weights share the row edge to edge
+            // so the group sits symmetrically inside the screen padding, and
+            // fillMaxRowHeight keeps them level when a label takes two lines.
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ItemGap),
+            ) {
+                OutlinedButton(
+                    onClick = { showWeightDialog = true },
+                    modifier = Modifier.weight(1f).fillMaxRowHeight(),
+                ) {
+                    Text(stringResource(R.string.log_weight), textAlign = TextAlign.Center)
                 }
                 if (uiState.trackWater) {
                     OutlinedButton(
                         onClick = viewModel::logWater,
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = WaterBlue),
+                        modifier = Modifier.weight(1f).fillMaxRowHeight(),
                     ) {
-                        Text(stringResource(R.string.log_water))
+                        Text(stringResource(R.string.log_water), textAlign = TextAlign.Center)
                     }
                 }
                 // Replaces the FAB, which floated over the delete icons of the last list rows.
                 // Filled green (primary) and labeled like its two outlined neighbors.
-                Button(onClick = { onAddFoodClick(uiState.date) }) {
-                    Text(stringResource(R.string.log_food))
+                Button(
+                    onClick = { onAddFoodClick(uiState.date) },
+                    modifier = Modifier.weight(1f).fillMaxRowHeight(),
+                ) {
+                    Text(stringResource(R.string.log_food), textAlign = TextAlign.Center)
                 }
             }
             Spacer(modifier = Modifier.height(SectionGap))
@@ -263,12 +275,21 @@ fun DiaryScreen(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(SectionGap))
-                Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
-                    OutlinedButton(onClick = viewModel::copyYesterday) {
-                        Text(stringResource(R.string.repeat_yesterday))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ItemGap),
+                ) {
+                    OutlinedButton(
+                        onClick = viewModel::copyYesterday,
+                        modifier = Modifier.weight(1f).fillMaxRowHeight(),
+                    ) {
+                        Text(stringResource(R.string.repeat_yesterday), textAlign = TextAlign.Center)
                     }
-                    OutlinedButton(onClick = { showCopySourcePicker = true }) {
-                        Text(stringResource(R.string.copy_from_day))
+                    OutlinedButton(
+                        onClick = { showCopySourcePicker = true },
+                        modifier = Modifier.weight(1f).fillMaxRowHeight(),
+                    ) {
+                        Text(stringResource(R.string.copy_from_day), textAlign = TextAlign.Center)
                     }
                 }
                 // Water logged on a day without food still needs its list row to stay editable.

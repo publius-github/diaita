@@ -10,10 +10,14 @@ import androidx.compose.ui.unit.dp
  *   inside a Card.
  * - [SectionGap] — between two blocks that are about different things (a card and the buttons
  *   under it, a form section and the next one).
+ * - [FieldGap] — between two inputs stacked in a form. Double [ItemGap]: a box with a label
+ *   floating inside it needs more air around it than a pair of list rows, or the form reads as
+ *   a solid speckled block.
  * - [ItemGap] — between related controls, and between rows of a list.
  * - [LabelGap] — between a label and the control it names.
  */
 val ScreenPadding = 16.dp
 val SectionGap = 16.dp
+val FieldGap = 16.dp
 val ItemGap = 8.dp
 val LabelGap = 4.dp

@@ -46,6 +46,7 @@ import app.diaita.data.settings.MacroSplit
 import app.diaita.ui.AppViewModelProvider
 import app.diaita.ui.common.CompactTextField
 import app.diaita.ui.common.label
+import app.diaita.ui.theme.FieldGap
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.LabelGap
 import app.diaita.ui.theme.ScreenPadding
@@ -154,7 +155,7 @@ private fun AboutYouStep(
             label = { Text(stringResource(R.string.calc_sex_female)) },
         )
     }
-    Spacer(modifier = Modifier.height(ItemGap))
+    Spacer(modifier = Modifier.height(FieldGap))
     CompactTextField(
         value = state.ageText,
         onValueChange = viewModel::onAgeChanged,
@@ -166,7 +167,7 @@ private fun AboutYouStep(
             ),
         modifier = Modifier.fillMaxWidth(),
     )
-    Spacer(modifier = Modifier.height(ItemGap))
+    Spacer(modifier = Modifier.height(FieldGap))
     if (state.useImperialHeight) {
         // Pound users think in feet and inches; the math still runs on centimeters.
         Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
@@ -206,7 +207,7 @@ private fun AboutYouStep(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-    Spacer(modifier = Modifier.height(ItemGap))
+    Spacer(modifier = Modifier.height(FieldGap))
     CompactTextField(
         value = state.weightText,
         onValueChange = viewModel::onWeightChanged,

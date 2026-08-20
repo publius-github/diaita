@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import app.diaita.R
 import app.diaita.data.db.entities.FoodItem
+import app.diaita.ui.theme.FieldGap
 import app.diaita.ui.theme.ItemGap
 import app.diaita.ui.theme.LabelGap
 import app.diaita.ui.theme.SectionGap
@@ -160,7 +161,7 @@ fun ManualFoodForm(
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        Spacer(modifier = Modifier.height(FieldGap))
         MacroField(
             value = caloriesText,
             onValueChange = {
@@ -169,7 +170,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.calories_per_100,
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        Spacer(modifier = Modifier.height(FieldGap))
         MacroField(
             value = proteinText,
             onValueChange = {
@@ -178,7 +179,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.protein_per_100,
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        Spacer(modifier = Modifier.height(FieldGap))
         MacroField(
             value = fatText,
             onValueChange = {
@@ -187,7 +188,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.fat_per_100,
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        Spacer(modifier = Modifier.height(FieldGap))
         MacroField(
             value = carbsText,
             onValueChange = {
@@ -196,7 +197,7 @@ fun ManualFoodForm(
             },
             labelRes = R.string.carbs_per_100,
         )
-        Spacer(modifier = Modifier.height(ItemGap))
+        Spacer(modifier = Modifier.height(FieldGap))
         Row(horizontalArrangement = Arrangement.spacedBy(ItemGap)) {
             MacroField(
                 value = fiberText,

@@ -21,7 +21,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import app.diaita.R
 import app.diaita.data.db.entities.MealSlot
-import app.diaita.ui.theme.ItemGap
+import app.diaita.ui.theme.FieldGap
 import app.diaita.util.normalizedDecimalOrNull
 
 /**
@@ -65,7 +65,7 @@ fun QuickAddDialog(
                     modifier = Modifier.fillMaxWidth(),
                     focusRequester = focusRequester,
                 )
-                Spacer(modifier = Modifier.height(ItemGap))
+                Spacer(modifier = Modifier.height(FieldGap))
                 CompactTextField(
                     value = nameText,
                     onValueChange = { nameText = it },
@@ -74,7 +74,7 @@ fun QuickAddDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (showMealSlotPicker) {
-                    Spacer(modifier = Modifier.height(ItemGap))
+                    Spacer(modifier = Modifier.height(FieldGap))
                     MealSlotPicker(selected = selectedSlot, onSelected = { selectedSlot = it })
                 }
             }
