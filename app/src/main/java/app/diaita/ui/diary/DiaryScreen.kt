@@ -217,8 +217,10 @@ fun DiaryScreen(
                 Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(start = ScreenPadding, end = ScreenPadding, top = ScreenPadding),
+                    .padding(horizontal = ScreenPadding),
         ) {
+            // No top inset: the day switcher opens the screen right under the status bar, the
+            // way the Presets tabs do.
             DateNavigationRow(
                 date = uiState.date,
                 isToday = uiState.isToday,
@@ -230,12 +232,12 @@ fun DiaryScreen(
             Spacer(modifier = Modifier.height(ItemGap))
             DailyTotalsCard(uiState)
             if (uiState.loaded && uiState.goalCalories == null) {
-                Spacer(modifier = Modifier.height(SectionGap))
+                Spacer(modifier = Modifier.height(ItemGap))
                 SetGoalBanner(onOpenGoals = onOpenGoals, onOpenWizard = onOpenWizard)
             }
-            // The action row is its own block: the same gap above it as below, so it doesn't
-            // look glued to the card.
-            Spacer(modifier = Modifier.height(SectionGap))
+            // One rhythm down the top of the screen: the gap under the day switcher, around
+            // the card and around the action row are all the same.
+            Spacer(modifier = Modifier.height(ItemGap))
             // FlowRow, not Row: three labeled buttons don't fit one line on narrow screens
             // in Russian — overflow must wrap, not clip. Justified like a paragraph of text
             // (SpaceBetween): every button keeps exactly the width its label needs and the
@@ -264,7 +266,7 @@ fun DiaryScreen(
                     Text(stringResource(R.string.log_food))
                 }
             }
-            Spacer(modifier = Modifier.height(SectionGap))
+            Spacer(modifier = Modifier.height(ItemGap))
             if (uiState.isEmpty) {
                 Text(
                     stringResource(R.string.diary_empty),
