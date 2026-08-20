@@ -54,7 +54,8 @@ private const val TAB_CUSTOM = 1
 
 @Composable
 fun PresetListScreen(
-    onAddPresetClick: () -> Unit,
+    /** True when Add was tapped on the Dishes tab, so the editor creates a dish. */
+    onAddPresetClick: (Boolean) -> Unit,
     onEditPresetClick: (Long) -> Unit,
     onPresetLogged: () -> Unit,
     modifier: Modifier = Modifier,
@@ -139,7 +140,7 @@ fun PresetListScreen(
                     placeholder = stringResource(R.string.preset_search_hint),
                     modifier = Modifier.weight(1f),
                 )
-                Button(onClick = onAddPresetClick) {
+                Button(onClick = { onAddPresetClick(selectedTab == TAB_DISHES) }) {
                     Text(stringResource(R.string.add))
                 }
             }

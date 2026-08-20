@@ -37,8 +37,15 @@ data class PresetEditUiState(
     val editingPresetId: Long? = null,
     val name: String = "",
     val mealSlot: MealSlot = MealSlot.BREAKFAST,
-    /** Raw text of the optional cooked-weight field; blank = plain preset, a value = dish. */
+    /** Raw text of the cooked-weight field; blank = plain preset, a value = dish. */
     val cookedWeightText: String = "",
+    /**
+     * A new draft started from the Dishes tab. The cooked weight is then part of what a dish is,
+     * so the field is shown and required; a draft started from the Custom tab never shows it and
+     * always saves as a plain preset. Stays false while editing — an existing preset keeps the
+     * optional field, which is also how a preset is promoted to a dish or demoted back.
+     */
+    val isDish: Boolean = false,
     val foodPendingQuantity: FoodItem? = null,
     val showQuickAdd: Boolean = false,
     val draftItems: List<DraftPresetItem> = emptyList(),
@@ -161,6 +168,9 @@ class PresetViewModel(
 
     // --- Create/edit draft ---
 
+    /** Marks a fresh draft as a dish (Add tapped on the Dishes tab). Never touches typed data. */
+    fun startNewDraft(isDish: Boolean) = _editState.update { it.copy(isDish = isDish) }
+
     /** Populates the draft from an existing preset. Safe to call repeatedly — only loads once per id. */
     fun loadForEdit(presetId: Long) {
         if (_editState.value.editingPresetId == presetId) return
@@ -263,9 +273,10 @@ class PresetViewModel(
             _editState.update { it.copy(hasError = true) }
             return
         }
-        // Blank = plain preset; anything typed must parse to a positive number to save.
+        // Blank = plain preset; anything typed must parse to a positive number to save. A dish
+        // draft has no blank option — without a cooked weight it would land in the Custom tab.
         val cookedWeightGrams = state.cookedWeightText.normalizedDecimalOrNull()?.takeIf { it > 0 }
-        if (state.cookedWeightText.isNotBlank() && cookedWeightGrams == null) {
+        if (cookedWeightGrams == null && (state.isDish || state.cookedWeightText.isNotBlank())) {
             _editState.update { it.copy(hasCookedWeightError = true) }
             return
         }
@@ -284,7 +295,11 @@ class PresetViewModel(
             }
             val boundaries = settingsRepository.dayPartBoundaries.first()
             _editState.update {
-                PresetEditUiState(saved = true, mealSlot = DateUtils.defaultMealSlotNow(boundaries))
+                PresetEditUiState(
+                    saved = true,
+                    mealSlot = DateUtils.defaultMealSlotNow(boundaries),
+                    isDish = state.isDish,
+                )
             }
         }
     }

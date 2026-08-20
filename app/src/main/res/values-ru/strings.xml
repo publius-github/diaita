@@ -219,6 +219,7 @@
 
     <!-- Presets -->
     <string name="new_preset">Новый шаблон</string>
+    <string name="new_dish">Новое блюдо</string>
     <string name="preset_search_hint">Поиск</string>
     <string name="preset_search_no_matches">Ничего не найдено</string>
     <string name="clear_search">Очистить поиск</string>
@@ -235,6 +236,9 @@
     <string name="cooked_weight_label">Вес готового блюда, г (необязательно)</string>
     <string name="cooked_weight_helper">Превращает шаблон в блюдо: порции записываются по весу, ккал считаются на 100 г.</string>
     <string name="cooked_weight_error">Введите вес больше 0 или оставьте поле пустым</string>
+    <string name="cooked_weight_label_required">Вес готового блюда, г</string>
+    <string name="cooked_weight_dish_helper">Порции записываются по весу, ккал считаются на 100 г.</string>
+    <string name="cooked_weight_required_error">Блюду нужен вес готового блюда — введите число больше 0</string>
     <string name="items_count_kcal">%1$d поз. · %2$d ккал</string>
     <string name="log_preset">Записать шаблон</string>
     <string name="delete_preset">Удалить шаблон</string>

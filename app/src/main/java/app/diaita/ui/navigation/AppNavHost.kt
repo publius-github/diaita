@@ -168,7 +168,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             }
             composable(Screen.PresetList.route) {
                 PresetListScreen(
-                    onAddPresetClick = { navController.navigate(Screen.PresetEdit.create()) },
+                    onAddPresetClick = { isDish ->
+                        navController.navigate(Screen.PresetEdit.create(isDish = isDish))
+                    },
                     onEditPresetClick = { presetId ->
                         navController.navigate(Screen.PresetEdit.create(presetId))
                     },
@@ -189,12 +191,17 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                             type = NavType.LongType
                             defaultValue = -1L
                         },
+                        navArgument("dish") {
+                            type = NavType.BoolType
+                            defaultValue = false
+                        },
                     ),
             ) { entry ->
                 val presetId = entry.arguments?.getLong("presetId") ?: -1L
                 PresetEditScreen(
                     onDone = { navController.popBackStack() },
                     presetId = presetId.takeIf { it > 0 },
+                    isDish = entry.arguments?.getBoolean("dish") == true,
                 )
             }
             composable(Screen.History.route) {

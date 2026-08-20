@@ -11,8 +11,12 @@ sealed class Screen(
 
     data object PresetList : Screen("presets")
 
-    data object PresetEdit : Screen("presets/edit?presetId={presetId}") {
-        fun create(presetId: Long? = null): String = "presets/edit?presetId=${presetId ?: -1L}"
+    data object PresetEdit : Screen("presets/edit?presetId={presetId}&dish={dish}") {
+        /** [isDish] only matters when creating: it decides which Presets tab the result lands in. */
+        fun create(
+            presetId: Long? = null,
+            isDish: Boolean = false,
+        ): String = "presets/edit?presetId=${presetId ?: -1L}&dish=$isDish"
     }
 
     data object History : Screen("history")

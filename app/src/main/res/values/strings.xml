@@ -219,6 +219,7 @@
 
     <!-- Presets -->
     <string name="new_preset">New preset</string>
+    <string name="new_dish">New dish</string>
     <string name="preset_search_hint">Search</string>
     <string name="preset_search_no_matches">Nothing found</string>
     <string name="clear_search">Clear search</string>
@@ -235,6 +236,9 @@
     <string name="cooked_weight_label">Cooked dish weight, g (optional)</string>
     <string name="cooked_weight_helper">Turns the preset into a dish: log portions by weight, kcal are computed per 100 g.</string>
     <string name="cooked_weight_error">Enter a weight greater than 0, or leave the field empty</string>
+    <string name="cooked_weight_label_required">Cooked dish weight, g</string>
+    <string name="cooked_weight_dish_helper">Portions are logged by weight, kcal are computed per 100 g.</string>
+    <string name="cooked_weight_required_error">A dish needs its cooked weight — enter a number greater than 0</string>
     <string name="items_count_kcal">%1$d items · %2$d kcal</string>
     <string name="log_preset">Log preset</string>
     <string name="delete_preset">Delete preset</string>

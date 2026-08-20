@@ -58,6 +58,8 @@ fun PresetEditScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     presetId: Long? = null,
+    /** Creating from the Dishes tab: the cooked weight becomes a required part of the form. */
+    isDish: Boolean = false,
     viewModel: PresetViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val state by viewModel.editState.collectAsStateWithLifecycle()
@@ -65,8 +67,12 @@ fun PresetEditScreen(
     // to keep the edit form itself uncluttered.
     var showFoodPicker by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(presetId) {
-        if (presetId != null && presetId > 0) viewModel.loadForEdit(presetId)
+    LaunchedEffect(presetId, isDish) {
+        if (presetId != null && presetId > 0) {
+            viewModel.loadForEdit(presetId)
+        } else {
+            viewModel.startNewDraft(isDish)
+        }
     }
 
     LaunchedEffect(state.saved) {
@@ -93,7 +99,11 @@ fun PresetEditScreen(
                     title = {
                         Text(
                             stringResource(
-                                if (state.editingPresetId != null) R.string.edit_preset else R.string.new_preset,
+                                when {
+                                    state.editingPresetId != null -> R.string.edit_preset
+                                    state.isDish -> R.string.new_dish
+                                    else -> R.string.new_preset
+                                },
                             ),
                         )
                     },
@@ -129,8 +139,13 @@ fun PresetEditScreen(
                     selected = state.mealSlot,
                     onSelected = viewModel::onMealSlotChanged,
                 )
-                Spacer(modifier = Modifier.height(SectionGap))
-                CookedWeightField(state, viewModel::onCookedWeightChanged)
+                // A plain preset has no cooked weight at all, so a new one started from the
+                // Custom tab is not asked for one — that is what keeps each tab's Add button
+                // producing the kind of preset the tab lists.
+                if (state.isDish || state.editingPresetId != null) {
+                    Spacer(modifier = Modifier.height(SectionGap))
+                    CookedWeightField(state, viewModel::onCookedWeightChanged)
+                }
                 Spacer(modifier = Modifier.height(SectionGap))
                 Text(stringResource(R.string.items_in_preset), style = MaterialTheme.typography.titleSmall)
                 if (state.draftItems.isEmpty()) {
@@ -236,7 +251,10 @@ private fun CookedWeightField(
     CompactTextField(
         value = state.cookedWeightText,
         onValueChange = onValueChange,
-        label = stringResource(R.string.cooked_weight_label),
+        label =
+            stringResource(
+                if (state.isDish) R.string.cooked_weight_label_required else R.string.cooked_weight_label,
+            ),
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions =
             KeyboardOptions(
@@ -246,9 +264,11 @@ private fun CookedWeightField(
         isError = state.hasCookedWeightError,
         supportingText =
             when {
+                state.hasCookedWeightError && state.isDish -> stringResource(R.string.cooked_weight_required_error)
                 state.hasCookedWeightError -> stringResource(R.string.cooked_weight_error)
                 cookedWeight != null && state.draftItems.isNotEmpty() ->
                     stringResource(R.string.kcal_per_100g, (totalCalories / cookedWeight * 100).toInt())
+                state.isDish -> stringResource(R.string.cooked_weight_dish_helper)
                 else -> stringResource(R.string.cooked_weight_helper)
             },
     )
