@@ -34,6 +34,20 @@ class WeightTrendTest {
     }
 
     @Test
+    fun `a dip in the middle does not flip the sign of the endpoint rate`() {
+        // Down for three weeks, then back up past the start: the chart ends higher, so must the rate.
+        val entries =
+            listOf(
+                start to 90.0,
+                start.plusDays(7) to 88.0,
+                start.plusDays(14) to 87.5,
+                start.plusDays(21) to 88.5,
+                start.plusDays(28) to 91.0,
+            )
+        assertEquals(0.25, WeightTrend.ratePerWeek(entries)!!, 1e-9)
+    }
+
+    @Test
     fun `projection lands where the trend crosses the target`() {
         val entries = steadyLoss(days = 15, startKg = 90.0, kgPerDay = -0.1)
         // Latest = 88.6 on day 14; target 87.2 is 1.4 kg away at 0.1 kg/day = 14 days.

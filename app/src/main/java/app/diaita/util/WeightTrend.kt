@@ -18,24 +18,20 @@ object WeightTrend {
     const val MAX_PROJECTION_DAYS = 365L * 2
 
     /**
-     * Rate of weight change in kg/week via a least-squares fit over the weigh-ins.
-     * Null when there are fewer than two points or they span less than
+     * Rate of weight change in kg/week, taken as the difference between the earliest and the
+     * latest weigh-in over the span between them. A least-squares fit was used before, but its
+     * slope follows the shape of the whole series and could read "losing" while the chart
+     * plainly ended higher than it started; the user wants the number to match the endpoints
+     * they see (2026-08-28). Null when there are fewer than two points or they span less than
      * [MIN_TREND_SPAN_DAYS] — day-to-day water noise dominates anything shorter.
      */
     fun ratePerWeek(entries: List<Pair<LocalDate, Double>>): Double? {
         if (entries.size < 2) return null
-        val first = entries.minOf { it.first }
-        val spanDays = entries.maxOf { it.first }.toEpochDay() - first.toEpochDay()
+        val first = entries.minByOrNull { it.first } ?: return null
+        val last = entries.maxByOrNull { it.first } ?: return null
+        val spanDays = last.first.toEpochDay() - first.first.toEpochDay()
         if (spanDays < MIN_TREND_SPAN_DAYS) return null
-
-        val points = entries.map { (date, kg) -> (date.toEpochDay() - first.toEpochDay()).toDouble() to kg }
-        val n = points.size.toDouble()
-        val meanX = points.sumOf { it.first } / n
-        val meanY = points.sumOf { it.second } / n
-        val denominator = points.sumOf { (x, _) -> (x - meanX) * (x - meanX) }
-        if (denominator == 0.0) return null
-        val slopePerDay = points.sumOf { (x, y) -> (x - meanX) * (y - meanY) } / denominator
-        return slopePerDay * 7
+        return (last.second - first.second) / spanDays * 7
     }
 
     /**
