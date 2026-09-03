@@ -216,6 +216,14 @@ class FoodSearchController(
         scope.launch { foodRepository.setFavorite(food.id, !food.isFavorite) }
     }
 
+    /** Absolute-state variant for the quantity sheet's star, where [food] is a snapshot. */
+    fun setFavorite(
+        food: FoodItem,
+        favorite: Boolean,
+    ) {
+        scope.launch { foodRepository.setFavorite(food.id, favorite) }
+    }
+
     fun onBarcodeScanned(barcode: String) {
         scope.launch {
             _state.update { it.copy(scanError = null, pendingBarcode = null, offSearching = true) }

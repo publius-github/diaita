@@ -1197,8 +1197,15 @@ private fun PaceMessage(
     val mood =
         when {
             uiState.totalCalories > goalCalories -> PaceMood.OVER
+            // Same banding as the day-part segments: an overshoot inside the configured slack
+            // still renders green there, so the coach must not scold over it either.
             DayPart.entries.any { part ->
-                (uiState.dayPartCalories[part] ?: 0.0) > (dayPartBudgets[part]?.target ?: 0)
+                dayPartOverBand(
+                    consumed = (uiState.dayPartCalories[part] ?: 0.0).roundToInt(),
+                    target = dayPartBudgets[part]?.target ?: 0,
+                    thresholds = uiState.dayPartOverThresholds,
+                    dayOver = false,
+                ) >= DayPartOverBand.MEDIUM
             } -> PaceMood.AHEAD
             uiState.isEmpty -> PaceMood.EMPTY
             else -> PaceMood.ON_TRACK

@@ -14,7 +14,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,9 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.diaita.R
+import app.diaita.data.db.entities.FoodSource
 import app.diaita.ui.AppViewModelProvider
+import app.diaita.ui.common.CompactRowCard
 import app.diaita.ui.common.CompactTextField
-import app.diaita.ui.common.FoodRowCard
 import app.diaita.ui.common.FoodSearchContent
 import app.diaita.ui.common.MealSlotPicker
 import app.diaita.ui.common.QuantitySheet
@@ -125,12 +129,15 @@ fun PresetEditScreen(
                         .fillMaxSize()
                         .padding(ScreenPadding),
             ) {
+                // Multiline on purpose: list rows ellipsize long names, so this form is the
+                // one place the full name is readable while typing or reviewing it.
                 CompactTextField(
                     value = state.name,
                     onValueChange = viewModel::onNameChanged,
                     label = stringResource(R.string.preset_name_label),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    singleLine = false,
                 )
                 Spacer(modifier = Modifier.height(SectionGap))
                 Text(stringResource(R.string.preset_meal_label), style = MaterialTheme.typography.titleSmall)
@@ -162,7 +169,7 @@ fun PresetEditScreen(
                     itemsIndexed(state.draftItems) { index, draftItem ->
                         // The same shared card as a diary row, so both lists render (and
                         // evolve) identically; tapping a row edits its quantity.
-                        FoodRowCard(
+                        CompactRowCard(
                             title = draftItem.food.name,
                             subtitle =
                                 stringResource(
@@ -171,8 +178,41 @@ fun PresetEditScreen(
                                     NutrientMath.caloriesFor(draftItem.food, draftItem.quantityGrams).toInt(),
                                 ),
                             onClick = { viewModel.requestEditDraftItem(index) },
-                            onDelete = { viewModel.removeDraftItem(index) },
-                        )
+                        ) {
+                            // Components stay reusable from here: a scanned or searched product
+                            // can be starred without hunting it down in the catalog again.
+                            // QUICK rows are calorie-only stand-ins hidden from search, so a
+                            // star would pin something the catalog never shows.
+                            if (draftItem.food.source != FoodSource.QUICK) {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.setDraftItemFavorite(index, !draftItem.food.isFavorite)
+                                    },
+                                ) {
+                                    Icon(
+                                        if (draftItem.food.isFavorite) {
+                                            Icons.Filled.Star
+                                        } else {
+                                            Icons.Outlined.StarOutline
+                                        },
+                                        contentDescription =
+                                            stringResource(
+                                                if (draftItem.food.isFavorite) {
+                                                    R.string.unfavorite_food
+                                                } else {
+                                                    R.string.favorite_food
+                                                },
+                                            ),
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { viewModel.removeDraftItem(index) }) {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.delete),
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(ItemGap))
@@ -204,6 +244,7 @@ fun PresetEditScreen(
                 viewModel.addDraftItem(food, grams)
                 showFoodPicker = false
             },
+            onToggleFavorite = { favorite -> viewModel.foodSearch.setFavorite(food, favorite) },
         )
     }
 
@@ -231,6 +272,12 @@ fun PresetEditScreen(
                 confirmLabel = stringResource(R.string.save),
                 onDismiss = viewModel::cancelDraftItemEdit,
                 onConfirm = { grams, _ -> viewModel.confirmDraftItemEdit(grams) },
+                onToggleFavorite =
+                    if (draftItem.food.source != FoodSource.QUICK) {
+                        { favorite -> viewModel.setDraftItemFavorite(index, favorite) }
+                    } else {
+                        null
+                    },
             )
         }
     }

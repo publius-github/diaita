@@ -165,6 +165,7 @@ fun AddFoodScreen(
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 viewModel.confirmQuantity(food.id, grams, slot)
             },
+            onToggleFavorite = { favorite -> viewModel.foodSearch.setFavorite(food, favorite) },
         )
     }
 

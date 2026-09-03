@@ -69,6 +69,7 @@ private fun DecoratedField(
     leadingIcon: (@Composable () -> Unit)?,
     trailingIcon: (@Composable () -> Unit)?,
     focusRequester: FocusRequester?,
+    singleLine: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val colors = OutlinedTextFieldDefaults.colors()
@@ -87,7 +88,7 @@ private fun DecoratedField(
                         Modifier.height(SearchFieldHeight)
                     },
                 ).let { if (focusRequester != null) it.focusRequester(focusRequester) else it },
-        singleLine = true,
+        singleLine = singleLine,
         textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         keyboardOptions = keyboardOptions,
@@ -98,7 +99,7 @@ private fun DecoratedField(
             value = value,
             innerTextField = innerTextField,
             enabled = true,
-            singleLine = true,
+            singleLine = singleLine,
             visualTransformation = VisualTransformation.None,
             interactionSource = interactionSource,
             isError = isError,
@@ -203,6 +204,8 @@ fun CompactTextField(
     supportingText: String? = null,
     /** Applied to the input itself — the [modifier] lands on the box + helper-line column. */
     focusRequester: FocusRequester? = null,
+    /** False lets long values wrap onto extra lines; the box grows from its usual floor. */
+    singleLine: Boolean = true,
 ) {
     Column(modifier = modifier) {
         DecoratedField(
@@ -217,6 +220,7 @@ fun CompactTextField(
             leadingIcon = null,
             trailingIcon = null,
             focusRequester = focusRequester,
+            singleLine = singleLine,
         )
         supportingText?.let { supporting ->
             Spacer(modifier = Modifier.height(LabelGap))

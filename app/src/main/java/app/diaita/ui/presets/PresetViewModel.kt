@@ -197,8 +197,8 @@ class PresetViewModel(
         }
     }
 
-    // Capped so preset names always fit a list row on one line (titles ellipsize, but a name
-    // that never shows fully is a naming error better caught while typing).
+    // A generous sanity cap only — list rows ellipsize long names, and the edit form shows
+    // them in full, so the limit just keeps pathological input out of the database.
     fun onNameChanged(name: String) =
         _editState.update { it.copy(name = name.take(MAX_PRESET_NAME_LENGTH), hasError = false) }
 
@@ -244,6 +244,26 @@ class PresetViewModel(
                 )
             }
             foodSearch.clearSearch()
+        }
+    }
+
+    /**
+     * Stars/unstars a component right in the draft list, so e.g. a product that entered the
+     * catalog via a barcode scan can be pinned for reuse while reviewing the preset. Persists
+     * through the catalog row and mirrors the new state into the draft snapshot.
+     */
+    fun setDraftItemFavorite(
+        index: Int,
+        favorite: Boolean,
+    ) {
+        val item = _editState.value.draftItems.getOrNull(index) ?: return
+        viewModelScope.launch {
+            foodRepository.setFavorite(item.food.id, favorite)
+            _editState.update { state ->
+                val items = state.draftItems.toMutableList()
+                items.getOrNull(index)?.let { items[index] = it.copy(food = it.food.copy(isFavorite = favorite)) }
+                state.copy(draftItems = items)
+            }
         }
     }
 
@@ -307,6 +327,6 @@ class PresetViewModel(
     fun consumeSaved() = _editState.update { it.copy(saved = false) }
 
     companion object {
-        const val MAX_PRESET_NAME_LENGTH = 30
+        const val MAX_PRESET_NAME_LENGTH = 80
     }
 }

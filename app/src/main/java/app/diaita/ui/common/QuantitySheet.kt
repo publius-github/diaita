@@ -11,10 +11,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -81,6 +86,12 @@ fun QuantitySheet(
     initialMealSlot: MealSlot = MealSlot.UNSPECIFIED,
     showMealSlotPicker: Boolean = false,
     confirmLabel: String = stringResource(R.string.log),
+    /**
+     * Non-null shows a favorite star next to the food's name, called with the new state on
+     * each tap. Lets a product picked via scan or search be pinned for reuse in the same
+     * sheet that confirms it, without hunting it down in the catalog afterwards.
+     */
+    onToggleFavorite: ((Boolean) -> Unit)? = null,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var quantityText by remember(food.id) {
@@ -104,7 +115,32 @@ fun QuantitySheet(
                     .navigationBarsPadding()
                     .imePadding(),
         ) {
-            Text(food.name, style = MaterialTheme.typography.titleLarge)
+            if (onToggleFavorite != null) {
+                var favorite by remember(food.id) { mutableStateOf(food.isFavorite) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        food.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    IconButton(
+                        onClick = {
+                            favorite = !favorite
+                            onToggleFavorite(favorite)
+                        },
+                    ) {
+                        Icon(
+                            if (favorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription =
+                                stringResource(
+                                    if (favorite) R.string.unfavorite_food else R.string.favorite_food,
+                                ),
+                        )
+                    }
+                }
+            } else {
+                Text(food.name, style = MaterialTheme.typography.titleLarge)
+            }
             Text(
                 stringResource(R.string.kcal_per_100g, food.caloriesPer100g.toInt()),
                 style = MaterialTheme.typography.bodyMedium,
