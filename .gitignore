@@ -16,6 +16,7 @@ local.properties
 # Build outputs
 *.apk
 *.aab
+dist/
 
 # Release signing (keep the keystore backed up OUTSIDE the repo too — losing it
 # means existing users must uninstall/reinstall to get updates)
