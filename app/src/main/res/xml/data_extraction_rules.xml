@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- API 31+: everything worth keeping is the Room database and DataStore settings.
-     Nothing here is sensitive; GMS device-to-device transfer is a convenience on top of
-     the in-app backup/restore, which remains the reliable path for sideload installs. -->
+<!-- API 31+: the diary and weight history are health data, so nothing goes to cloud backup
+     (the app promises no cloud). Direct device-to-device transfer stays on, as a convenience
+     on top of the in-app backup/restore. -->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="database" path="." />
-        <include domain="file" path="datastore/" />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="datastore/" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="." />

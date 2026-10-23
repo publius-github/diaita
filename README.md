@@ -15,12 +15,13 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/main.jpg" width="24%" alt="Home: the day's totals, day-part progress and the diary">
-  <img src="screenshots/presets.jpg" width="24%" alt="Presets: recurring meals and dishes">
-  <img src="screenshots/history.jpg" width="24%" alt="History: calories and weight over time">
-  <img src="screenshots/settings.jpg" width="24%" alt="Settings">
+  <img src="screenshots/main.jpg" width="19%" alt="Home: the day's totals, day-part progress and the diary">
+  <img src="screenshots/presets-dishes.jpg" width="19%" alt="Presets: ready-made dishes">
+  <img src="screenshots/presets-custom.jpg" width="19%" alt="Presets: your own recurring meals">
+  <img src="screenshots/history.jpg" width="19%" alt="History: calories and weight over time">
+  <img src="screenshots/settings.jpg" width="19%" alt="Settings">
   <br>
-  <em>Home, Presets, History and Settings (dark theme; a light theme is included).</em>
+  <em>Home, Presets (dishes and custom), History and Settings (dark theme; a light theme is included).</em>
 </p>
 
 Diaita keeps a food diary, your goals and your weight in one place, and keeps all of it on your phone. There is no account, no cloud and no telemetry: the only network use is an optional product search on OpenFoodFacts, and what it finds is cached so it keeps working offline. The app is available in English and Russian.
