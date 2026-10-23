@@ -14,7 +14,7 @@ import app.diaita.data.db.entities.FoodSource
  * Fiber/sugar/salt were cross-checked against the USDA SR Legacy dataset where a
  * one-to-one match exists (generic whole foods); Russian and composite/brand-dependent
  * entries — tvorog, borodinsky bread, syrniki, olivier, kvass, sausages, prepared
- * dishes — have no counterpart there and stay estimates. See the project notes for the coverage.
+ * dishes — have no counterpart there and stay estimates.
  *
  * For anything typically bought raw and cooked at home (meat, poultry, fish, grains,
  * some vegetables), the catalog lists the raw/dry form first — for weighing before
