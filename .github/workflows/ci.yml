@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, development]
   pull_request:
+  # Reused by release.yml so a tag is only built from a commit that passes every gate
+  workflow_call:
 
 permissions:
   contents: read
@@ -46,6 +48,11 @@ jobs:
       # local.properties on the developer machine; this job just proves R8 still builds.
       - name: assemble
         run: ./gradlew assembleDebug assembleRelease --no-daemon
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: diaita-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
 
   test:
     runs-on: ubuntu-latest
