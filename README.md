@@ -1,4 +1,5 @@
 <h1 align="center">
+  <img src="assets/logo.svg" width="128" height="128" alt=""><br>
   Diaita<br>
   <sup><sub>EAT WITH MEASURE.</sub></sup>
 </h1>
