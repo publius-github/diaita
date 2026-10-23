@@ -10,7 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import app.diaita.AppContainer
-import app.diaita.CalorieCounterApplication
+import app.diaita.DiaitaApplication
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
@@ -27,7 +27,7 @@ class AutoBackupWorker(
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val container =
-            (applicationContext as? CalorieCounterApplication)?.container
+            (applicationContext as? DiaitaApplication)?.container
                 ?: return Result.failure()
         val treeUriString =
             container.settingsRepository.autoBackupUri.first()

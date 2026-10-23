@@ -41,7 +41,7 @@ private val DarkColors =
     )
 
 @Composable
-fun CalorieCounterTheme(
+fun DiaitaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,

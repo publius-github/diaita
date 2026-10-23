@@ -63,7 +63,7 @@ Built with Kotlin and Jetpack Compose. The application id is
 
 ## Requirements
 
-- Android Studio (any recent version) with the Android SDK, or just a JDK 17+ for
+- Android Studio (any recent version) with the Android SDK, or just a JDK 21 for
   command-line builds.
 - SDK Platform 36 (Android Studio installs it automatically on first Gradle sync).
 - Device or emulator running Android 8.0+ (`minSdk = 26`).

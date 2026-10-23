@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import app.diaita.AppContainer
-import app.diaita.CalorieCounterApplication
+import app.diaita.DiaitaApplication
 import kotlinx.coroutines.launch
 
 /**
@@ -22,7 +22,7 @@ class TimeChangedReceiver : BroadcastReceiver() {
         ) {
             return
         }
-        val app = context.applicationContext as? CalorieCounterApplication ?: return
+        val app = context.applicationContext as? DiaitaApplication ?: return
         val pendingResult = goAsync()
         app.container.appScope.launch {
             try {

@@ -24,7 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.time.LocalDate
 
-/** Manual DI container: one instance per process, owned by [CalorieCounterApplication]. */
+/** Manual DI container: one instance per process, owned by [DiaitaApplication]. */
 class AppContainer(
     context: Context,
 ) {

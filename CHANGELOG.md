@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-10
+
+Condensed summary of 0.11.0 – 0.43.0; individual releases are in the git history.
+
+### Added
+
+- Water tracking with a configurable daily target, overshoot bands, per-tap editing and its own diary row.
+- Dishes: presets split into Dishes and Custom tabs, dishes logged by eaten portion, 40 seeded dish compositions.
+- Fiber/sugar/salt totals (whole seed catalog filled and cross-checked against USDA SR Legacy), colored against daily norms.
+- First-run onboarding, goal wizard, BMI tile (with an athletic-build toggle) and 7-day weight trend.
+- Selectable Home progress style, day-part balance bar with carry and overshoot bands, macro overshoot tolerance.
+- Coach messages with an ancient Greek flavour.
+- Russian locale and dark theme.
+- All settings mirrored into the database so backups and reinstalls keep them.
+- APK build script (`build-apk.sh`).
+
+### Changed
+
+- History defaults to 30 days, with a weekly-bucketed year view; retention defaults to keeping everything.
+- Weight trend is based on the first and last weigh-in.
+- Compact UI density pass: unified spacing, form fields, search fields and settings grouped under headers.
+- Floating action buttons replaced by regular buttons.
+
+### Fixed
+
+- A corrupted settings file is recreated instead of failing forever.
+- Assorted History layout jumps and chart nudges.
+
 ## [0.10.0] - 2026-07-22
 
 ### Added

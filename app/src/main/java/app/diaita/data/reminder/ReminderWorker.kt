@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import app.diaita.AppContainer
-import app.diaita.CalorieCounterApplication
+import app.diaita.DiaitaApplication
 import app.diaita.R
 import app.diaita.ui.diary.DayPart
 import app.diaita.ui.diary.dayPartOf
@@ -33,7 +33,7 @@ class ReminderWorker(
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val container =
-            (applicationContext as? CalorieCounterApplication)?.container
+            (applicationContext as? DiaitaApplication)?.container
                 ?: return Result.failure()
         return try {
             val today = DateUtils.today()

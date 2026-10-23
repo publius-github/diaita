@@ -7,7 +7,7 @@ import app.diaita.data.reminder.ReminderScheduler
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class CalorieCounterApplication : Application() {
+class DiaitaApplication : Application() {
     lateinit var container: AppContainer
         private set
 
@@ -31,7 +31,7 @@ class CalorieCounterApplication : Application() {
             // receiver) keeps the wall-clock times honest.
             runCatching {
                 ReminderScheduler.rescheduleAll(
-                    this@CalorieCounterApplication,
+                    this@DiaitaApplication,
                     container.settingsRepository,
                 )
             }.onFailure { error -> Log.e(AppContainer.TAG, "Reminder rescheduling failed", error) }
@@ -39,7 +39,7 @@ class CalorieCounterApplication : Application() {
         container.appScope.launch {
             runCatching {
                 if (container.settingsRepository.autoBackupUri.first() != null) {
-                    AutoBackupWorker.schedule(this@CalorieCounterApplication)
+                    AutoBackupWorker.schedule(this@DiaitaApplication)
                 }
             }.onFailure { error -> Log.e(AppContainer.TAG, "Auto-backup scheduling failed", error) }
         }

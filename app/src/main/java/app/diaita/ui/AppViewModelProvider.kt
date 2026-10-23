@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.diaita.AppContainer
-import app.diaita.CalorieCounterApplication
+import app.diaita.DiaitaApplication
 import app.diaita.ui.addfood.AddFoodViewModel
 import app.diaita.ui.daydetail.DayDetailViewModel
 import app.diaita.ui.diary.DiaryViewModel
@@ -18,7 +18,7 @@ import app.diaita.ui.presets.PresetViewModel
 import app.diaita.ui.settings.SettingsViewModel
 
 private fun CreationExtras.appContainer(): AppContainer =
-    (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as CalorieCounterApplication).container
+    (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as DiaitaApplication).container
 
 /** Manual DI wiring for ViewModels — no Hilt/Koin, matches [AppContainer]'s scale. */
 object AppViewModelProvider {

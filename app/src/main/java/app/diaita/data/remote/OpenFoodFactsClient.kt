@@ -18,7 +18,8 @@ class OpenFoodFactsClient(
     appVersionName: String,
 ) {
     // OFF asks all API clients to identify themselves with a descriptive User-Agent.
-    private val userAgent = "Diaita/$appVersionName (Android; personal use, non-commercial)"
+    private val userAgent =
+        "Diaita/$appVersionName (Android; non-commercial; +https://github.com/publius-github/diaita)"
 
     private val userAgentInterceptor =
         Interceptor { chain ->
