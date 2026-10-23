@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -24,7 +23,7 @@ val releaseStoreFile: String? = localProperties.getProperty("RELEASE_STORE_FILE"
 
 android {
     namespace = "app.diaita"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "app.diaita"
