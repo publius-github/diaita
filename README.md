@@ -40,6 +40,15 @@ Built with Kotlin and Jetpack Compose. The application id is
 - CSV export of the diary for spreadsheets.
 - Optional daily reminders to log food and weight.
 
+## Screenshots
+
+<p>
+  <img src="screenshots/main.jpg" width="24%" alt="Home" />
+  <img src="screenshots/presets.jpg" width="24%" alt="Presets" />
+  <img src="screenshots/history.jpg" width="24%" alt="History" />
+  <img src="screenshots/settings.jpg" width="24%" alt="Settings" />
+</p>
+
 ## Tech stack
 
 | Area | Choice |
@@ -126,7 +135,6 @@ app/src/main/java/app/diaita/
 │                  # history, daydetail, settings, about) + shared components
 └── util/          # Small helpers
 app/schemas/       # Exported Room schemas (fixtures for migration tests)
-the project notes       # Development log: architecture decisions and build history
 ```
 
 ## Privacy
