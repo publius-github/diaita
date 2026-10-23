@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CalorieCounter"
+rootProject.name = "Diaita"
 include(":app")

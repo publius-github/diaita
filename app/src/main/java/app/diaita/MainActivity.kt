@@ -13,7 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.diaita.data.settings.ThemeMode
 import app.diaita.ui.navigation.AppNavHost
 import app.diaita.ui.onboarding.OnboardingFlow
-import app.diaita.ui.theme.CalorieCounterTheme
+import app.diaita.ui.theme.DiaitaTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen().setKeepOnScreenCondition { keepSplash }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val container = (application as CalorieCounterApplication).container
+        val container = (application as DiaitaApplication).container
         val settingsRepository = container.settingsRepository
         setContent {
             // null = still deciding (splash covers the gap). Once onboarding is shown, the
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
             }
             val themeMode by settingsRepository.themeMode.collectAsStateWithLifecycle(ThemeMode.SYSTEM)
             val dynamicColor by settingsRepository.dynamicColor.collectAsStateWithLifecycle(true)
-            CalorieCounterTheme(
+            DiaitaTheme(
                 darkTheme =
                     when (themeMode) {
                         ThemeMode.SYSTEM -> isSystemInDarkTheme()
